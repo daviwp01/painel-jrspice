@@ -69,15 +69,27 @@ const openLegal = (type) => {
         </div>
 
         <!-- 📝 RIGHT SIDE: FORM (40% WIDTH) -->
-        <div class="flex-1 lg:w-[40%] bg-white h-screen flex flex-col relative">
+        <div class="flex-1 lg:w-[40%] bg-white h-screen flex flex-col relative overflow-y-auto">
 
             <!-- Language Switcher (Fixed Position) -->
             <div class="absolute top-8 right-8 z-50">
                 <LanguageSwitcher />
             </div>
 
+            <!-- 📱 MOBILE LOGO (Visible only on < lg screens) -->
+            <div class="flex lg:hidden flex-col items-center pt-10 pb-4 px-6 flex-shrink-0">
+                <Link href="/">
+                    <img
+                        src="/logo-black.png"
+                        alt="JR SPICE"
+                        class="h-14 w-auto object-contain transition-transform duration-500 hover:scale-105"
+                    />
+                </Link>
+                <div class="w-10 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mt-4 opacity-60"></div>
+            </div>
+
             <!-- Form Container (Centered Vertically) -->
-            <div class="flex-1 flex flex-col justify-center px-12 sm:px-20 lg:px-24 w-full">
+            <div class="flex-1 flex flex-col justify-center px-8 sm:px-20 lg:px-24 w-full">
                 <div class="max-w-[520px] mx-auto w-full">
                     <slot />
                 </div>

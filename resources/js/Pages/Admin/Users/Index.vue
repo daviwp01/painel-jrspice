@@ -195,8 +195,108 @@ const openWhatsApp = (phone) => {
                     </div>
                 </div>
 
-                <!-- User Listing Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
+                <!-- 📱 MOBILE: User Cards (< lg) -->
+                <div class="lg:hidden space-y-3">
+                    <div
+                        v-for="user in users"
+                        :key="'mobile-' + user.id"
+                        class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all active:scale-[0.99]"
+                    >
+                        <!-- Card Header: Avatar + Name + Role -->
+                        <div class="flex items-center justify-between px-4 py-4 border-b border-slate-50">
+                            <div class="flex items-center min-w-0 flex-1">
+                                <div
+                                    class="h-10 w-10 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm"
+                                    :class="getAvatarColor(user.name)"
+                                >
+                                    {{ user.name.charAt(0).toUpperCase() }}
+                                </div>
+                                <div class="ml-3 min-w-0 flex-1">
+                                    <div class="text-sm font-black text-slate-800 tracking-tight truncate">{{ user.name }}</div>
+                                    <div class="text-xs text-slate-400 font-medium truncate">{{ user.email }}</div>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 ml-3">
+                                <div v-if="user.is_master" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100/50">
+                                    <ShieldCheck class="w-3 h-3 mr-1" />
+                                    {{ $t('Master') }}
+                                </div>
+                                <div v-else class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-100/50">
+                                    {{ $t('User') }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body: Details -->
+                        <div class="px-4 py-3 space-y-2">
+                            <div v-if="user.company_name" class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Company') }}</span>
+                                <span class="text-xs font-bold text-slate-600">{{ user.company_name }}</span>
+                            </div>
+                            <div v-if="user.phone" class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Phone') }}</span>
+                                <span class="text-xs font-bold text-slate-500">{{ user.phone }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Created at') }}</span>
+                                <span class="text-[11px] font-bold text-slate-400">{{ formatDate(user.created_at) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Status + Actions -->
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-50/50 border-t border-slate-100">
+                            <div class="flex items-center space-x-2.5">
+                                <ToggleSwitch
+                                    :model-value="user.is_active"
+                                    @change="toggleUserStatus(user)"
+                                />
+                                <div v-if="user.is_active !== false" class="text-[9px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                    {{ $t('Active') }}
+                                </div>
+                                <div v-else class="text-[9px] font-black uppercase tracking-tight text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                                    {{ $t('Inactive') }}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-0.5">
+                                <button
+                                    @click="openWhatsApp(user.phone)"
+                                    :disabled="user.id === $page.props.auth.user.id || !user.phone"
+                                    class="p-2 border border-transparent rounded-lg transition-all active:scale-90"
+                                    :class="user.id === $page.props.auth.user.id || !user.phone
+                                        ? 'text-slate-200 cursor-not-allowed'
+                                        : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'"
+                                >
+                                    <MessageCircle class="w-4 h-4" />
+                                </button>
+                                <Link
+                                    :href="route('admin.users.edit', user.id)"
+                                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent rounded-lg transition-all active:scale-90"
+                                >
+                                    <Edit2 class="w-4 h-4" />
+                                </Link>
+                                <button
+                                    @click="confirmDeleteAction(user)"
+                                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent rounded-lg transition-all active:scale-90"
+                                >
+                                    <Trash2 class="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Empty State -->
+                    <div v-if="users.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
+                            <Search class="w-7 h-7 text-slate-300" />
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800">{{ $t('No users found') }}</h3>
+                        <p class="text-slate-500 font-medium mt-1 text-sm">{{ $t('Try adjusting your search or clearing the filters.') }}</p>
+                    </div>
+                </div>
+
+                <!-- 🖥️ DESKTOP: User Listing Table (>= lg) -->
+                <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-100">
                             <thead>

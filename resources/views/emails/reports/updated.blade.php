@@ -1,6 +1,6 @@
 @component('mail::message')
 <div style="text-align: center; margin-bottom: 30px;">
-    <img src="{{ config('app.url') }}/logo-black.png" alt="{{ config('app.name') }}" style="height: 60px; width: auto;">
+    <img src="http://painel.jrspice.com/logo-black.png" alt="{{ config('app.name') }}" style="height: 60px; width: auto;">
 </div>
 
 # {{ $customTitle }}

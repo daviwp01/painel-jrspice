@@ -44,22 +44,21 @@ const tabs = [
                 </div>
 
                 <!-- Tabs Navigation -->
-                <div class="flex p-1.5 bg-slate-200/50 backdrop-blur-md rounded-2xl mb-12 w-fit mx-auto sm:mx-0">
-                    <button
-                        v-for="tab in tabs"
-                        :key="tab.id"
-                        @click="activeTab = tab.id"
-                        class="flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 relative group"
-                        :class="activeTab === tab.id
-                            ? 'bg-white text-indigo-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800'"
-                    >
-                        <component :is="tab.icon" class="w-4 h-4" />
-                        <span class="text-sm font-black uppercase tracking-widest">{{ $t(tab.name) }}</span>
-
-                        <!-- Indicator for active tab -->
-                        <div v-if="activeTab === tab.id" class="absolute -bottom-8 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-600 rounded-full"></div>
-                    </button>
+                <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar mb-10">
+                    <div class="flex p-1.5 bg-slate-200/50 backdrop-blur-md rounded-2xl w-full sm:w-fit">
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.id"
+                            @click="activeTab = tab.id"
+                            class="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 sm:space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-300 group whitespace-nowrap"
+                            :class="activeTab === tab.id
+                                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100'
+                                : 'text-slate-500 hover:text-slate-800'"
+                        >
+                            <component :is="tab.icon" class="w-4 h-4" />
+                            <span class="text-xs sm:text-sm font-black uppercase tracking-wider sm:tracking-widest">{{ $t(tab.name) }}</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tab Content -->

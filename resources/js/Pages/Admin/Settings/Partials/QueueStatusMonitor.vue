@@ -56,7 +56,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 mb-8">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-4 sm:p-6 mb-8">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div class="flex items-center space-x-4">
                 <div class="p-3 rounded-xl transition-colors duration-500"
@@ -74,7 +74,7 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <!-- Pending -->
                 <div class="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center space-x-3">
                     <Clock class="w-4 h-4 text-amber-500" />

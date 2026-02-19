@@ -74,8 +74,89 @@ const getAvatarColor = (name) => {
                     </div>
                 </div>
 
-                <!-- Activity Table -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
+                <!-- 📱 MOBILE: Activity Cards (< lg) -->
+                <div class="lg:hidden space-y-3">
+                    <div
+                        v-for="user in users.data"
+                        :key="'mobile-' + user.id"
+                        class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all"
+                    >
+                        <!-- Card Header: Avatar + Name + Status -->
+                        <div class="flex items-center justify-between px-4 py-4 border-b border-slate-50">
+                            <div class="flex items-center min-w-0 flex-1">
+                                <div
+                                    class="h-10 w-10 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm capitalize"
+                                    :class="getAvatarColor(user.name)"
+                                >
+                                    {{ user.name.charAt(0) }}
+                                </div>
+                                <div class="ml-3 min-w-0 flex-1">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-sm font-black text-slate-800 tracking-tight truncate">{{ user.name }}</span>
+                                        <ShieldCheck v-if="user.is_master" class="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight truncate">{{ user.email }}</div>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0 ml-3">
+                                <div class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-sm"
+                                     :class="user.is_online ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-400 border border-slate-100'">
+                                    <Circle class="w-1.5 h-1.5 mr-1.5 fill-current" />
+                                    {{ user.is_online ? $t('Online') : $t('Offline') }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Body: Details -->
+                        <div class="px-4 py-3 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Last Login') }}</span>
+                                <div class="flex items-center text-slate-600 bg-slate-50/50 px-2.5 py-1 rounded-lg border border-slate-100">
+                                    <Clock class="w-3 h-3 mr-1.5 text-slate-300" />
+                                    <span class="text-[11px] font-black uppercase tracking-tighter">{{ user.last_login }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Last Activity') }}</span>
+                                <div class="flex items-center text-slate-800 bg-slate-50/50 px-2.5 py-1 rounded-lg border border-slate-100">
+                                    <MousePointer2 class="w-3 h-3 mr-1.5 text-slate-400" />
+                                    <span class="text-[11px] font-black uppercase tracking-tighter">{{ user.last_activity }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Email Info -->
+                        <div class="flex items-center justify-between px-4 py-3 bg-slate-50/50 border-t border-slate-100">
+                            <div class="flex flex-col items-start">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $t('Email Notification') }}</span>
+                                <div v-if="user.notified_at" class="inline-flex items-center space-x-1.5 bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg border border-indigo-100">
+                                    <Mail class="w-3 h-3" />
+                                    <span class="text-[10px] font-black uppercase tracking-wider">{{ user.notified_at }}</span>
+                                </div>
+                                <div v-else class="text-[10px] font-bold text-slate-300 italic">---</div>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ $t('Email Interaction') }}</span>
+                                <div v-if="user.clicked_at" class="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg border border-emerald-100">
+                                    <Activity class="w-3 h-3" />
+                                    <span class="text-[10px] font-black uppercase tracking-wider">{{ user.clicked_at }}</span>
+                                </div>
+                                <div v-else class="text-[10px] font-bold text-slate-300 italic">---</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Empty State -->
+                    <div v-if="users.data.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4 text-slate-300">
+                            <Activity class="w-7 h-7" />
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800">{{ $t('No activity found') }}</h3>
+                    </div>
+                </div>
+
+                <!-- 🖥️ DESKTOP: Activity Table (>= lg) -->
+                <div class="hidden lg:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-100">
                             <thead>

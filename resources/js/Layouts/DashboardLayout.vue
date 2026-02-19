@@ -9,6 +9,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import LegalModal from '@/Components/LegalModal.vue';
+import { LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, Settings as SettingsIcon2 } from 'lucide-vue-next';
 
 const page = usePage();
 const user = page.props.auth.user;
@@ -47,10 +48,10 @@ onMounted(() => {
 
 // Custom Navigation Items
 const navItems = [
-    { name: 'Dashboard', route: 'dashboard', active: route().current('dashboard') },
-    { name: 'Users', route: 'admin.users.index', active: route().current('admin.users.*'), masterOnly: true },
-    { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true },
-    { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true },
+    { name: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), icon: LayoutDashboard },
+    { name: 'Users', route: 'admin.users.index', active: route().current('admin.users.*'), masterOnly: true, icon: UsersIcon },
+    { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true, icon: ActivityIcon },
+    { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true, icon: SettingsIcon2 },
 ];
 </script>
 
@@ -113,8 +114,8 @@ const navItems = [
                     </div>
                 </div>
             </header>
-            <!-- SUBMENU (ONLY ON INTERNAL PAGES FOR MASTERS) -->
-            <nav v-if="!route().current('dashboard') && user.is_master" class="bg-white border-b border-slate-200 shadow-sm relative z-40">
+            <!-- SUBMENU DESKTOP (ONLY ON INTERNAL PAGES FOR MASTERS) -->
+            <nav v-if="!route().current('dashboard') && user.is_master" class="hidden md:block bg-white border-b border-slate-200 shadow-sm relative z-40">
                 <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center space-x-1">
                     <template v-for="item in navItems" :key="item.route">
                         <Link
@@ -136,7 +137,7 @@ const navItems = [
             <main class="flex-1 overflow-hidden relative">
                 <!-- Content gets a wrapper now for consistent padding -->
                 <div class="w-full h-full bg-slate-50 overflow-y-auto relative flex flex-col">
-                    <div class="flex-1">
+                    <div class="flex-1" :class="{ 'pb-20 md:pb-0': !route().current('dashboard') && user.is_master }">
                         <slot />
                     </div>
 
@@ -154,6 +155,36 @@ const navItems = [
                     </footer>
                 </div>
             </main>
+
+            <!-- 📱 MOBILE BOTTOM NAV (App-style, only for masters) -->
+            <nav v-if="user.is_master" class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+                <div class="flex items-stretch justify-around px-2 py-1 safe-area-bottom">
+                    <template v-for="item in navItems" :key="'mobile-nav-' + item.route">
+                        <Link
+                            :href="route(item.route)"
+                            class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
+                            :class="item.active
+                                ? 'text-blue-600'
+                                : 'text-slate-400 active:text-slate-600'"
+                        >
+                            <div
+                                class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 transition-all duration-200"
+                                :class="item.active
+                                    ? 'bg-blue-50 scale-105'
+                                    : 'group-active:bg-slate-50'"
+                            >
+                                <component :is="item.icon" class="w-5 h-5 transition-colors" />
+                            </div>
+                            <span
+                                class="text-[9px] font-black uppercase tracking-wider leading-none transition-colors"
+                                :class="item.active ? 'text-blue-600' : 'text-slate-400'"
+                            >
+                                {{ $t(item.name) }}
+                            </span>
+                        </Link>
+                    </template>
+                </div>
+            </nav>
         </div>
 
         <!-- Global Legal Modal -->

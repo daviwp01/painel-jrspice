@@ -56,7 +56,7 @@ const sendTestMail = () => {
 <template>
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
         <!-- Header -->
-        <div class="px-8 py-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="px-4 sm:px-8 py-5 sm:py-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <div class="p-3 bg-blue-100 rounded-xl text-blue-600 shadow-sm">
                     <Mail class="w-6 h-6" />
@@ -68,7 +68,7 @@ const sendTestMail = () => {
             </div>
         </div>
 
-        <form @submit.prevent="submit" class="p-8 space-y-8">
+        <form @submit.prevent="submit" class="p-4 sm:p-8 space-y-8">
             <!-- Server Connection -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
@@ -170,7 +170,7 @@ const sendTestMail = () => {
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-100">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-slate-100">
                 <button
                     type="button"
                     @click="sendTestMail"

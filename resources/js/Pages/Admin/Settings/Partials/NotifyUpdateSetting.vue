@@ -82,7 +82,7 @@ const sendNotification = () => {
 <template>
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
         <!-- Header -->
-        <div class="px-8 py-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="px-4 sm:px-8 py-5 sm:py-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center space-x-4">
                 <div class="p-3 bg-amber-100 rounded-xl text-amber-600 shadow-sm">
                     <Bell class="w-6 h-6" />
@@ -106,7 +106,7 @@ const sendNotification = () => {
             </div>
         </div>
 
-        <div class="p-8 space-y-6">
+        <div class="p-4 sm:p-8 space-y-6">
             <!-- Search and Select All -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div class="relative flex-1 max-w-xl">

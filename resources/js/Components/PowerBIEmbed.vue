@@ -309,7 +309,7 @@ watch(() => props.embedConfig, (newConfig) => {
                         <div class="absolute top-0 right-0 -mt-24 -mr-24 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
                         <div class="absolute bottom-0 left-0 -mb-24 -ml-24 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-                        <div class="max-w-7xl mx-auto w-full z-10 text-white px-12 pb-12">
+                        <div class="max-w-7xl mx-auto w-full z-10 text-white px-4 sm:px-6 lg:px-12 pb-12">
                             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                 <div class="space-y-4">
                                     <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
@@ -363,7 +363,7 @@ watch(() => props.embedConfig, (newConfig) => {
                     </div>
 
                     <!-- Statistics / Quick Access Grid -->
-                    <div class="max-w-7xl mx-auto px-12 -mt-16 pb-24 relative z-10">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-16 pb-24 relative z-10">
 
                         <!-- SKELETON LOADER FOR GRID -->
                         <div v-if="isLoading && pages.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

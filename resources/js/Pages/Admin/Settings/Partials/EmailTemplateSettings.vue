@@ -41,7 +41,7 @@ const submit = () => {
 <template>
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
         <!-- Header -->
-        <div class="px-8 py-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="px-4 sm:px-8 py-5 sm:py-6 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <div class="p-3 bg-indigo-100 rounded-xl text-indigo-600 shadow-sm">
                     <Layout class="w-6 h-6" />
@@ -53,7 +53,7 @@ const submit = () => {
             </div>
         </div>
 
-        <form @submit.prevent="submit" class="p-8 space-y-8">
+        <form @submit.prevent="submit" class="p-4 sm:p-8 space-y-8">
             <div class="grid grid-cols-1 gap-8">
                 <!-- Email Title -->
                 <div class="space-y-2">
