@@ -26,7 +26,7 @@ createInertiaApp({
                     const value = `; ${document.cookie}`;
                     const parts = value.split(`; app_locale=`);
                     if (parts.length === 2) return parts.pop().split(';').shift();
-                    return 'en';
+                    return 'pt_BR';
                 })(),
                 resolve: lang => {
                     const langs = import.meta.glob('../../lang/*.json', { eager: true });
