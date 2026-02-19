@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    ::-webkit-scrollbar {
+        width: 8px; /* Thin but usable */
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-slate-200 rounded-full border-2 border-transparent bg-clip-content;
+        /* Border transparent + bg-clip-content creates padding around the thumb for a 'floating' look */
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-slate-300;
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #e2e8f0 transparent;
+    }
+}
