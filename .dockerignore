@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+vendor
+storage/*.key
+.env
+.env.*
+!.env.example
+docker-compose-dev.yml
+docker/nginx/local.conf
+Makefile
+tests
+phpunit.xml
+README.md
+.gitignore
+.editorconfig
+.gitattributes
