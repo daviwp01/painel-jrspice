@@ -301,14 +301,14 @@ const openWhatsApp = (phone) => {
                         <table class="min-w-full divide-y divide-slate-100">
                             <thead>
                                 <tr class="bg-slate-50/50">
-                                    <th scope="col" class="px-8 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Name') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Company') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Phone') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Role') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Status') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Created at') }}</th>
-                                    <th scope="col" class="px-8 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em] transition-all">{{ $t('Actions') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Name') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Company') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Phone') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Role') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Status') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Created at') }}</th>
+                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em] transition-all">{{ $t('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
@@ -317,10 +317,10 @@ const openWhatsApp = (phone) => {
                                     :key="user.id"
                                     class="hover:bg-indigo-50/20 group transition-all duration-300"
                                 >
-                                    <td class="px-8 py-5 whitespace-nowrap">
-                                        <div class="flex items-center">
+                                    <td class="px-4 py-5 whitespace-nowrap max-w-[220px]">
+                                        <div class="flex items-center min-w-0">
                                             <div
-                                                class="h-12 w-12 rounded-lg border flex items-center justify-center font-black text-sm shadow-sm transition-transform duration-300 group-hover:scale-110"
+                                                class="h-12 w-12 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm transition-transform duration-300 group-hover:scale-110"
                                                 :class="getAvatarColor(user.name)"
                                             >
                                                 {{ user.name.charAt(0).toUpperCase() }}
@@ -330,16 +330,16 @@ const openWhatsApp = (phone) => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap max-w-[200px]">
+                                    <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
                                         <div class="text-sm text-slate-600 font-black tracking-tight truncate" :title="user.company_name">{{ user.company_name || '-' }}</div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap">
-                                        <div class="text-sm text-slate-500 font-bold tracking-tight">{{ user.phone || '-' }}</div>
+                                    <td class="px-4 py-5 whitespace-nowrap text-sm text-slate-500 font-bold tracking-tight">
+                                        {{ user.phone || '-' }}
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap max-w-[200px]">
+                                    <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
                                         <div class="text-sm text-slate-500 font-bold tracking-tight truncate" :title="user.email">{{ user.email }}</div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap text-center">
+                                    <td class="px-4 py-5 whitespace-nowrap text-center">
                                         <div v-if="user.is_master" class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border-2 border-indigo-100/50 shadow-sm">
                                             <ShieldCheck class="w-3 h-3 mr-1.5" />
                                             {{ $t('Master') }}
@@ -348,7 +348,7 @@ const openWhatsApp = (phone) => {
                                             {{ $t('User') }}
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap text-center">
+                                    <td class="px-4 py-5 whitespace-nowrap text-center">
                                         <div class="flex flex-col items-center justify-center space-y-2">
                                             <ToggleSwitch
                                                 :model-value="user.is_active"
@@ -362,12 +362,12 @@ const openWhatsApp = (phone) => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap text-center">
+                                    <td class="px-4 py-5 whitespace-nowrap text-center">
                                         <div class="text-[11px] text-slate-400 font-black uppercase tracking-widest bg-slate-50/50 px-3 py-1 rounded-lg inline-block border border-slate-100">
                                             {{ formatDate(user.created_at) }}
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap text-right font-medium">
+                                    <td class="px-4 py-5 whitespace-nowrap text-center font-medium">
                                         <div class="flex items-center justify-center space-x-1">
                                             <button
                                                 @click="openWhatsApp(user.phone)"
