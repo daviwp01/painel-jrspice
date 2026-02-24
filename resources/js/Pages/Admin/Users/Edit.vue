@@ -178,6 +178,7 @@ const isFormValid = computed(() => {
                                         type="text"
                                         class="block w-full py-4 pl-12 pr-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
                                         v-model="form.company_name"
+                                        @input="form.company_name = form.company_name.replace(/[0-9@]/g, '')"
                                         :placeholder="$t('Company Ltd.')"
                                     />
                                 </div>

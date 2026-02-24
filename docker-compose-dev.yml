@@ -12,7 +12,6 @@ services:
       - db
     networks:
       - appnet
-      - nginx-proxy
     mem_limit: 256M
 
   worker:
@@ -24,13 +23,13 @@ services:
     volumes:
       - ./:/var/www/html
     command: >
-      sh -c "(while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done) & php artisan queue:work --timeout=60 --tries=3 --max-jobs=100 --max-time=3600 --m>
+      sh -c "(while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done) & php artisan queue:work --timeout=60 --tries=3 --max-jobs=100 --max-time=3600 --memory=128"
     depends_on:
       - app
       - db
     networks:
       - appnet
-    mem_limit: 256M
+    mem_limit: 128M
 
   web:
     image: nginx:stable-alpine
@@ -40,16 +39,11 @@ services:
       - app
     volumes:
       - ./:/var/www/html:delegated
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    environment:
-      - VIRTUAL_HOST=painel.jrspice.com
-      - LETSENCRYPT_HOST=painel.jrspice.com
-      - LETSENCRYPT_EMAIL=davi.wordpress@gmail.com
-    expose:
-      - "80"
+      - ./docker/nginx/local.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
     networks:
       - appnet
-      - nginx-proxy
     mem_limit: 64M
 
   db:
@@ -70,9 +64,7 @@ services:
 
 networks:
   appnet:
-    external: true
-  nginx-proxy:
-    external: true
+    driver: bridge
 
 volumes:
   dbdata:

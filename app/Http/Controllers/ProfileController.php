@@ -35,7 +35,9 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . Auth::id()],
             'phone' => ['nullable', 'string', 'max:20'],
-            'company_name' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+        ], [
+            'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
 
         $request->user()->fill($request->only('name', 'email', 'phone', 'company_name'));

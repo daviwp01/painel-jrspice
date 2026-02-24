@@ -85,6 +85,7 @@ const submit = () => {
                             type="text"
                             class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm placeholder-gray-300 transition-all font-medium"
                             v-model="form.company_name"
+                            @input="form.company_name = form.company_name.replace(/[0-9@]/g, '')"
                             :placeholder="$t('Company Ltd.')"
                         />
                         <InputError class="mt-2" :message="form.errors.company_name" />

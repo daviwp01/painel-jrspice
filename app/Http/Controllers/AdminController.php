@@ -153,7 +153,9 @@ class AdminController extends Controller
             'allowed_pages' => ['nullable', 'array'],
             'tenant_id' => ['nullable', 'string'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'company_name' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+        ], [
+            'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
 
         $user = User::create([
@@ -196,7 +198,9 @@ class AdminController extends Controller
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'company_name' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+        ], [
+            'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
 
         if ($user->id === $request->user()->id) {

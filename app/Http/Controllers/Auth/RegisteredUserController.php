@@ -36,7 +36,9 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => 'nullable|string|max:20',
-            'company_name' => 'nullable|string|max:255',
+            'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+        ], [
+            'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
 
         $requiresActivation = Setting::get('registration_requires_activation', false);

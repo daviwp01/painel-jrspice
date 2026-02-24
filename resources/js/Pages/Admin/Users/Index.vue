@@ -325,19 +325,19 @@ const openWhatsApp = (phone) => {
                                             >
                                                 {{ user.name.charAt(0).toUpperCase() }}
                                             </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">{{ user.name }}</div>
+                                            <div class="ml-4 min-w-0">
+                                                <div class="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors truncate" :title="user.name">{{ user.name }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap">
-                                        <div class="text-sm text-slate-600 font-black tracking-tight">{{ user.company_name || '-' }}</div>
+                                    <td class="px-8 py-5 whitespace-nowrap max-w-[200px]">
+                                        <div class="text-sm text-slate-600 font-black tracking-tight truncate" :title="user.company_name">{{ user.company_name || '-' }}</div>
                                     </td>
                                     <td class="px-8 py-5 whitespace-nowrap">
                                         <div class="text-sm text-slate-500 font-bold tracking-tight">{{ user.phone || '-' }}</div>
                                     </td>
-                                    <td class="px-8 py-5 whitespace-nowrap">
-                                        <div class="text-sm text-slate-500 font-bold tracking-tight">{{ user.email }}</div>
+                                    <td class="px-8 py-5 whitespace-nowrap max-w-[200px]">
+                                        <div class="text-sm text-slate-500 font-bold tracking-tight truncate" :title="user.email">{{ user.email }}</div>
                                     </td>
                                     <td class="px-8 py-5 whitespace-nowrap text-center">
                                         <div v-if="user.is_master" class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border-2 border-indigo-100/50 shadow-sm">
