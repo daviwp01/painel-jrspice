@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         // --------------------------------------------------------
         // FORÇAR HTTPS EM PRODUÇÃO
         // --------------------------------------------------------
-        if (app()->environment('production')) {
+        if (app()->environment('production') || app()->isProduction() || !app()->environment('local')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     }
