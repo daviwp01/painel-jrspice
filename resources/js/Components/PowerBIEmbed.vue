@@ -41,15 +41,20 @@ const filteredPages = computed(() => {
         // HIDE HOME PAGE from the list (it is accessed via Overview button)
         if (displayName.includes('HOME')) return false;
 
-        // PERMISSION CHECK
+        // STRICT DEVICE FILTERING
         if (!user.value.is_master) {
             const allowed = Array.isArray(user.value.allowed_pages) ? user.value.allowed_pages : [];
-            const isDefault = onMobile
-                ? mobileLinks.includes(page.name)
-                : desktopLinks.includes(page.name);
 
-            // User sees it if it's a global default for their device OR explicitly allowed
-            if (!isDefault && !allowed.includes(page.name)) return false;
+            if (onMobile) {
+                // If on mobile, ONLY show if it's in the global mobile links AND the user has permission
+                if (!mobileLinks.includes(page.name)) return false;
+            } else {
+                // If on desktop, ONLY show if it's in the global desktop links AND the user has permission
+                if (!desktopLinks.includes(page.name)) return false;
+            }
+
+            // Finally, check if the specific user has this page allowed (either by default or manual)
+            if (!allowed.includes(page.name)) return false;
         }
 
         return true;
