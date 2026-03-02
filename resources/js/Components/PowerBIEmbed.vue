@@ -26,13 +26,32 @@ const isMounted = ref(false);
 const isRefreshing = ref(false);
 let report = null;
 
+const isMobile = computed(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+});
+
 const filteredPages = computed(() => {
+    const mobileLinks = usePage().props.settings.mobile_user_pages || [];
+    const desktopLinks = usePage().props.settings.desktop_user_pages || [];
+    const onMobile = isMobile.value;
+
     let list = pages.value.filter(page => {
         const displayName = (page.displayName || '').toUpperCase();
         // HIDE HOME PAGE from the list (it is accessed via Overview button)
         if (displayName.includes('HOME')) return false;
 
-        // PERMISSION CHECK
+        // DEVICE FILTER
+        // Skip device filtering for Master users - they see everything.
+        if (!user.value.is_master) {
+            if (onMobile) {
+                if (!mobileLinks.includes(page.name)) return false;
+            } else {
+                if (!desktopLinks.includes(page.name)) return false;
+            }
+        }
+
+        // PERMISSION CHECK (redundant for master but kept for safety)
         if (!user.value.is_master) {
             const allowed = user.value.allowed_pages || [];
             if (!allowed.includes(page.name)) return false;

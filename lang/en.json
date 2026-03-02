@@ -119,5 +119,9 @@
   "Our commitment to you": "Our commitment to you",
   "Content not available": "Content not available",
   "The administration team is currently updating this document.": "The administration team is currently updating this document.",
-  "Close window": "Close window"
+  "Close window": "Close window",
+  "Mobile Links": "Mobile Links",
+  "Define which reports will be visible on mobile devices (Android/iOS).": "Define which reports will be visible on mobile devices (Android/iOS).",
+  "Desktop Links": "Desktop Links",
+  "Define which reports will be visible on Desktop computers.": "Define which reports will be visible on Desktop computers."
 }

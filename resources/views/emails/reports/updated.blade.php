@@ -1,11 +1,7 @@
 @component('mail::message')
-<div style="text-align: center; margin-bottom: 30px;">
-    <img src="http://painel.jrspice.com/logo-black.png" alt="{{ config('app.name') }}" style="height: 60px; width: auto;">
-</div>
-
 # {{ $customTitle }}
 
-{{ __('Hello') }}, {{ $user->name }}
+{{ __('Hello') }}, {{ trim(explode(' ', str_replace(',', ' ', $user->name))[0]) }}
 
 {{ $customIntro }}
 

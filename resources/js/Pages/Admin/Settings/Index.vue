@@ -4,6 +4,8 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import UserActivationSetting from './Partials/UserActivationSetting.vue';
 import DefaultPagesSetting from './Partials/DefaultPagesSetting.vue';
+import DesktopLinksSetting from './Partials/DesktopLinksSetting.vue';
+import MobileLinksSetting from './Partials/MobileLinksSetting.vue';
 import NotifyUpdateSetting from './Partials/NotifyUpdateSetting.vue';
 import SMTPSettings from './Partials/SMTPSettings.vue';
 import EmailTemplateSettings from './Partials/EmailTemplateSettings.vue';
@@ -77,11 +79,21 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Landing Pages') }}</span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Desktop Links') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
-                            <DefaultPagesSetting
-                                :initial-default-pages="settings.default_user_pages || []"
+                            <DesktopLinksSetting
+                                :initial-desktop-pages="settings.desktop_user_pages || []"
+                            />
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-2 px-1">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Mobile Links') }}</span>
+                                <div class="h-px flex-1 bg-slate-200"></div>
+                            </div>
+                            <MobileLinksSetting
+                                :initial-mobile-pages="settings.mobile_user_pages || []"
                             />
                         </div>
                     </div>

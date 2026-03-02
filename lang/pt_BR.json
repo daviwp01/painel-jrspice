@@ -256,5 +256,9 @@
   "passwords.token": "Este token de redefinição de senha é inválido.",
   "passwords.user": "Não conseguimos encontrar um usuário com esse endereço de e-mail.",
   "This account is inactive. Please contact an administrator.": "Esta conta está inativa. Por favor, entre em contato com um administrador.",
-  "We encountered a problem sending the reset link. Please try again later or contact support.": "Encontramos um problema ao enviar o link de redefinição. Por favor, tente novamente mais tarde ou entre em contato com o suporte."
+  "We encountered a problem sending the reset link. Please try again later or contact support.": "Encontramos um problema ao enviar o link de redefinição. Por favor, tente novamente mais tarde ou entre em contato com o suporte.",
+  "Mobile Links": "Links Mobile",
+  "Define which reports will be visible on mobile devices (Android/iOS).": "Defina quais relatórios serão visíveis em dispositivos móveis (Android/iOS).",
+  "Desktop Links": "Links Desktop",
+  "Define which reports will be visible on Desktop computers.": "Defina quais relatórios serão visíveis em computadores Desktop."
 }

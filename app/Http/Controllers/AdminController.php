@@ -36,7 +36,7 @@ class AdminController extends Controller
         }
 
         return \Inertia\Inertia::render('Admin/Users/Index', [
-            'users' => $query->get(),
+            'users' => $query->paginate(12)->withQueryString(),
             'filters' => $request->only(['search', 'status']),
             'total_users' => User::count(),
             'active_users' => User::where('is_active', true)->count()
@@ -98,8 +98,12 @@ class AdminController extends Controller
      */
     public function usersCreate()
     {
+        $desktopPages = \App\Models\Setting::get('desktop_user_pages', []);
+        $mobilePages = \App\Models\Setting::get('mobile_user_pages', []);
+        $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
+
         return \Inertia\Inertia::render('Admin/Users/Create', [
-            'default_pages' => \App\Models\Setting::get('default_user_pages', [])
+            'default_pages' => $mergedPages
         ]);
     }
 

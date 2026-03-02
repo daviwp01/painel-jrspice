@@ -7,9 +7,10 @@ import { router } from '@inertiajs/vue3';
 import { Trash2, Edit2, UserPlus, ShieldCheck, Search, Users, UserCheck, Filter, CheckCircle, MessageCircle } from 'lucide-vue-next';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
+import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
-    users: Array,
+    users: Object, // Paginated object
     active_users: Number,
     total_users: Number,
     filters: Object,
@@ -74,7 +75,7 @@ const toggleUserStatus = (user) => {
 };
 
 const activateAllListed = () => {
-    const inactiveIds = props.users
+    const inactiveIds = props.users.data
         .filter(u => !u.is_active)
         .map(u => u.id);
 
@@ -184,7 +185,7 @@ const openWhatsApp = (phone) => {
                     </div>
 
                     <!-- Bulk Actions -->
-                    <div v-if="statusFilter === 'inactive' && users.length > 0" class="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div v-if="statusFilter === 'inactive' && users.data.length > 0" class="animate-in fade-in slide-in-from-right-4 duration-300">
                         <PrimaryButton
                             @click="activateAllListed"
                             class="px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl bg-emerald-600 shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98] border-none"
@@ -198,7 +199,7 @@ const openWhatsApp = (phone) => {
                 <!-- 📱 MOBILE: User Cards (< lg) -->
                 <div class="lg:hidden space-y-3">
                     <div
-                        v-for="user in users"
+                        v-for="user in users.data"
                         :key="'mobile-' + user.id"
                         class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all active:scale-[0.99]"
                     >
@@ -286,7 +287,7 @@ const openWhatsApp = (phone) => {
                     </div>
 
                     <!-- Mobile Empty State -->
-                    <div v-if="users.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
+                    <div v-if="users.data.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
                         <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
                             <Search class="w-7 h-7 text-slate-300" />
                         </div>
@@ -313,7 +314,7 @@ const openWhatsApp = (phone) => {
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <tr
-                                    v-for="user in users"
+                                    v-for="user in users.data"
                                     :key="user.id"
                                     class="hover:bg-indigo-50/20 group transition-all duration-300"
                                 >
@@ -398,7 +399,7 @@ const openWhatsApp = (phone) => {
                                     </td>
                                 </tr>
                                 <!-- Empty State -->
-                                <tr v-if="users.length === 0">
+                                <tr v-if="users.data.length === 0">
                                     <td colspan="8" class="px-8 py-20 text-center">
                                         <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
                                             <Search class="w-8 h-8 text-slate-300" />
@@ -410,6 +411,11 @@ const openWhatsApp = (phone) => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-8 flex justify-center">
+                    <Pagination :links="users.links" />
                 </div>
             </div>
         </div>
