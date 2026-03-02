@@ -25,6 +25,14 @@ const props = defineProps({
     default_pages: {
         type: Array,
         default: () => []
+    },
+    desktop_pages: {
+        type: Array,
+        default: () => []
+    },
+    mobile_pages: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -36,7 +44,7 @@ const form = useForm({
     phone: '',
     company_name: '',
     is_master: false,
-    allowed_pages: props.default_pages || [],
+    allowed_pages: Array.isArray(props.default_pages) ? props.default_pages : [],
 });
 
 const availablePages = ref([]);
@@ -287,7 +295,7 @@ const isFormValid = computed(() => {
 
                                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div
-                                        v-for="page in availablePages.filter(p => !p.displayName.toUpperCase().includes('HOME'))"
+                                        v-for="page in availablePages.filter(p => !(p.displayName || '').toUpperCase().includes('HOME'))"
                                         :key="page.name"
                                         @click="togglePageAccess(page.name)"
                                         class="relative flex items-center p-4 rounded-xl border-2 transition-all cursor-pointer group hover:shadow-sm"
@@ -300,6 +308,14 @@ const isFormValid = computed(() => {
                                             <p class="text-xs font-black text-slate-800 truncate uppercase tracking-tight group-hover:text-indigo-700 transition-colors">
                                                 {{ page.displayName.replace(/_/g, ' ') }}
                                             </p>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                <span v-if="desktop_pages.includes(page.name)" class="text-[8px] font-black uppercase tracking-tighter bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">
+                                                    Desktop
+                                                </span>
+                                                <span v-if="mobile_pages.includes(page.name)" class="text-[8px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100">
+                                                    Mobile
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="ml-2">
                                             <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="form.allowed_pages.includes(page.name) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200'">

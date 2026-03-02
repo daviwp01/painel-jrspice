@@ -103,7 +103,9 @@ class AdminController extends Controller
         $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
 
         return \Inertia\Inertia::render('Admin/Users/Create', [
-            'default_pages' => $mergedPages
+            'default_pages' => array_values($mergedPages),
+            'desktop_pages' => array_values($desktopPages),
+            'mobile_pages' => array_values($mobilePages)
         ]);
     }
 
@@ -184,8 +186,15 @@ class AdminController extends Controller
      */
     public function usersEdit(User $user)
     {
+        $desktopPages = \App\Models\Setting::get('desktop_user_pages', []);
+        $mobilePages = \App\Models\Setting::get('mobile_user_pages', []);
+        $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
+
         return \Inertia\Inertia::render('Admin/Users/Edit', [
-            'user' => $user
+            'user' => $user,
+            'default_pages' => array_values($mergedPages),
+            'desktop_pages' => array_values($desktopPages),
+            'mobile_pages' => array_values($mobilePages)
         ]);
     }
 

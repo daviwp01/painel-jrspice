@@ -55,7 +55,7 @@ class RegisteredUserController extends Controller
             'phone' => $request->phone,
             'company_name' => $request->company_name,
             'is_active' => !$requiresActivation,
-            'allowed_pages' => $mergedPages,
+            'allowed_pages' => array_values($mergedPages),
         ]);
 
         event(new Registered($user));
