@@ -21,7 +21,7 @@ defineProps(['embedConfig']);
 
             <!-- Master Activity Card -->
             <div v-if="$page.props.auth.user.is_master"
-                 class="absolute bottom-6 right-6 z-[60] group">
+                 class="hidden md:block absolute bottom-6 right-6 z-[60] group">
                 <Link :href="route('admin.activity.index')"
                       class="flex items-center space-x-4 bg-slate-900/90 backdrop-blur-md text-white p-2 pl-5 rounded-2xl shadow-2xl border border-slate-700/50 hover:bg-slate-900 transition-all hover:scale-[1.02] active:scale-[0.98]">
                     <div class="flex flex-col">

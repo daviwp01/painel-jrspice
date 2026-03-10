@@ -136,7 +136,7 @@ const navItems = computed(() => [
             <main class="flex-1 overflow-hidden relative">
                 <!-- Content gets a wrapper now for consistent padding -->
                 <div class="w-full h-full bg-slate-50 overflow-y-auto relative flex flex-col">
-                    <div class="flex-1" :class="{ 'pb-24 md:pb-0': true }">
+                    <div class="flex-1" :class="{ 'md:pb-0': true }">
                         <slot />
                     </div>
 
@@ -172,7 +172,7 @@ const navItems = computed(() => [
             <div class="flex items-stretch justify-around px-2 py-1 safe-area-bottom">
                 <template v-for="item in navItems" :key="'mobile-nav-' + item.route">
                     <Link
-                        v-if="!item.masterOnly || user?.is_master"
+                        v-if="(!item.masterOnly || user?.is_master)"
                         :href="route(item.route)"
                         class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
                         :class="item.active

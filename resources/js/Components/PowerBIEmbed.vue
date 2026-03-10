@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, watch, computed } from 'vue';
 import * as pbi from 'powerbi-client';
-import { BarChart3, Mail, LayoutDashboard, Loader2, Clock, Layout, RefreshCw } from 'lucide-vue-next';
+import { BarChart3, Mail, LayoutDashboard, Loader2, Clock, Layout, RefreshCw, ChevronDown } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -25,6 +25,10 @@ const pendingPage = ref(null);
 const isMounted = ref(false);
 const isRefreshing = ref(false);
 let report = null;
+const isNavOpen = ref(false);
+
+const closeNav = () => { isNavOpen.value = false; };
+const toggleNav = () => { isNavOpen.value = !isNavOpen.value; };
 
 const isMobile = computed(() => {
     if (typeof navigator === 'undefined') return false;
@@ -197,14 +201,12 @@ const setActivePage = async (page) => {
     }
 
     try {
+        // ⚡ SET IMMEDIATELY for instant UI feedback — don't wait for SDK
+        activePage.value = page.name;
         isLoading.value = true;
 
-        // Use the SDK's setPage method which accepts the unique page name (ReportSection...)
+        // Navigate the embedded report in parallel (UI already transitioned)
         await report.setPage(page.name);
-
-        // Component state will be updated by the 'pageChanged' event listener automatically,
-        // but we set it here as well for immediate UI feedback.
-        activePage.value = page.name;
 
         isLoading.value = false;
     } catch (e) {
@@ -269,46 +271,100 @@ watch(() => props.embedConfig, (newConfig) => {
         <!-- 🚀 CONTENT AREA -->
         <main class="flex-1 relative flex flex-col overflow-hidden bg-slate-50">
 
-            <!-- 🧭 TOP NAVIGATION BAR (Visible only in Report Mode) -->
+            <!-- 🧭 TOP NAVIGATION BAR (Desktop only — hidden on mobile) -->
             <transition name="fade-slide">
-                <div v-if="activePage !== 'system_home'" class="w-full bg-white border-b border-slate-200 shadow-sm z-30 flex items-center px-4 py-3 space-x-4">
+                <div v-if="activePage !== 'system_home'" class="hidden md:flex w-full bg-white border-b border-slate-200 shadow-sm z-30 items-center px-4 py-2.5 gap-3">
 
-                    <!-- Back to Home -->
+                    <!-- Back to Overview -->
                     <button
                         @click="goToSystemHome"
-                        class="flex items-center px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 transition-all font-bold text-sm mr-2 group border border-transparent hover:border-slate-200"
-                        :title="$t('Voltar para Visão Geral')"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 transition-all font-bold text-sm group border border-transparent hover:border-slate-200 flex-shrink-0"
                     >
-                        <LayoutDashboard class="w-5 h-5 mr-2 text-slate-400 group-hover:text-blue-600 transition-colors" />
-                        <span class="hidden md:inline">{{ $t('Overview') }}</span>
+                        <LayoutDashboard class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                        <span>{{ $t('Overview') }}</span>
                     </button>
 
-                    <div class="h-8 w-px bg-slate-200 mx-2"></div>
+                    <div class="h-6 w-px bg-slate-200 flex-shrink-0"></div>
 
-                    <!-- Horizontal Scrollable Tabs (Segmented Control Style) -->
-                    <div class="flex-1 flex items-center overflow-x-auto no-scrollbar mask-gradient py-1">
-                        <div class="flex items-center space-x-1 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60">
-                            <button
-                                v-for="page in filteredPages"
-                                :key="page.name"
-                                @click="setActivePage(page)"
-                                class="flex items-center px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200"
-                                :class="activePage === page.name
-                                    ? 'bg-white text-blue-700 shadow-sm ring-1 ring-black/5 scale-[1.02]'
-                                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'"
+                    <!-- 🎯 DROPDOWN NAVIGATOR -->
+                    <div class="relative flex-1">
+
+                        <!-- Invisible overlay to close on outside click -->
+                        <div
+                            v-if="isNavOpen"
+                            class="fixed inset-0 z-40"
+                            @click="closeNav"
+                        ></div>
+
+                        <!-- Trigger -->
+                        <button
+                            @click="toggleNav"
+                            class="w-full flex items-center gap-3 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all text-left group relative z-50"
+                        >
+                            <component
+                                :is="getPageIcon(filteredPages.find(p => p.name === activePage)?.displayName)"
+                                class="w-4 h-4 text-blue-600 flex-shrink-0"
+                            />
+                            <span class="flex-1 text-sm font-bold text-slate-800 truncate">
+                                {{ filteredPages.find(p => p.name === activePage)?.displayName?.replace(/_/g, ' ') || $t('Select Report') }}
+                            </span>
+                            <ChevronDown
+                                class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                                :class="isNavOpen ? 'rotate-180' : ''"
+                            />
+                        </button>
+
+                        <!-- Dropdown List -->
+                        <transition name="dropdown">
+                            <div
+                                v-if="isNavOpen"
+                                class="absolute top-full left-0 mt-1.5 w-full min-w-[260px] max-w-md bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
                             >
-                                <component :is="getPageIcon(page.displayName)" class="w-4 h-4 mr-2" :class="activePage === page.name ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'" />
-                                {{ page.displayName.replace(/_/g, ' ') }}
-                            </button>
-                        </div>
+                                <div class="p-1.5 max-h-72 overflow-y-auto">
+                                    <button
+                                        v-for="page in filteredPages"
+                                        :key="page.name"
+                                        @click="() => { setActivePage(page); closeNav(); }"
+                                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all text-left"
+                                        :class="activePage === page.name
+                                            ? 'bg-blue-50 text-blue-700'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                                    >
+                                        <component
+                                            :is="getPageIcon(page.displayName)"
+                                            class="w-4 h-4 flex-shrink-0"
+                                            :class="activePage === page.name ? 'text-blue-600' : 'text-slate-400'"
+                                        />
+                                        {{ page.displayName.replace(/_/g, ' ') }}
+                                        <span v-if="activePage === page.name" class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </transition>
                     </div>
 
-                    <!-- Loading Indicator Link (Hidden when overlay is on) -->
-                    <div v-if="isLoading && activePage !== 'system_home'" class="ml-4 flex items-center text-xs text-blue-600 font-bold">
+                    <!-- Loading Indicator -->
+                    <div v-if="isLoading" class="flex items-center text-blue-600 font-bold flex-shrink-0">
                         <Loader2 class="w-4 h-4 animate-spin" />
                     </div>
                 </div>
             </transition>
+
+            <!-- 📱 MOBILE BACK BAR (sub-header simples, só no mobile) -->
+            <div
+                v-if="activePage !== 'system_home'"
+                class="flex md:hidden w-full items-center bg-white border-b border-slate-100 px-4 py-2.5 z-30"
+            >
+                <button
+                    @click="goToSystemHome"
+                    class="flex items-center gap-2 text-slate-600 active:text-blue-700 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span class="text-sm font-semibold">{{ $t('Home') }}</span>
+                </button>
+            </div>
 
             <!-- 🏠 PREMIUM LANDING PAGE (SYSTEM HOME) -->
             <transition name="fade-slide">
@@ -382,7 +438,7 @@ watch(() => props.embedConfig, (newConfig) => {
                     </div>
 
                     <!-- Statistics / Quick Access Grid -->
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-16 pb-24 relative z-10">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-16 pb-20 md:pb-8 relative z-10">
 
                         <!-- SKELETON LOADER FOR GRID -->
                         <div v-if="isLoading && pages.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -482,7 +538,7 @@ watch(() => props.embedConfig, (newConfig) => {
                 v-if="embedConfig"
                 ref="reportContainer"
                 class="flex-1 w-full h-full relative bg-white"
-                :class="activePage === 'system_home' ? 'pointer-events-none opacity-0 h-0 hidden' : 'opacity-100 h-full w-full block transition-opacity duration-700'"
+                :class="activePage === 'system_home' ? 'pointer-events-none opacity-0 h-0 hidden' : 'opacity-100 h-full w-full block transition-opacity duration-200'"
             ></div>
         </main>
     </div>
@@ -531,10 +587,14 @@ iframe {
 </style>
 
 <style scoped>
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-slide-enter-from { opacity: 0; transform: translateY(20px); }
 .fade-slide-leave-to { opacity: 0; transform: translateY(-20px); }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.dropdown-enter-active, .dropdown-leave-active { transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1); }
+.dropdown-enter-from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+.dropdown-leave-to { opacity: 0; transform: translateY(-6px) scale(0.98); }
 </style>
