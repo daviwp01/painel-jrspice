@@ -478,9 +478,44 @@ watch(() => props.embedConfig, (newConfig) => {
                                     </p>
                                 </div>
 
+                                <div class="flex items-center space-x-4">
+                                    <!-- Connection Status (Real-time check) -->
+                                    <div class="hidden sm:flex items-center px-4 py-2.5 border rounded-xl backdrop-blur-md"
+                                         :class="(props.embedConfig?.is_available !== false || !user?.is_master) ? 'bg-green-500/10 border-green-500/20' : 'bg-rose-500/10 border-rose-500/20'">
+
+                                        <div class="relative flex h-2 w-2 mr-3">
+                                            <span v-if="props.embedConfig?.is_available !== false || !user?.is_master" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2"
+                                                  :class="(props.embedConfig?.is_available !== false || !user?.is_master) ? 'bg-green-500' : 'bg-rose-500'"></span>
+                                        </div>
+
+                                        <div class="flex flex-col">
+                                            <span class="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5"
+                                                  :class="(props.embedConfig?.is_available !== false || !user?.is_master) ? 'text-green-400' : 'text-rose-400'">
+                                                {{ (props.embedConfig?.is_available !== false || !user?.is_master) ? $t('System Online') : $t('System Offline') }}
+                                            </span>
+                                            <span class="text-[8px] font-medium uppercase tracking-tighter leading-none"
+                                                  :class="(props.embedConfig?.is_available !== false || !user?.is_master) ? 'text-green-500/70' : 'text-rose-500/70'">
+                                                {{ (props.embedConfig?.is_available !== false || !user?.is_master) ? $t('Service Connection') : $t('Service Unavailable') }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        @click="refreshDashboard"
+                                        :disabled="isRefreshing"
+                                        class="flex items-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/20 rounded-xl transition-all duration-300 group backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <RefreshCw
+                                            class="w-4 h-4 text-blue-400 group-hover:rotate-180 transition-transform duration-700"
+                                            :class="{ 'animate-spin': isRefreshing }"
+                                        />
+                                        <span class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('Refresh Report') }}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
                     <!-- Statistics / Quick Access Grid -->
                     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 md:pb-8 relative z-10">
