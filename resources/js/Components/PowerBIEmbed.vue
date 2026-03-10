@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import * as pbi from 'powerbi-client';
 import { BarChart3, Mail, LayoutDashboard, Loader2, Clock, Layout, RefreshCw, ChevronDown } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
@@ -25,6 +25,7 @@ const pendingPage = ref(null);
 const isMounted = ref(false);
 const isRefreshing = ref(false);
 let report = null;
+let isReportLoaded = false;
 const isNavOpen = ref(false);
 
 const closeNav = () => { isNavOpen.value = false; };
@@ -45,20 +46,20 @@ const filteredPages = computed(() => {
         // HIDE HOME PAGE from the list (it is accessed via Overview button)
         if (displayName.includes('HOME')) return false;
 
-        // STRICT DEVICE FILTERING
         if (!user.value.is_master) {
+            // Non-masters: strict device + individual permission filtering
             const allowed = Array.isArray(user.value.allowed_pages) ? user.value.allowed_pages : [];
 
             if (onMobile) {
-                // If on mobile, ONLY show if it's in the global mobile links AND the user has permission
                 if (!mobileLinks.includes(page.name)) return false;
             } else {
-                // If on desktop, ONLY show if it's in the global desktop links AND the user has permission
                 if (!desktopLinks.includes(page.name)) return false;
             }
 
-            // Finally, check if the specific user has this page allowed (either by default or manual)
             if (!allowed.includes(page.name)) return false;
+        } else {
+            // Masters: see ALL pages regardless of device
+            return true;
         }
 
         return true;
@@ -73,7 +74,7 @@ const filteredPages = computed(() => {
 
         if (isContactA && !isContactB) return 1;
         if (!isContactA && isContactB) return -1;
-        return 0; // Maintain original order otherwise
+        return 0;
     });
 });
 
@@ -134,11 +135,13 @@ const embedReport = async () => {
         report = powerbi.embed(reportContainer.value, config);
 
         report.on('loaded', async () => {
+             isReportLoaded = true; // ✅ Mark report as ready for navigation
+
              // 1. If fast REST API failed or is slow, use SDK pages as fallback
              if (!pages.value || pages.value.length === 0) {
                  try {
                      pages.value = await report.getPages();
-                 } catch (e) { console.error("SDK getPages failed", e); }
+                 } catch (e) { /* silent fail */ }
              }
 
              // 2. Initial Page Check (Force System Home if default is HOME)
@@ -185,17 +188,17 @@ const embedReport = async () => {
         });
 
     } catch (error) {
-        console.error('PowerBI: Connection Error', error);
+        // Connection error
     }
 };
 
 const goToSystemHome = () => { activePage.value = 'system_home'; };
 
 const setActivePage = async (page) => {
-    if (!report) {
-        // Queue navigation for when the report is ready
+    if (!report || !isReportLoaded) {
+        // Report not ready yet — queue navigation for when 'loaded' fires
         pendingPage.value = page;
-        activePage.value = page.name; // Visual feedback
+        activePage.value = page.name; // Visual feedback immediately
         isLoading.value = true;
         return;
     }
@@ -210,7 +213,6 @@ const setActivePage = async (page) => {
 
         isLoading.value = false;
     } catch (e) {
-        console.error("Navigation error:", e);
         isLoading.value = false;
     }
 };
@@ -248,13 +250,52 @@ onMounted(async () => {
     isMounted.value = true;
     embedReport();
 
+    // Listener para botão "Relatórios" do bottom nav mobile
+    const handleOpenReportsNav = () => {
+        if (activePage.value === 'system_home') {
+            // Na home: vai para o primeiro relatório e abre o dropdown
+            const first = filteredPages.value[0];
+            if (first) {
+                setActivePage(first);
+                // Aguarda o DOM atualizar antes de abrir o dropdown
+                setTimeout(() => {
+                    isNavOpen.value = true;
+                }, 100);
+            }
+        } else {
+            // Já em um relatório: basta abrir/fechar o dropdown
+            toggleNav();
+        }
+    };
+    window.addEventListener('open-reports-nav', handleOpenReportsNav);
+    // Guardar referência para cleanup
+    window._openReportsNavHandler = handleOpenReportsNav;
+
     // 🚀 NEW: FAST PAGE LOADING
     // Fetch pages from REST API immediately instead of waiting for heavy SDK embed
     try {
         const response = await axios.get(route('powerbi.pages'));
         pages.value = response.data;
+
+        // Verificar se foi solicitado abrir a navegação (vindo de outra página como Perfil)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('open_nav') === '1') {
+            handleOpenReportsNav();
+
+            // Limpar URL
+            const url = new URL(window.location);
+            url.searchParams.delete('open_nav');
+            window.history.replaceState({}, '', url);
+        }
     } catch (e) {
-        console.error("Failed to fetch pages via REST API", e);
+        // Failed to fetch pages via REST API
+    }
+});
+
+onUnmounted(() => {
+    if (window._openReportsNavHandler) {
+        window.removeEventListener('open-reports-nav', window._openReportsNavHandler);
+        delete window._openReportsNavHandler;
     }
 });
 
@@ -350,20 +391,59 @@ watch(() => props.embedConfig, (newConfig) => {
                 </div>
             </transition>
 
-            <!-- 📱 MOBILE BACK BAR (sub-header simples, só no mobile) -->
+            <!-- 📱 MOBILE NAV BAR (só no mobile, com dropdown de navegação) -->
             <div
                 v-if="activePage !== 'system_home'"
-                class="flex md:hidden w-full items-center bg-white border-b border-slate-100 px-4 py-2.5 z-30"
+                class="flex md:hidden w-full items-center bg-white border-b border-slate-100 px-3 py-2 z-30 gap-2"
             >
-                <button
-                    @click="goToSystemHome"
-                    class="flex items-center gap-2 text-slate-600 active:text-blue-700 transition-colors"
-                >
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    <span class="text-sm font-semibold">{{ $t('Home') }}</span>
-                </button>
+                <!-- Dropdown de navegação -->
+                <div class="relative flex-1">
+                    <div v-if="isNavOpen" class="fixed inset-0 z-40" @click="closeNav"></div>
+
+                    <button
+                        @click="toggleNav"
+                        class="w-full flex items-center gap-2 px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-left relative z-50 active:bg-slate-100"
+                    >
+                        <component
+                            :is="getPageIcon(filteredPages.find(p => p.name === activePage)?.displayName)"
+                            class="w-4 h-4 text-blue-600 flex-shrink-0"
+                        />
+                        <span class="flex-1 text-sm font-bold text-slate-800 truncate">
+                            {{ filteredPages.find(p => p.name === activePage)?.displayName?.replace(/_/g, ' ') || $t('Select Report') }}
+                        </span>
+                        <ChevronDown
+                            class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+                            :class="isNavOpen ? 'rotate-180' : ''"
+                        />
+                    </button>
+
+                    <transition name="dropdown">
+                        <div
+                            v-if="isNavOpen"
+                            class="absolute top-full left-0 mt-1.5 w-full min-w-[220px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                        >
+                            <div class="p-1.5 max-h-60 overflow-y-auto">
+                                <button
+                                    v-for="page in filteredPages"
+                                    :key="page.name"
+                                    @click="() => { setActivePage(page); closeNav(); }"
+                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all text-left"
+                                    :class="activePage === page.name ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'"
+                                >
+                                    <component
+                                        :is="getPageIcon(page.displayName)"
+                                        class="w-4 h-4 flex-shrink-0"
+                                        :class="activePage === page.name ? 'text-blue-600' : 'text-slate-400'"
+                                    />
+                                    {{ page.displayName.replace(/_/g, ' ') }}
+                                    <span v-if="activePage === page.name" class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+
+                <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" />
             </div>
 
             <!-- 🏠 PREMIUM LANDING PAGE (SYSTEM HOME) -->
@@ -384,7 +464,7 @@ watch(() => props.embedConfig, (newConfig) => {
                         <div class="absolute top-0 right-0 -mt-24 -mr-24 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
                         <div class="absolute bottom-0 left-0 -mb-24 -ml-24 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-                        <div class="max-w-7xl mx-auto w-full z-10 text-white px-4 sm:px-6 lg:px-12 pb-12">
+                        <div class="max-w-[1600px] mx-auto w-full z-10 text-white px-4 sm:px-6 lg:px-8 pb-12">
                             <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                 <div class="space-y-4">
                                     <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm">
@@ -398,47 +478,12 @@ watch(() => props.embedConfig, (newConfig) => {
                                     </p>
                                 </div>
 
-                                <div class="flex items-center space-x-4">
-                                <!-- Connection Status (Real-time check) -->
-                                <div class="hidden sm:flex items-center px-4 py-2.5 border rounded-xl backdrop-blur-md"
-                                     :class="props.embedConfig?.is_available !== false ? 'bg-green-500/10 border-green-500/20' : 'bg-rose-500/10 border-rose-500/20'">
-
-                                    <div class="relative flex h-2 w-2 mr-3">
-                                        <span v-if="props.embedConfig?.is_available !== false" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2"
-                                              :class="props.embedConfig?.is_available !== false ? 'bg-green-500' : 'bg-rose-500'"></span>
-                                    </div>
-
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5"
-                                              :class="props.embedConfig?.is_available !== false ? 'text-green-400' : 'text-rose-400'">
-                                            {{ props.embedConfig?.is_available !== false ? $t('System Online') : $t('System Offline') }}
-                                        </span>
-                                        <span class="text-[8px] font-medium uppercase tracking-tighter leading-none"
-                                              :class="props.embedConfig?.is_available !== false ? 'text-green-500/70' : 'text-rose-500/70'">
-                                            {{ props.embedConfig?.is_available !== false ? $t('Service Connection') : $t('Service Unavailable') }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                    <button
-                                        @click="refreshDashboard"
-                                        :disabled="isRefreshing"
-                                        class="flex items-center space-x-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/20 rounded-xl transition-all duration-300 group backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <RefreshCw
-                                            class="w-4 h-4 text-blue-400 group-hover:rotate-180 transition-transform duration-700"
-                                            :class="{ 'animate-spin': isRefreshing }"
-                                        />
-                                        <span class="text-xs font-bold text-white uppercase tracking-wider">{{ $t('Refresh Report') }}</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
                     <!-- Statistics / Quick Access Grid -->
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 -mt-16 pb-20 md:pb-8 relative z-10">
+                    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 md:pb-8 relative z-10">
 
                         <!-- SKELETON LOADER FOR GRID -->
                         <div v-if="isLoading && pages.length === 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

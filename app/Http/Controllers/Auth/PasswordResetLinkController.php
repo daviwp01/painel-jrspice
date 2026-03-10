@@ -64,9 +64,7 @@ class PasswordResetLinkController extends Controller
                 'email' => [trans($status)],
             ]);
         } catch (\Exception $e) {
-            // Log the error for the admin but show a friendly message to the user
-            \Illuminate\Support\Facades\Log::error('Password reset mail failure: ' . $e->getMessage());
-
+            // Friendly message to the user
             throw ValidationException::withMessages([
                 'email' => [__('We encountered a problem sending the reset link. Please try again later or contact support.')],
             ]);

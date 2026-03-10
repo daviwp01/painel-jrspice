@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import { watch, onMounted } from 'vue';
 import { toast } from '@/Stores/ToastStore';
 import ToastContainer from '@/Components/ToastContainer.vue';
@@ -8,7 +8,7 @@ import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import LegalModal from '@/Components/LegalModal.vue';
-import { LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, Settings as SettingsIcon2 } from 'lucide-vue-next';
+import { LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, Settings as SettingsIcon2, BarChart3, User as UserIcon } from 'lucide-vue-next';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -52,6 +52,14 @@ const navItems = computed(() => [
     { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true, icon: ActivityIcon },
     { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true, icon: SettingsIcon2 },
 ]);
+
+const openReportsNav = () => {
+    if (route().current('dashboard')) {
+        window.dispatchEvent(new CustomEvent('open-reports-nav'));
+    } else {
+        router.visit(route('dashboard'), { data: { open_nav: 1 } });
+    }
+};
 </script>
 
 <template>
@@ -141,8 +149,8 @@ const navItems = computed(() => [
                     </div>
 
                     <!-- Discrete Footer -->
-                    <footer class="py-6 px-8 border-t border-slate-200/50 mt-auto bg-white/30 backdrop-blur-sm">
-                        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <footer class="py-6 border-t border-slate-200/50 mt-auto bg-white/30 backdrop-blur-sm">
+                        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {{ $t('Copyright • 2026 All rights reserved') }}
                             </p>
@@ -170,6 +178,7 @@ const navItems = computed(() => [
         <!-- 📱 MOBILE BOTTOM NAV (App-style) -->
         <nav class="md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
             <div class="flex items-stretch justify-around px-2 py-1 safe-area-bottom">
+                <!-- Nav items normais (masters e não-masters) -->
                 <template v-for="item in navItems" :key="'mobile-nav-' + item.route">
                     <Link
                         v-if="(!item.masterOnly || user?.is_master)"
@@ -193,6 +202,38 @@ const navItems = computed(() => [
                         >
                             {{ $t(item.name) }}
                         </span>
+                    </Link>
+                </template>
+
+                <!-- Botões extras apenas para não-masters -->
+                <template v-if="!user?.is_master">
+                    <!-- Relatórios: abre o dropdown de navegação -->
+                    <button
+                        @click="openReportsNav"
+                        class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group text-slate-400 active:text-blue-600"
+                    >
+                        <div class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 group-active:bg-blue-50 transition-all duration-200">
+                            <BarChart3 class="w-5 h-5" />
+                        </div>
+                        <span class="text-[9px] font-black uppercase tracking-wider leading-none">{{ $t('Reports') }}</span>
+                    </button>
+
+                    <!-- Perfil -->
+                    <Link
+                        :href="route('profile.edit')"
+                        class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
+                        :class="route().current('profile.*') ? 'text-blue-600' : 'text-slate-400 active:text-slate-600'"
+                    >
+                        <div
+                            class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 transition-all duration-200"
+                            :class="route().current('profile.*') ? 'bg-blue-50 scale-105' : 'group-active:bg-slate-50'"
+                        >
+                            <UserIcon class="w-5 h-5" />
+                        </div>
+                        <span
+                            class="text-[9px] font-black uppercase tracking-wider leading-none"
+                            :class="route().current('profile.*') ? 'text-blue-600' : 'text-slate-400'"
+                        >{{ $t('Profile') }}</span>
                     </Link>
                 </template>
             </div>

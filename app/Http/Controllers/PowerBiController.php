@@ -9,13 +9,12 @@ class PowerBiController extends Controller
 {
     public function index(PowerBiService $powerBiService)
     {
-        // For now, we use the env variables. In a real app, this would come from the authenticated user.
-        // Example: $user = auth()->user();
-        // $config = $powerBiService->getEmbedConfig($user->email, ['User']);
+        $refresh = request()->has('refresh');
 
-        $config = $powerBiService->getEmbedConfig();
+        // Pass user context if needed for RLS
+        $config = $powerBiService->getEmbedConfig(null, null, $refresh);
 
-        return Inertia::render('PowerBi/Index', [
+        return Inertia::render('Dashboard', [
             'embedConfig' => $config,
         ]);
     }

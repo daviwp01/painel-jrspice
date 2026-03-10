@@ -12,8 +12,6 @@ const reportContainer = ref(null);
 
 onMounted(() => {
     if (props.embedConfig && reportContainer.value) {
-        console.log('Power BI Embed Config:', props.embedConfig);
-
         try {
             const powerbi = new pbi.service.Service(pbi.factories.hpmFactory, pbi.factories.wpmpFactory, pbi.factories.routerFactory);
 
@@ -31,12 +29,10 @@ onMounted(() => {
                 }
             };
 
-            console.log('Initializing Power BI embed with config:', config);
-
             const report = powerbi.embed(reportContainer.value, config);
 
             report.on('loaded', () => {
-                console.log('Report loaded successfully');
+                // Loaded successfully
             });
 
             report.on('error', (event) => {
@@ -48,7 +44,7 @@ onMounted(() => {
             alert('Failed to initialize Power BI report: ' + error.message);
         }
     } else {
-        console.warn('Embed config or container missing', props.embedConfig, reportContainer.value);
+        // Embed config or container missing
     }
 });
 </script>

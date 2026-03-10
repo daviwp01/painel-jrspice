@@ -123,5 +123,7 @@
   "Mobile Links": "Mobile Links",
   "Define which reports will be visible on mobile devices (Android/iOS).": "Define which reports will be visible on mobile devices (Android/iOS).",
   "Desktop Links": "Desktop Links",
-  "Define which reports will be visible on Desktop computers.": "Define which reports will be visible on Desktop computers."
+  "Define which reports will be visible on Desktop computers.": "Define which reports will be visible on Desktop computers.",
+  "Reports": "Reports",
+  "Profile": "Profile"
 }
