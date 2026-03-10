@@ -60,7 +60,7 @@ const togglePage = (pageName) => {
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Mobile Links') }}</h3>
-                    <p class="text-xs text-slate-500">{{ $t('Define which reports will be visible on mobile devices (Android/iOS).') }}</p>
+                    <p class="text-xs text-slate-500">{{ $t('Define which reports will be visible on mobile devices. This configuration also sets the default access for new users.') }}</p>
                 </div>
             </div>
         </div>

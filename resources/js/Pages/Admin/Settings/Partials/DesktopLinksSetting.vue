@@ -60,7 +60,7 @@ const togglePage = (pageName) => {
                 </div>
                 <div>
                     <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Desktop Links') }}</h3>
-                    <p class="text-xs text-slate-500">{{ $t('Define which reports will be visible on Desktop computers.') }}</p>
+                    <p class="text-xs text-slate-500">{{ $t('Define which reports will be visible on Desktop. This configuration also sets the default access for new users.') }}</p>
                 </div>
             </div>
         </div>

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import UserActivationSetting from './Partials/UserActivationSetting.vue';
-import DefaultPagesSetting from './Partials/DefaultPagesSetting.vue';
 import DesktopLinksSetting from './Partials/DesktopLinksSetting.vue';
 import MobileLinksSetting from './Partials/MobileLinksSetting.vue';
 import NotifyUpdateSetting from './Partials/NotifyUpdateSetting.vue';

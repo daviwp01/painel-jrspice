@@ -258,9 +258,9 @@
   "This account is inactive. Please contact an administrator.": "Esta conta está inativa. Por favor, entre em contato com um administrador.",
   "We encountered a problem sending the reset link. Please try again later or contact support.": "Encontramos um problema ao enviar o link de redefinição. Por favor, tente novamente mais tarde ou entre em contato com o suporte.",
   "Mobile Links": "Links Mobile",
-  "Define which reports will be visible on mobile devices (Android/iOS).": "Defina quais relatórios serão visíveis em dispositivos móveis (Android/iOS).",
+  "Define which reports will be visible on mobile devices. This configuration also sets the default access for new users.": "Defina quais relatórios serão exibidos em dispositivos móveis (Android/iOS). Estes relatórios também serão atribuídos automaticamente como acesso padrão para todos os novos usuários cadastrados.",
   "Desktop Links": "Links Desktop",
-  "Define which reports will be visible on Desktop computers.": "Defina quais relatórios serão visíveis em computadores Desktop.",
+  "Define which reports will be visible on Desktop. This configuration also sets the default access for new users.": "Defina quais relatórios serão exibidos em computadores Desktop. Estes relatórios também serão atribuídos automaticamente como acesso padrão para todos os novos usuários cadastrados.",
   "Reports": "Relatórios",
   "Profile": "Perfil"
 }
