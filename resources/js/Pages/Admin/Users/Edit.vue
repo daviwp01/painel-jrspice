@@ -35,8 +35,8 @@ const props = defineProps({
 const form = useForm({
     name: props.user.name,
     email: props.user.email,
-    password: '',
-    password_confirmation: '',
+    new_password: '',
+    new_password_confirmation: '',
     phone: props.user.phone || '',
     company_name: props.user.company_name || '',
     is_master: Boolean(props.user.is_master),
@@ -60,7 +60,7 @@ onMounted(async () => {
 
 const submit = () => {
     form.put(route('admin.users.update', props.user.id), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => form.reset('new_password', 'new_password_confirmation'),
     });
 };
 
@@ -208,11 +208,11 @@ const isFormValid = computed(() => {
                                 <PasswordInput
                                     id="password"
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
-                                    v-model="form.password"
+                                    v-model="form.new_password"
                                     autocomplete="new-password"
                                     :placeholder="$t('Leave blank to keep current')"
                                 />
-                                <InputError :message="form.errors.password" />
+                                <InputError :message="form.errors.new_password" />
                             </div>
 
                             <div class="space-y-2">
@@ -220,11 +220,11 @@ const isFormValid = computed(() => {
                                 <PasswordInput
                                     id="password_confirmation"
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
-                                    v-model="form.password_confirmation"
+                                    v-model="form.new_password_confirmation"
                                     autocomplete="new-password"
                                     :placeholder="$t('Leave blank to keep current')"
                                 />
-                                <InputError :message="form.errors.password_confirmation" />
+                                <InputError :message="form.errors.new_password_confirmation" />
                             </div>
                         </div>
                     </div>

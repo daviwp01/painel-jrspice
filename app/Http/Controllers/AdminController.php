@@ -213,8 +213,8 @@ class AdminController extends Controller
             'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
         ];
 
-        if ($request->filled('password')) {
-            $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
+        if ($request->filled('new_password')) {
+            $rules['new_password'] = ['required', 'confirmed', Rules\Password::defaults()];
         }
 
         $request->validate($rules, [
@@ -235,8 +235,8 @@ class AdminController extends Controller
             'allowed_pages' => $request->input('allowed_pages', []),
         ];
 
-        if ($request->filled('password')) {
-            $userData['password'] = Hash::make($request->password);
+        if ($request->filled('new_password')) {
+            $userData['password'] = Hash::make($request->new_password);
         }
 
         $user->fill($userData);
@@ -244,7 +244,7 @@ class AdminController extends Controller
         $user->is_active = $request->boolean('is_active');
         $user->save();
 
-        if ($user->id === $request->user()->id && $request->filled('password')) {
+        if ($user->id === $request->user()->id && $request->filled('new_password')) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
