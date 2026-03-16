@@ -41,7 +41,7 @@ const form = useForm({
     company_name: props.user.company_name || '',
     is_master: Boolean(props.user.is_master),
     is_active: Boolean(props.user.is_active !== undefined ? props.user.is_active : true),
-    allowed_pages: Array.isArray(props.user.allowed_pages) ? props.user.allowed_pages : [],
+    allowed_pages: Array.isArray(props.user.allowed_pages) ? [...props.user.allowed_pages] : [],
 });
 
 const availablePages = ref([]);
@@ -124,7 +124,7 @@ const isFormValid = computed(() => {
                         </div>
 
                         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-2">
+                             <div class="space-y-2">
                                 <InputLabel for="name" :value="$t('Name')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
                                 <TextInput
                                     id="name"
@@ -133,7 +133,7 @@ const isFormValid = computed(() => {
                                     v-model="form.name"
                                     required
                                     autofocus
-                                    autocomplete="name"
+                                    autocomplete="off"
                                     :placeholder="$t('Full Name')"
                                 />
                                 <InputError :message="form.errors.name" />
@@ -147,7 +147,7 @@ const isFormValid = computed(() => {
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
                                     v-model="form.email"
                                     required
-                                    autocomplete="username"
+                                    autocomplete="off"
                                     placeholder="user@example.com"
                                 />
                                 <InputError :message="form.errors.email" />
@@ -202,7 +202,7 @@ const isFormValid = computed(() => {
                             </div>
                         </div>
 
-                        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 relative animate-in fade-in slide-in-from-top-4 duration-300">
                             <div class="space-y-2">
                                 <InputLabel for="password" :value="$t('Password')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
                                 <PasswordInput
@@ -222,7 +222,7 @@ const isFormValid = computed(() => {
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
                                     v-model="form.new_password_confirmation"
                                     autocomplete="new-password"
-                                    :placeholder="$t('Leave blank to keep current')"
+                                    :placeholder="$t('Confirm Password')"
                                 />
                                 <InputError :message="form.errors.new_password_confirmation" />
                             </div>
