@@ -28,3 +28,6 @@ logs:
 # Reinicia o ambiente de desenvolvimento
 restart:
 	docker-compose -f docker-compose-dev.yml restart
+
+# Baixar banco de dados
+scp "root@143.110.205.180:/srv/painel-jrspice/backup_*.sql.gz" ./
