@@ -9,6 +9,15 @@ const props = defineProps({
 });
 
 const reportContainer = ref(null);
+const reportInstance = ref(null);
+
+const printReport = () => {
+    if (reportInstance.value) {
+        reportInstance.value.print();
+    } else {
+        alert('Report not loaded yet.');
+    }
+};
 
 onMounted(() => {
     if (props.embedConfig && reportContainer.value) {
@@ -30,6 +39,7 @@ onMounted(() => {
             };
 
             const report = powerbi.embed(reportContainer.value, config);
+            reportInstance.value = report;
 
             report.on('loaded', () => {
                 // Loaded successfully
@@ -47,6 +57,7 @@ onMounted(() => {
         // Embed config or container missing
     }
 });
+import { Printer } from 'lucide-vue-next';
 </script>
 
 <template>
@@ -54,9 +65,18 @@ onMounted(() => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Power BI Report
-            </h2>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    Power BI Report
+                </h2>
+                <button
+                    @click="printReport"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-sm shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                >
+                    <Printer class="w-4 h-4 mr-2" />
+                    Exportar PDF (Imprimir)
+                </button>
+            </div>
         </template>
 
         <div class="py-12">

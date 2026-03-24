@@ -81,7 +81,8 @@ const isFormValid = computed(() => {
                      form.password !== '' &&
                      form.password === form.password_confirmation;
 
-    const permissions = form.is_master || form.allowed_pages.length > 0;
+    // Permissões são válidas mesmo vazias (caem no padrão do sistema)
+    const permissions = true;
 
     return basicInfo && permissions;
 });
@@ -279,9 +280,9 @@ const isFormValid = computed(() => {
                                         <Layout class="w-4 h-4 text-indigo-500" />
                                         <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ $t('Allowed Reports') }}</h4>
                                     </div>
-                                    <span v-if="form.allowed_pages.length === 0" class="text-[10px] text-rose-600 font-black animate-pulse flex items-center bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
+                                    <span v-if="form.allowed_pages.length === 0" class="text-[10px] text-blue-600 font-black flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                         <AlertCircle class="w-3 h-3 mr-1" />
-                                        {{ $t('REQUIRED TO SELECT ONE') }}
+                                        {{ $t('DEFAULT (SYSTEM)') }}
                                     </span>
                                     <span v-else class="text-[10px] text-emerald-600 font-black flex items-center bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
                                         <CheckCircle2 class="w-3 h-3 mr-1" />

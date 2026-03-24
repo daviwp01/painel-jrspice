@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import * as pbi from 'powerbi-client';
-import { BarChart3, Mail, LayoutDashboard, Loader2, Clock, Layout, RefreshCw, ChevronDown } from 'lucide-vue-next';
+import { BarChart3, Mail, LayoutDashboard, Loader2, Clock, Layout, RefreshCw, ChevronDown, Printer } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -31,6 +31,21 @@ const isNavOpen = ref(false);
 const closeNav = () => { isNavOpen.value = false; };
 const toggleNav = () => { isNavOpen.value = !isNavOpen.value; };
 
+const isPriceTable = computed(() => {
+    const page = filteredPages.value.find(p => p.name === activePage.value);
+    if (!page) return false;
+    const name = (page.displayName || '').toUpperCase();
+    return name.includes('TABELA') || name.includes('PRICE') || name.includes('EXPORT');
+});
+
+const printReport = () => {
+    if (report) {
+        report.print();
+    } else {
+        alert('Report is not fully loaded.');
+    }
+};
+
 const isMobile = computed(() => {
     if (typeof navigator === 'undefined') return false;
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -41,22 +56,29 @@ const filteredPages = computed(() => {
     const desktopLinks = usePage().props.settings.desktop_user_pages || [];
     const onMobile = isMobile.value;
 
+    console.log('[FILTER] mobileLinks:', mobileLinks);
+    console.log('[FILTER] desktopLinks:', desktopLinks);
+    console.log('[FILTER] allowed_pages:', user.value.allowed_pages);
+
     let list = pages.value.filter(page => {
         const displayName = (page.displayName || '').toUpperCase();
         // HIDE HOME PAGE from the list (it is accessed via Overview button)
         if (displayName.includes('HOME')) return false;
 
         if (!user.value.is_master) {
-            // Non-masters: strict device + individual permission filtering
             const allowed = Array.isArray(user.value.allowed_pages) ? user.value.allowed_pages : [];
+            const hasCustomPermissions = allowed.length > 0;
 
-            if (onMobile) {
-                if (!mobileLinks.includes(page.name)) return false;
+            if (hasCustomPermissions) {
+                // Se o usuário tiver permissões específicas salvas, exibe EXATAMENTE o que foi permitido
+                const inAllowed = allowed.some(link => String(link).toLowerCase() === String(page.name).toLowerCase());
+                if (!inAllowed) return false;
             } else {
-                if (!desktopLinks.includes(page.name)) return false;
+                // Se não tiver permissões salvas, pega o padrão (tudo que estiver marcado em Links Desktop ou Links Mobile)
+                const inDefault = mobileLinks.some(link => String(link).toLowerCase() === String(page.name).toLowerCase()) 
+                               || desktopLinks.some(link => String(link).toLowerCase() === String(page.name).toLowerCase());
+                if (!inDefault) return false;
             }
-
-            if (!allowed.includes(page.name)) return false;
         } else {
             // Masters: see ALL pages regardless of device
             return true;
@@ -384,6 +406,16 @@ watch(() => props.embedConfig, (newConfig) => {
                         </transition>
                     </div>
 
+                    <!-- 🖨️ PRINT/EXPORT PDF BUTTON -->
+                    <button
+                        v-if="isPriceTable"
+                        @click="printReport"
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-blue-700 transition-all font-bold text-sm group border border-transparent hover:border-slate-200 flex-shrink-0 cursor-pointer animate-in fade-in duration-300"
+                    >
+                        <Printer class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                        <span>Exportar PDF</span>
+                    </button>
+
                     <!-- Loading Indicator -->
                     <div v-if="isLoading" class="flex items-center text-blue-600 font-bold flex-shrink-0">
                         <Loader2 class="w-4 h-4 animate-spin" />
@@ -442,6 +474,15 @@ watch(() => props.embedConfig, (newConfig) => {
                         </div>
                     </transition>
                 </div>
+
+                <!-- 🖨️ MOBILE PRINT/EXPORT PDF BUTTON -->
+                <button
+                    v-if="isPriceTable"
+                    @click="printReport"
+                    class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 active:bg-slate-100 transition-all font-bold text-sm cursor-pointer"
+                >
+                    <Printer class="w-4 h-4 text-blue-600" />
+                </button>
 
                 <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" />
             </div>
