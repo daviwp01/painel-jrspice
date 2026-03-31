@@ -22,15 +22,11 @@ import {
 } from 'lucide-vue-next';
 
 const props = defineProps({
-    default_pages: {
+    available_pages: {
         type: Array,
         default: () => []
     },
-    desktop_pages: {
-        type: Array,
-        default: () => []
-    },
-    mobile_pages: {
+    default_allowed_pages: {
         type: Array,
         default: () => []
     }
@@ -44,22 +40,11 @@ const form = useForm({
     phone: '',
     company_name: '',
     is_master: false,
-    allowed_pages: Array.isArray(props.default_pages) ? props.default_pages : [],
+    allowed_pages: Array.isArray(props.default_allowed_pages) ? [...props.default_allowed_pages] : [],
 });
 
-const availablePages = ref([]);
-const isLoadingPages = ref(true);
-
-onMounted(async () => {
-    try {
-        const response = await axios.get(route('powerbi.pages'));
-        availablePages.value = response.data;
-    } catch (error) {
-        console.error('Failed to load Power BI pages', error);
-    } finally {
-        isLoadingPages.value = false;
-    }
-});
+// Removed axios call since we use props.available_pages
+const isLoadingPages = ref(false);
 
 const submit = () => {
     form.post(route('admin.users.store'), {
@@ -67,11 +52,11 @@ const submit = () => {
     });
 };
 
-const togglePageAccess = (pageName) => {
-    if (form.allowed_pages.includes(pageName)) {
-        form.allowed_pages = form.allowed_pages.filter(p => p !== pageName);
+const togglePageAccess = (slug) => {
+    if (form.allowed_pages.includes(slug)) {
+        form.allowed_pages = form.allowed_pages.filter(p => p !== slug);
     } else {
-        form.allowed_pages.push(pageName);
+        form.allowed_pages.push(slug);
     }
 };
 
@@ -92,8 +77,11 @@ const isFormValid = computed(() => {
     <Head :title="$t('Add New User')" />
 
     <DashboardLayout>
-        <div class="py-12 bg-[#f8fafc] min-h-screen">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <template #header>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Add New User') }}</h2>
+        </template>
+
+        <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
 
                 <!-- Breadcrumbs/Back -->
                 <div class="mb-8">
@@ -296,31 +284,24 @@ const isFormValid = computed(() => {
 
                                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div
-                                        v-for="page in availablePages.filter(p => !(p.displayName || '').toUpperCase().includes('HOME'))"
-                                        :key="page.name"
-                                        @click="togglePageAccess(page.name)"
+                                        v-for="page in available_pages.filter(p => !p.slug.toLowerCase().includes('home'))"
+                                        :key="page.id"
+                                        @click="togglePageAccess(page.slug)"
                                         class="relative flex items-center p-4 rounded-xl border-2 transition-all cursor-pointer group hover:shadow-sm"
-                                        :class="form.allowed_pages.includes(page.name) ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 bg-white hover:border-indigo-200'"
+                                        :class="form.allowed_pages.includes(page.slug) ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 bg-white hover:border-indigo-200'"
                                     >
-                                        <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-all mr-3" :class="form.allowed_pages.includes(page.name) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-400'">
+                                        <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-all mr-3" :class="form.allowed_pages.includes(page.slug) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-400'">
                                             <Layout class="w-5 h-5" />
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="text-xs font-black text-slate-800 truncate uppercase tracking-tight group-hover:text-indigo-700 transition-colors">
-                                                {{ page.displayName.replace(/_/g, ' ') }}
+                                                {{ page.title }}
                                             </p>
-                                            <div class="flex flex-wrap gap-1 mt-1">
-                                                <span v-if="desktop_pages.includes(page.name)" class="text-[8px] font-black uppercase tracking-tighter bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">
-                                                    Desktop
-                                                </span>
-                                                <span v-if="mobile_pages.includes(page.name)" class="text-[8px] font-black uppercase tracking-tighter bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded border border-emerald-100">
-                                                    Mobile
-                                                </span>
-                                            </div>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{{ page.slug }}</p>
                                         </div>
                                         <div class="ml-2">
-                                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="form.allowed_pages.includes(page.name) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200'">
-                                                <CheckCircle2 v-if="form.allowed_pages.includes(page.name)" class="w-3 h-3 text-white" />
+                                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="form.allowed_pages.includes(page.slug) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-200'">
+                                                <CheckCircle2 v-if="form.allowed_pages.includes(page.slug)" class="w-3 h-3 text-white" />
                                             </div>
                                         </div>
                                     </div>
@@ -359,7 +340,6 @@ const isFormValid = computed(() => {
                         </PrimaryButton>
                     </div>
                 </form>
-            </div>
         </div>
     </DashboardLayout>
 </template>

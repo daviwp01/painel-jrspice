@@ -8,33 +8,26 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use App\Http\Controllers\InternalDashboardController;
+use App\Http\Controllers\Admin\DataController;
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
 Route::get('/tracking/email-click/{user}', [AdminController::class, 'trackEmailClick'])->name('tracking.email-click');
 
-Route::get('/dashboard', function (Illuminate\Http\Request $request, PowerBiService $powerBiService) {
-    try {
-        $embedConfig = $powerBiService->getEmbedConfig(null, null, $request->has('refresh'));
-    } catch (\Exception $e) {
-        $embedConfig = ['is_available' => false, 'error' => $e->getMessage()];
-    }
-
-    return Inertia::render('Dashboard/Index', [
-        'embedConfig' => $embedConfig
-    ]);
-})->middleware(['auth', 'verified', 'throttle:10,1'])->name('dashboard');
+Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
+    Route::get('/dashboard', [InternalDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/page/{slug}', [InternalDashboardController::class, 'show'])->name('dashboard.page');
+    Route::post('/dashboard/contact/send', [InternalDashboardController::class, 'sendContactEmail'])->name('dashboard.contact.send');
+});
 
 Route::middleware('auth')->group(function () {
-    Route::get('/powerbi', [PowerBiController::class, 'index'])->name('powerbi');
-    Route::get('/powerbi/pages', [AdminController::class, 'getPowerBiPages'])->name('powerbi.pages');
-
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
 });
-
 
 require __DIR__.'/auth.php';
 
@@ -57,4 +50,30 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
 
     Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('admin.users.toggle-status');
     Route::post('/users/bulk-status', [AdminController::class, 'bulkUpdateStatus'])->name('admin.users.bulk-status');
+
+    // Admin Data Routes
+    Route::get('/data', [DataController::class, 'index'])->name('admin.data.index');
+    Route::post('/data/pages', [DataController::class, 'storePage'])->name('admin.data.pages.store');
+    Route::put('/data/pages/{page}', [DataController::class, 'updatePage'])->name('admin.data.pages.update');
+    Route::delete('/data/pages/{page}', [DataController::class, 'destroyPage'])->name('admin.data.pages.destroy');
+
+    Route::post('/data/countries', [DataController::class, 'storeCountry'])->name('admin.data.countries.store');
+    Route::put('/data/countries/{country}', [DataController::class, 'updateCountry'])->name('admin.data.countries.update');
+    Route::delete('/data/countries/{country}', [DataController::class, 'destroyCountry'])->name('admin.data.countries.destroy');
+
+    Route::post('/data/suppliers', [DataController::class, 'storeSupplier'])->name('admin.data.suppliers.store');
+    Route::put('/data/suppliers/{supplier}', [DataController::class, 'updateSupplier'])->name('admin.data.suppliers.update');
+    Route::delete('/data/suppliers/{supplier}', [DataController::class, 'destroySupplier'])->name('admin.data.suppliers.destroy');
+
+    Route::post('/data/products', [DataController::class, 'storeProduct'])->name('admin.data.products.store');
+    Route::put('/data/products/{product}', [DataController::class, 'updateProduct'])->name('admin.data.products.update');
+    Route::delete('/data/products/{product}', [DataController::class, 'destroyProduct'])->name('admin.data.products.destroy');
+
+    Route::post('/data/prices', [DataController::class, 'storePrice'])->name('admin.data.prices.store');
+    Route::put('/data/prices/{price}', [DataController::class, 'updatePrice'])->name('admin.data.prices.update');
+    Route::delete('/data/prices/{price}', [DataController::class, 'destroyPrice'])->name('admin.data.prices.destroy');
+
+    // Import Routes
+    Route::post('/data/import', [DataController::class, 'importData'])->name('admin.data.import');
+    Route::get('/data/import-status/{jobId}', [DataController::class, 'getImportStatus'])->name('admin.data.import-status');
 });

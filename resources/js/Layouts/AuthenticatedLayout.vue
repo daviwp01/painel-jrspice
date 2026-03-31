@@ -35,15 +35,16 @@ const showingNavigationDropdown = ref(false);
                             >
                                 <NavLink
                                     :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
+                                    :active="route().current('dashboard') || route().current('dashboard.page')"
                                 >
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    :href="route('powerbi')"
-                                    :active="route().current('powerbi')"
+                                    v-if="$page.props.auth.user.is_master"
+                                    :href="route('admin.data.index')"
+                                    :active="route().current('admin.data.index')"
                                 >
-                                    Power BI
+                                    Gerenciar Dados
                                 </NavLink>
                             </div>
                         </div>
@@ -148,15 +149,16 @@ const showingNavigationDropdown = ref(false);
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
                             :href="route('dashboard')"
-                            :active="route().current('dashboard')"
+                            :active="route().current('dashboard') || route().current('dashboard.page')"
                         >
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            :href="route('powerbi')"
-                            :active="route().current('powerbi')"
+                            v-if="$page.props.auth.user.is_master"
+                            :href="route('admin.data.index')"
+                            :active="route().current('admin.data.index')"
                         >
-                            Power BI
+                            Gerenciar Dados
                         </ResponsiveNavLink>
                     </div>
 

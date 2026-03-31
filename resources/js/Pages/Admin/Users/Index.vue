@@ -117,306 +117,298 @@ const openWhatsApp = (phone) => {
     <Head :title="$t('Users Management')" />
 
     <DashboardLayout>
-        <div class="py-12 bg-[#f8fafc] min-h-screen">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <template #header>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Users Management') }}</h2>
+        </template>
 
-                <!-- Page Header & Stats Row -->
-                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-                    <div>
-                        <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center">
-                            <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
-                            {{ $t('Users Management') }}
-                        </h1>
-                        <p class="mt-3 text-slate-500 font-medium text-lg">{{ $t('Manage your organization\'s users, roles and platform access.') }}</p>
+        <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
+            <!-- Stats Row & Add Button -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-fit">
+                    <div class="flex items-center px-4 py-2 border-r border-slate-100">
+                        <Users class="w-4 h-4 text-indigo-500 mr-2" />
+                        <span class="text-sm font-black text-slate-800">{{ total_users }}</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
                     </div>
-
-                    <div class="flex flex-wrap items-center gap-4">
-                        <!-- Stats Mini Cards -->
-                        <div class="flex items-center space-x-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-                            <div class="flex items-center px-4 py-2 border-r border-slate-100">
-                                <Users class="w-4 h-4 text-indigo-500 mr-2" />
-                                <span class="text-sm font-black text-slate-800">{{ total_users }}</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
-                            </div>
-                            <div class="flex items-center px-4 py-2">
-                                <UserCheck class="w-4 h-4 text-emerald-500 mr-2" />
-                                <span class="text-sm font-black text-slate-800">{{ active_users }}</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">{{ $t('Active') }}</span>
-                            </div>
-                        </div>
-
-                        <Link :href="route('admin.users.create')">
-                            <PrimaryButton class="px-8 py-3.5 text-sm font-black uppercase tracking-[0.15em] rounded-xl bg-indigo-600 shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                                <UserPlus class="w-5 h-5 mr-2.5" />
-                                {{ $t('Add New User') }}
-                            </PrimaryButton>
-                        </Link>
+                    <div class="flex items-center px-4 py-2">
+                        <UserCheck class="w-4 h-4 text-emerald-500 mr-2" />
+                        <span class="text-sm font-black text-slate-800">{{ active_users }}</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">{{ $t('Active') }}</span>
                     </div>
                 </div>
 
-                <!-- Filters & Search Bar -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex flex-1 items-center gap-4 max-w-2xl">
-                        <div class="relative flex-1 max-w-md">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Search class="h-5 w-5 text-slate-400" />
-                            </div>
-                            <input
-                                type="text"
-                                v-model="searchQuery"
-                                :placeholder="$t('Search by name or email...')"
-                                class="block w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium text-slate-600 placeholder-slate-400 border shadow-sm"
-                            />
-                        </div>
+                <Link :href="route('admin.users.create')">
+                    <PrimaryButton class="px-8 py-3.5 text-sm font-black uppercase tracking-[0.15em] rounded-xl bg-indigo-600 shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <UserPlus class="w-5 h-5 mr-2.5" />
+                        {{ $t('Add New User') }}
+                    </PrimaryButton>
+                </Link>
+            </div>
 
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Filter class="h-4 w-4 text-slate-400" />
-                            </div>
-                            <select
-                                v-model="statusFilter"
-                                class="block w-full pl-10 pr-10 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-bold text-xs uppercase tracking-widest text-slate-600 border shadow-sm appearance-none cursor-pointer"
-                            >
-                                <option value="">{{ $t('All Status') }}</option>
-                                <option value="active">{{ $t('Active') }}</option>
-                                <option value="inactive">{{ $t('Inactive') }}</option>
-                            </select>
+            <!-- Filters & Search Bar -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex flex-1 items-center gap-4 max-w-2xl">
+                    <div class="relative flex-1 max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Search class="h-5 w-5 text-slate-400" />
                         </div>
+                        <input
+                            type="text"
+                            v-model="searchQuery"
+                            @input="performSearch"
+                            :placeholder="$t('Search by name or email...')"
+                            class="block w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium text-slate-600 placeholder-slate-400 border shadow-sm"
+                        />
                     </div>
 
-                    <!-- Bulk Actions -->
-                    <div v-if="statusFilter === 'inactive' && users.data.length > 0" class="animate-in fade-in slide-in-from-right-4 duration-300">
-                        <PrimaryButton
-                            @click="activateAllListed"
-                            class="px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl bg-emerald-600 shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98] border-none"
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Filter class="h-4 w-4 text-slate-400" />
+                        </div>
+                        <select
+                            v-model="statusFilter"
+                            @change="performSearch"
+                            class="block w-full pl-10 pr-10 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-bold text-xs uppercase tracking-widest text-slate-600 border shadow-sm appearance-none cursor-pointer"
                         >
-                            <CheckCircle class="w-4 h-4 mr-2" />
-                            {{ $t('Activate All Listed') }}
-                        </PrimaryButton>
+                            <option value="">{{ $t('All Status') }}</option>
+                            <option value="active">{{ $t('Active') }}</option>
+                            <option value="inactive">{{ $t('Inactive') }}</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- 📱 MOBILE: User Cards (< lg) -->
-                <div class="lg:hidden space-y-3">
-                    <div
-                        v-for="user in users.data"
-                        :key="'mobile-' + user.id"
-                        class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all active:scale-[0.99]"
+                <!-- Bulk Actions -->
+                <div v-if="statusFilter === 'inactive' && users.data.length > 0" class="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <PrimaryButton
+                        @click="activateAllListed"
+                        class="px-6 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl bg-emerald-600 shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98] border-none"
                     >
-                        <!-- Card Header: Avatar + Name + Role -->
-                        <div class="flex items-center justify-between px-4 py-4 border-b border-slate-50">
-                            <div class="flex items-center min-w-0 flex-1">
-                                <div
-                                    class="h-10 w-10 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm"
-                                    :class="getAvatarColor(user.name)"
-                                >
-                                    {{ user.name.charAt(0).toUpperCase() }}
-                                </div>
-                                <div class="ml-3 min-w-0 flex-1">
-                                    <div class="text-sm font-black text-slate-800 tracking-tight truncate">{{ user.name }}</div>
-                                    <div class="text-xs text-slate-400 font-medium truncate">{{ user.email }}</div>
-                                </div>
+                        <CheckCircle class="w-4 h-4 mr-2" />
+                        {{ $t('Activate All Listed') }}
+                    </PrimaryButton>
+                </div>
+            </div>
+
+            <!-- 📱 MOBILE: User Cards (< lg) -->
+            <div class="lg:hidden space-y-3">
+                <div
+                    v-for="user in users.data"
+                    :key="'mobile-' + user.id"
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all active:scale-[0.99]"
+                >
+                    <!-- Card Header: Avatar + Name + Role -->
+                    <div class="flex items-center justify-between px-4 py-4 border-b border-slate-50">
+                        <div class="flex items-center min-w-0 flex-1">
+                            <div
+                                class="h-10 w-10 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm"
+                                :class="getAvatarColor(user.name)"
+                            >
+                                {{ user.name.charAt(0).toUpperCase() }}
                             </div>
-                            <div class="flex-shrink-0 ml-3">
-                                <div v-if="user.is_master" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100/50">
-                                    <ShieldCheck class="w-3 h-3 mr-1" />
-                                    {{ $t('Master') }}
-                                </div>
-                                <div v-else class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-100/50">
-                                    {{ $t('User') }}
-                                </div>
+                            <div class="ml-3 min-w-0 flex-1">
+                                <div class="text-sm font-black text-slate-800 tracking-tight truncate">{{ user.name }}</div>
+                                <div class="text-xs text-slate-400 font-medium truncate">{{ user.email }}</div>
                             </div>
                         </div>
-
-                        <!-- Card Body: Details -->
-                        <div class="px-4 py-3 space-y-2">
-                            <div v-if="user.company_name" class="flex items-center justify-between">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Company') }}</span>
-                                <span class="text-xs font-bold text-slate-600">{{ user.company_name }}</span>
+                        <div class="flex-shrink-0 ml-3">
+                            <div v-if="user.is_master" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-100/50">
+                                <ShieldCheck class="w-3 h-3 mr-1" />
+                                {{ $t('Master') }}
                             </div>
-                            <div v-if="user.phone" class="flex items-center justify-between">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Phone') }}</span>
-                                <span class="text-xs font-bold text-slate-500">{{ user.phone }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Created at') }}</span>
-                                <span class="text-[11px] font-bold text-slate-400">{{ formatDate(user.created_at) }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Card Footer: Status + Actions -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-slate-50/50 border-t border-slate-100">
-                            <div class="flex items-center space-x-2.5">
-                                <ToggleSwitch
-                                    :model-value="user.is_active"
-                                    @change="toggleUserStatus(user)"
-                                />
-                                <div v-if="user.is_active !== false" class="text-[9px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                    {{ $t('Active') }}
-                                </div>
-                                <div v-else class="text-[9px] font-black uppercase tracking-tight text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                                    {{ $t('Inactive') }}
-                                </div>
-                            </div>
-
-                            <div class="flex items-center space-x-0.5">
-                                <button
-                                    @click="openWhatsApp(user.phone)"
-                                    :disabled="user.id === $page.props.auth.user.id || !user.phone"
-                                    class="p-2 border border-transparent rounded-lg transition-all active:scale-90"
-                                    :class="user.id === $page.props.auth.user.id || !user.phone
-                                        ? 'text-slate-200 cursor-not-allowed'
-                                        : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'"
-                                >
-                                    <MessageCircle class="w-4 h-4" />
-                                </button>
-                                <Link
-                                    :href="route('admin.users.edit', user.id)"
-                                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent rounded-lg transition-all active:scale-90"
-                                >
-                                    <Edit2 class="w-4 h-4" />
-                                </Link>
-                                <button
-                                    @click="confirmDeleteAction(user)"
-                                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent rounded-lg transition-all active:scale-90"
-                                >
-                                    <Trash2 class="w-4 h-4" />
-                                </button>
+                            <div v-else class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-100/50">
+                                {{ $t('User') }}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Mobile Empty State -->
-                    <div v-if="users.data.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
-                        <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
-                            <Search class="w-7 h-7 text-slate-300" />
+                    <!-- Card Body: Details -->
+                    <div class="px-4 py-3 space-y-2">
+                        <div v-if="user.company_name" class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Company') }}</span>
+                            <span class="text-xs font-bold text-slate-600">{{ user.company_name }}</span>
                         </div>
-                        <h3 class="text-lg font-black text-slate-800">{{ $t('No users found') }}</h3>
-                        <p class="text-slate-500 font-medium mt-1 text-sm">{{ $t('Try adjusting your search or clearing the filters.') }}</p>
+                        <div v-if="user.phone" class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Phone') }}</span>
+                            <span class="text-xs font-bold text-slate-500">{{ user.phone }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Created at') }}</span>
+                            <span class="text-[11px] font-bold text-slate-400">{{ formatDate(user.created_at) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer: Status + Actions -->
+                    <div class="flex items-center justify-between px-4 py-3 bg-slate-50/50 border-t border-slate-100">
+                        <div class="flex items-center space-x-2.5">
+                            <ToggleSwitch
+                                :model-value="user.is_active"
+                                @change="toggleUserStatus(user)"
+                            />
+                            <div v-if="user.is_active !== false" class="text-[9px] font-black uppercase tracking-tight text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                {{ $t('Active') }}
+                            </div>
+                            <div v-else class="text-[9px] font-black uppercase tracking-tight text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                                {{ $t('Inactive') }}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-0.5">
+                            <button
+                                @click="openWhatsApp(user.phone)"
+                                :disabled="user.id === $page.props.auth.user.id || !user.phone"
+                                class="p-2 border border-transparent rounded-lg transition-all active:scale-90"
+                                :class="user.id === $page.props.auth.user.id || !user.phone
+                                    ? 'text-slate-200 cursor-not-allowed'
+                                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'"
+                            >
+                                <MessageCircle class="w-4 h-4" />
+                            </button>
+                            <Link
+                                :href="route('admin.users.edit', user.id)"
+                                class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent rounded-lg transition-all active:scale-90"
+                            >
+                                <Edit2 class="w-4 h-4" />
+                            </Link>
+                            <button
+                                @click="confirmDeleteAction(user)"
+                                class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent rounded-lg transition-all active:scale-90"
+                            >
+                                <Trash2 class="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 🖥️ DESKTOP: User Listing Table (>= lg) -->
-                <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-100">
-                            <thead>
-                                <tr class="bg-slate-50/50">
-                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Name') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Company') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Phone') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Role') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Status') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Created at') }}</th>
-                                    <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em] transition-all">{{ $t('Actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                <tr
-                                    v-for="user in users.data"
-                                    :key="user.id"
-                                    class="hover:bg-indigo-50/20 group transition-all duration-300"
-                                >
-                                    <td class="px-4 py-5 whitespace-nowrap max-w-[220px]">
-                                        <div class="flex items-center min-w-0">
-                                            <div
-                                                class="h-12 w-12 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm transition-transform duration-300 group-hover:scale-110"
-                                                :class="getAvatarColor(user.name)"
-                                            >
-                                                {{ user.name.charAt(0).toUpperCase() }}
-                                            </div>
-                                            <div class="ml-4 min-w-0">
-                                                <div class="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors truncate" :title="user.name">{{ user.name }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
-                                        <div class="text-sm text-slate-600 font-black tracking-tight truncate" :title="user.company_name">{{ user.company_name || '-' }}</div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap text-sm text-slate-500 font-bold tracking-tight">
-                                        {{ user.phone || '-' }}
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
-                                        <div class="text-sm text-slate-500 font-bold tracking-tight truncate" :title="user.email">{{ user.email }}</div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap text-center">
-                                        <div v-if="user.is_master" class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border-2 border-indigo-100/50 shadow-sm">
-                                            <ShieldCheck class="w-3 h-3 mr-1.5" />
-                                            {{ $t('Master') }}
-                                        </div>
-                                        <div v-else class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border-2 border-slate-100/50">
-                                            {{ $t('User') }}
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap text-center">
-                                        <div class="flex flex-col items-center justify-center space-y-2">
-                                            <ToggleSwitch
-                                                :model-value="user.is_active"
-                                                @change="toggleUserStatus(user)"
-                                            />
-                                            <div v-if="user.is_active !== false" class="text-[9px] font-black uppercase tracking-tighter text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                                {{ $t('Active') }}
-                                            </div>
-                                            <div v-else class="text-[9px] font-black uppercase tracking-tighter text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                                                {{ $t('Inactive') }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap text-center">
-                                        <div class="text-[11px] text-slate-400 font-black uppercase tracking-widest bg-slate-50/50 px-3 py-1 rounded-lg inline-block border border-slate-100">
-                                            {{ formatDate(user.created_at) }}
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-5 whitespace-nowrap text-center font-medium">
-                                        <div class="flex items-center justify-center space-x-1">
-                                            <button
-                                                @click="openWhatsApp(user.phone)"
-                                                :disabled="user.id === $page.props.auth.user.id || !user.phone"
-                                                class="p-2.5 border border-transparent rounded-xl transition-all active:scale-90"
-                                                :class="user.id === $page.props.auth.user.id || !user.phone
-                                                    ? 'text-slate-200 cursor-not-allowed'
-                                                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100'"
-                                                :title="user.id === $page.props.auth.user.id ? $t('Cannot message yourself') : $t('WhatsApp')"
-                                            >
-                                                <MessageCircle class="w-4 h-4" />
-                                            </button>
-                                            <Link
-                                                :href="route('admin.users.edit', user.id)"
-                                                class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-sm hover:border-slate-200 border border-transparent rounded-xl transition-all active:scale-90"
-                                                :title="$t('Edit User')"
-                                            >
-                                                <Edit2 class="w-4 h-4" />
-                                            </Link>
-                                            <button
-                                                @click="confirmDeleteAction(user)"
-                                                class="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 border border-transparent rounded-xl transition-all active:scale-90"
-                                                :title="$t('Delete User')"
-                                            >
-                                                <Trash2 class="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <!-- Empty State -->
-                                <tr v-if="users.data.length === 0">
-                                    <td colspan="8" class="px-8 py-20 text-center">
-                                        <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
-                                            <Search class="w-8 h-8 text-slate-300" />
-                                        </div>
-                                        <h3 class="text-lg font-black text-slate-800">{{ $t('No users found') }}</h3>
-                                        <p class="text-slate-500 font-medium mt-1">{{ $t('Try adjusting your search or clearing the filters.') }}</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <!-- Mobile Empty State -->
+                <div v-if="users.data.length === 0" class="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
+                        <Search class="w-7 h-7 text-slate-300" />
                     </div>
+                    <h3 class="text-lg font-black text-slate-800">{{ $t('No users found') }}</h3>
+                    <p class="text-slate-500 font-medium mt-1 text-sm">{{ $t('Try adjusting your search or clearing the filters.') }}</p>
                 </div>
+            </div>
 
-                <!-- Pagination -->
-                <div class="mt-8 flex justify-center">
-                    <Pagination :links="users.links" />
+            <!-- 🖥️ DESKTOP: User Listing Table (>= lg) -->
+            <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-100">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Name') }}</th>
+                                <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Company') }}</th>
+                                <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Phone') }}</th>
+                                <th scope="col" class="px-4 py-6 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email') }}</th>
+                                <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Role') }}</th>
+                                <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Status') }}</th>
+                                <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em]">{{ $t('Created at') }}</th>
+                                <th scope="col" class="px-4 py-6 text-center text-xs font-black text-slate-400 uppercase tracking-[0.2em] transition-all">{{ $t('Actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr
+                                v-for="user in users.data"
+                                :key="user.id"
+                                class="hover:bg-indigo-50/20 group transition-all duration-300"
+                            >
+                                <td class="px-4 py-5 whitespace-nowrap max-w-[220px]">
+                                    <div class="flex items-center min-w-0">
+                                        <div
+                                            class="h-12 w-12 rounded-lg border flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm transition-transform duration-300 group-hover:scale-110"
+                                            :class="getAvatarColor(user.name)"
+                                        >
+                                            {{ user.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div class="ml-4 min-w-0">
+                                            <div class="text-sm font-black text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors truncate" :title="user.name">{{ user.name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
+                                    <div class="text-sm text-slate-600 font-black tracking-tight truncate" :title="user.company_name">{{ user.company_name || '-' }}</div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap text-sm text-slate-500 font-bold tracking-tight">
+                                    {{ user.phone || '-' }}
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap max-w-[180px]">
+                                    <div class="text-sm text-slate-500 font-bold tracking-tight truncate" :title="user.email">{{ user.email }}</div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap text-center">
+                                    <div v-if="user.is_master" class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border-2 border-indigo-100/50 shadow-sm">
+                                        <ShieldCheck class="w-3 h-3 mr-1.5" />
+                                        {{ $t('Master') }}
+                                    </div>
+                                    <div v-else class="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border-2 border-slate-100/50">
+                                        {{ $t('User') }}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap text-center">
+                                    <div class="flex flex-col items-center justify-center space-y-2">
+                                        <ToggleSwitch
+                                            :model-value="user.is_active"
+                                            @change="toggleUserStatus(user)"
+                                        />
+                                        <div v-if="user.is_active !== false" class="text-[9px] font-black uppercase tracking-tighter text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                            {{ $t('Active') }}
+                                        </div>
+                                        <div v-else class="text-[9px] font-black uppercase tracking-tighter text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                                            {{ $t('Inactive') }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap text-center">
+                                    <div class="text-[11px] text-slate-400 font-black uppercase tracking-widest bg-slate-50/50 px-3 py-1 rounded-lg inline-block border border-slate-100">
+                                        {{ formatDate(user.created_at) }}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-5 whitespace-nowrap text-center font-medium">
+                                    <div class="flex items-center justify-center space-x-1">
+                                        <button
+                                            @click="openWhatsApp(user.phone)"
+                                            :disabled="user.id === $page.props.auth.user.id || !user.phone"
+                                            class="p-2.5 border border-transparent rounded-xl transition-all active:scale-90"
+                                            :class="user.id === $page.props.auth.user.id || !user.phone
+                                                ? 'text-slate-200 cursor-not-allowed'
+                                                : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100'"
+                                            :title="user.id === $page.props.auth.user.id ? $t('Cannot message yourself') : $t('WhatsApp')"
+                                        >
+                                            <MessageCircle class="w-4 h-4" />
+                                        </button>
+                                        <Link
+                                            :href="route('admin.users.edit', user.id)"
+                                            class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-sm hover:border-slate-200 border border-transparent rounded-xl transition-all active:scale-90"
+                                            :title="$t('Edit User')"
+                                        >
+                                            <Edit2 class="w-4 h-4" />
+                                        </Link>
+                                        <button
+                                            @click="confirmDeleteAction(user)"
+                                            class="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 border border-transparent rounded-xl transition-all active:scale-90"
+                                            :title="$t('Delete User')"
+                                        >
+                                            <Trash2 class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Empty State -->
+                            <tr v-if="users.data.length === 0">
+                                <td colspan="8" class="px-8 py-20 text-center">
+                                    <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 mb-4">
+                                        <Search class="w-8 h-8 text-slate-300" />
+                                    </div>
+                                    <h3 class="text-lg font-black text-slate-800">{{ $t('No users found') }}</h3>
+                                    <p class="text-slate-500 font-medium mt-1">{{ $t('Try adjusting your search or clearing the filters.') }}</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-center">
+                <Pagination :links="users.links" />
             </div>
         </div>
 

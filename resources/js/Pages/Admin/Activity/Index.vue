@@ -35,19 +35,13 @@ const getAvatarColor = (name) => {
     <Head :title="$t('User Access Control')" />
 
     <DashboardLayout>
-        <div class="py-12 bg-[#f8fafc] min-h-screen">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <template #header>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('User Access Control') }}</h2>
+        </template>
+
+        <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
 
                 <!-- Page Header & Stats Row -->
-                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-                    <div>
-                        <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center capitalize">
-                            <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
-                            {{ $t('User Access Control') }}
-                        </h1>
-                        <p class="mt-3 text-slate-500 font-medium text-lg">{{ $t('Monitor user engagement and email interactions') }}</p>
-                    </div>
-
                     <div class="flex flex-wrap items-center gap-4">
                         <!-- Stats Mini Cards -->
                         <div class="flex items-center space-x-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
@@ -72,7 +66,6 @@ const getAvatarColor = (name) => {
                             <span class="text-xs font-black text-slate-600 group-hover:text-rose-700 uppercase tracking-wider">{{ $t('Clear Activities') }}</span>
                         </button>
                     </div>
-                </div>
 
                 <!-- 📱 MOBILE: Activity Cards (< lg) -->
                 <div class="lg:hidden space-y-3">
@@ -243,7 +236,6 @@ const getAvatarColor = (name) => {
                 <div class="mt-8 flex justify-center">
                     <Pagination :links="users.links" />
                 </div>
-            </div>
         </div>
 
         <!-- Reusable Confirmation Modal -->

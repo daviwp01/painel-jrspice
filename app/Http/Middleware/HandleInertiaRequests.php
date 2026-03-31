@@ -41,9 +41,16 @@ class HandleInertiaRequests extends Middleware
             'settings' => [
                 'legal_privacy_policy' => \App\Models\Setting::get('legal_privacy_policy'),
                 'legal_terms_of_use' => \App\Models\Setting::get('legal_terms_of_use'),
-                'desktop_user_pages' => \App\Models\Setting::get('desktop_user_pages', []),
-                'mobile_user_pages' => \App\Models\Setting::get('mobile_user_pages', []),
             ],
+            'dashboardPages' => \App\Models\DashboardPage::where('is_active', true)
+                ->orderBy('order')
+                ->get()
+                ->filter(function ($page) use ($request) {
+                    $user = $request->user();
+                    if (!$user) return false;
+                    return $user->canAccessPage($page->slug);
+                })
+                ->values(),
         ];
     }
 }
