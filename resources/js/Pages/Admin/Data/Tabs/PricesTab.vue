@@ -5,6 +5,7 @@ import { PencilIcon, TrashIcon, XIcon, SearchIcon, TrendingUpIcon, PackageIcon, 
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
     prices: Object,
@@ -79,11 +80,7 @@ const changePage = (url) => {
     });
 };
 
-const formatLabel = (label) => {
-    if (label.includes('pagination.previous') || label.includes('Previous')) return '&laquo; Anterior';
-    if (label.includes('pagination.next') || label.includes('Next')) return 'Próximo &raquo;';
-    return label;
-};
+
 </script>
 
 <template>
@@ -158,7 +155,7 @@ const formatLabel = (label) => {
                             {{ prices.total }} registros encontrados
                         </span>
                     </div>
-                    <div class="max-h-[600px] overflow-y-auto">
+                    <div class="relative">
                          <table class="w-full text-sm text-left text-slate-600">
                             <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                                 <tr>
@@ -193,17 +190,20 @@ const formatLabel = (label) => {
                          </table>
                     </div>
                 </div>
-                <!-- Pagination -->
-                <div v-if="prices.links?.length > 3" class="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200 sm:px-6 mt-4 rounded-xl shadow-sm">
-                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <p class="text-xs text-slate-700 font-bold uppercase tracking-widest">
-                            Exibindo <span class="font-bold text-blue-600">{{ prices.from }}</span> até <span class="font-bold text-blue-600">{{ prices.to }}</span> de <span class="font-bold text-slate-900">{{ prices.total }}</span> resultados
+                <!-- Pagination Balanced -->
+                <div v-if="prices.links?.length > 3" class="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 shadow-sm transition-all duration-300">
+                    <!-- Info Region Minimalist -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                            <span class="text-blue-600">{{ prices.from }}-{{ prices.to }}</span> 
+                            <span class="mx-2 text-slate-300">de</span>
+                            <span class="text-slate-900">{{ prices.total }}</span>
                         </p>
-                        <div class="flex gap-1">
-                            <button v-for="(link, i) in prices.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                                :class="['px-3 py-2 text-xs font-bold rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
-                        </div>
                     </div>
+
+                    <!-- Navigation Buttons (Global Component) -->
+                    <Pagination :links="prices.links" />
                 </div>
             </div>
         </div>

@@ -27,28 +27,28 @@ const form = useForm({
 
 <template>
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
-        <header class="px-8 py-6 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-4">
-            <div class="p-2.5 bg-indigo-100 rounded-lg text-indigo-600">
-                <User class="w-6 h-6" />
+        <header class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-3">
+            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <User class="w-5 h-5" />
             </div>
             <div>
-                <h2 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('Profile Information') }}</h2>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Profile Information') }}</h2>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                     {{ $t("Update your account's profile information and email address.") }}
                 </p>
             </div>
         </header>
 
-        <form @submit.prevent="form.patch(route('profile.update'))" class="p-8 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <form @submit.prevent="form.patch(route('profile.update'))" class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                    <InputLabel for="name" :value="$t('Name')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                    <InputLabel for="name" :value="$t('Name')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                     <div class="relative">
-                        <User class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <User class="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <TextInput
                             id="name"
                             type="text"
-                            class="block w-full py-4 pl-12 pr-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
+                            class="block w-full py-3 pl-11 pr-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
                             v-model="form.name"
                             required
                             autofocus
@@ -59,13 +59,13 @@ const form = useForm({
                 </div>
 
                 <div class="space-y-2">
-                    <InputLabel for="email" :value="$t('Email')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                    <InputLabel for="email" :value="$t('Email')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                     <div class="relative">
-                        <Mail class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Mail class="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <TextInput
                             id="email"
                             type="email"
-                            class="block w-full py-4 pl-12 pr-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
+                            class="block w-full py-3 pl-11 pr-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
                             v-model="form.email"
                             required
                             autocomplete="username"
@@ -75,13 +75,13 @@ const form = useForm({
                 </div>
 
                 <div class="space-y-2">
-                    <InputLabel for="phone" :value="$t('Phone')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                    <InputLabel for="phone" :value="$t('Phone')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                     <div class="relative">
-                        <Phone class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Phone class="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <TextInput
                             id="phone"
                             type="text"
-                            class="block w-full py-4 pl-12 pr-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
+                            class="block w-full py-3 pl-11 pr-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
                             v-model="form.phone"
                             autocomplete="tel"
                             :placeholder="$t('+55 11 99999-9999')"
@@ -91,13 +91,13 @@ const form = useForm({
                 </div>
 
                 <div class="space-y-2">
-                    <InputLabel for="company_name" :value="$t('Company Name')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                    <InputLabel for="company_name" :value="$t('Company Name')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                     <div class="relative">
-                        <Building2 class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Building2 class="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                         <TextInput
                             id="company_name"
                             type="text"
-                            class="block w-full py-4 pl-12 pr-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
+                            class="block w-full py-3 pl-11 pr-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
                             v-model="form.company_name"
                             @input="form.company_name = form.company_name.replace(/[0-9@]/g, '')"
                             autocomplete="organization"
@@ -115,7 +115,7 @@ const form = useForm({
                         :href="route('verification.send')"
                         method="post"
                         as="button"
-                        class="underline text-sm text-slate-600 hover:text-slate-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        class="underline text-xs text-slate-600 hover:text-blue-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
                         {{ $t('Click here to re-send the verification email.') }}
                     </Link>
@@ -132,10 +132,10 @@ const form = useForm({
             <div class="flex items-center justify-end border-t border-slate-100 pt-6">
                 <PrimaryButton
                     :disabled="form.processing || !form.isDirty"
-                    class="px-12 py-4 text-base font-black uppercase tracking-[0.2em] rounded-xl bg-indigo-600 shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
+                    class="px-8 py-3 text-sm font-bold uppercase tracking-[0.2em] rounded-xl bg-blue-600 shadow-xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
                 >
-                    <Loader2 v-if="form.processing" class="w-5 h-5 mr-3 animate-spin" />
-                    <Save v-else class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
+                    <Loader2 v-if="form.processing" class="w-4 h-4 mr-2.5 animate-spin" />
+                    <Save v-else class="w-4 h-4 mr-2.5 group-hover:rotate-12 transition-transform" />
                     {{ $t('Save Changes') }}
                 </PrimaryButton>
             </div>

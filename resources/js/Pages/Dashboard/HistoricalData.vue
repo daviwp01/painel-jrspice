@@ -242,9 +242,7 @@ const changePage = (url) => {
                     <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
                 </p>
             </div>
-            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Gerenciador Analítico JRSpice
-            </div>
+
         </div>
 
         <div class="transition-opacity duration-300" :class="{ 'opacity-50 pointer-events-none': isLoading }">

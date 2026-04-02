@@ -64,7 +64,7 @@ const toggleYear = (year) => {
     const latestYear = String(Math.max(...Object.keys(props.chartData || {}).map(Number)));
     
     if (sYear !== latestYear) {
-        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
+        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, entre em contato.' });
         return;
     }
 
@@ -169,10 +169,21 @@ const chartOptions = computed(() => ({
             intersect: false,
             backgroundColor: '#0f172a',
             padding: 12,
+            boxPadding: 1,
+            usePointStyle: true,
             titleFont: { size: 14, weight: 'bold' },
             bodyFont: { size: 15 },
             callbacks: {
-                label: (context) => `${context.dataset.label}: R$ ${context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
+                label: (context) => ` ${context.dataset.label}: $ ${context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+                labelColor: (context) => ({
+                    borderColor: 'transparent',
+                    backgroundColor: context.dataset.borderColor,
+                    borderWidth: 0
+                }),
+                labelPointStyle: () => ({
+                    pointStyle: 'circle',
+                    rotation: 0
+                })
             }
         }
     },
@@ -182,7 +193,7 @@ const chartOptions = computed(() => ({
             ticks: { 
                 font: { size: 14, weight: 'bold' },
                 color: '#94a3b8',
-                callback: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`
+                callback: (value) => `$ ${Number(value).toLocaleString('pt-BR')}`
             }
         },
         x: {

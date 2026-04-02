@@ -226,9 +226,7 @@ const changePage = (url) => {
                 >
                     <FileDown class="w-4 h-4" /> Exportar PDF
                 </button>
-                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                    Gerenciador Analítico JRSpice
-                </div>
+
             </div>
         </div>
 
@@ -347,11 +345,8 @@ const changePage = (url) => {
               <Loader2 class="w-12 h-12 text-blue-600 animate-spin absolute inset-4" />
           </div>
           <div>
-              <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Gerando PDF Analítico</h3>
-              <p class="text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest leading-loose">
-                  Estamos processando as bandeiras, tabelas e variações de preços... <br>
-                  <span class="text-blue-600">O download começará em instantes.</span>
-              </p>
+              <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Gerando...</h3>
+              <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.2em]">Aguarde.</p>
           </div>
       </div>
   </div>

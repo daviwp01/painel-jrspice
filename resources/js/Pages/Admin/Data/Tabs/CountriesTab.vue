@@ -109,7 +109,7 @@ const formatLabel = (label) => {
                     >
                 </div>
 
-                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Países Ativos</p>
@@ -117,33 +117,37 @@ const formatLabel = (label) => {
                             {{ countries.total }} países cadastrados
                         </span>
                     </div>
-                    <div class="overflow-y-auto flex-1 relative">
+                    <div class="relative">
                         <table class="w-full text-left text-slate-600">
                             <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
-                            <tr>
-                                <th class="px-6 py-5">Nome do País</th>
-                                <th class="px-6 py-4 text-center">Produtos Cadastrados</th>
-                                <th class="px-6 py-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
+                                <tr>
+                                    <th class="px-6 py-3">Nome do País</th>
+                                    <th class="px-6 py-3 text-center">Produtos</th>
+                                    <th class="px-6 py-3 text-right">Ações</th>
+                                </tr>
+                            </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="c in countries.data" :key="c.id" class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-800">
-                                    <div class="flex items-center gap-3">
-                                        <CountryFlag :name="c.name" class-name="w-6 h-4 object-cover rounded-sm border border-slate-100 shadow-sm" />
-                                        <span class="text-sm font-bold uppercase tracking-tight">{{ c.name }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest border border-blue-100 shadow-sm">
-                                        {{ c.products_count || 0 }} {{ $t('produtos') }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button @click="editCountry(c)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1"><PencilIcon class="w-4 h-4"/></button>
-                                    <button @click="deleteCountry(c)" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors inline-block"><TrashIcon class="w-4 h-4"/></button>
-                                </td>
-                            </tr>
+                                <tr v-for="c in countries.data" :key="c.id" class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
+                                    <td class="px-6 py-3 font-bold text-slate-800">
+                                        <div class="flex items-center gap-3">
+                                            <CountryFlag :name="c.name" class-name="w-6 h-4 object-cover rounded-sm border border-slate-100 shadow-sm" />
+                                            <span class="text-sm font-bold uppercase tracking-tight">{{ c.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-3 text-center">
+                                        <div class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                                            {{ c.products_count || 0 }} {{ $t('produtos') }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-3 text-right">
+                                        <button @click="editCountry(c)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1">
+                                            <PencilIcon class="w-3.5 h-3.5"/>
+                                        </button>
+                                        <button @click="deleteCountry(c)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors inline-block">
+                                            <TrashIcon class="w-3.5 h-3.5"/>
+                                        </button>
+                                    </td>
+                                </tr>
                             <tr v-if="!countries.data?.length">
                                 <td colspan="3" class="px-6 py-8 text-center text-slate-400 font-medium">Nenhum país cadastrado.</td>
                             </tr>
@@ -152,11 +156,19 @@ const formatLabel = (label) => {
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-6 flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Exibindo <span class="text-blue-600">{{ countries.from }}</span> até <span class="text-blue-600">{{ countries.to }}</span> de <span class="text-blue-600">{{ countries.total }}</span> resultados
-                </p>
+            <!-- Pagination Balanced -->
+            <div v-if="countries.links?.length > 3" class="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 shadow-sm transition-all duration-300">
+                <!-- Info Region Minimalist -->
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                        <span class="text-blue-600">{{ countries.from }}-{{ countries.to }}</span> 
+                        <span class="mx-2 text-slate-300">de</span>
+                        <span class="text-slate-900">{{ countries.total }}</span>
+                    </p>
+                </div>
+
+                <!-- Navigation Buttons (Global Component) -->
                 <Pagination :links="countries.links" />
             </div>
           </div>

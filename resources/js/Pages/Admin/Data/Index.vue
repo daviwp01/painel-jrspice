@@ -106,7 +106,7 @@ const searchableProducts = computed(() => {
 </script>
 
 <template>
-    <Head title="Gerenciamento de Dados Analíticos" />
+    <Head title="Gerenciamento de Dados" />
 
     <DashboardLayout>
         <template #header>

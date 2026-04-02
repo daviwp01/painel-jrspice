@@ -157,7 +157,7 @@ const openWhatsApp = (phone) => {
                             v-model="searchQuery"
                             @input="performSearch"
                             :placeholder="$t('Search by name or email...')"
-                            class="block w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-medium text-slate-600 placeholder-slate-400 border shadow-sm"
+                            class="block w-full pl-11 pr-4 py-3 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-bold text-sm text-slate-800 placeholder-slate-400 border shadow-sm"
                         />
                     </div>
 
@@ -168,7 +168,7 @@ const openWhatsApp = (phone) => {
                         <select
                             v-model="statusFilter"
                             @change="performSearch"
-                            class="block w-full pl-10 pr-10 py-3.5 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-bold text-xs uppercase tracking-widest text-slate-600 border shadow-sm appearance-none cursor-pointer"
+                            class="block w-full pl-10 pr-10 py-3 rounded-xl bg-white border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-bold text-xs uppercase tracking-widest text-slate-600 border shadow-sm appearance-none cursor-pointer"
                         >
                             <option value="">{{ $t('All Status') }}</option>
                             <option value="active">{{ $t('Active') }}</option>

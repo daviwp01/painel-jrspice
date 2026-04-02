@@ -63,7 +63,7 @@ const openLegal = (type) => {
                 <div class="w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto mb-6 rounded-full"></div>
 
                 <p class="text-slate-400 text-lg font-light leading-relaxed max-w-xl mx-auto">
-                    {{ $t('This report presents price history, information and analysis related to our product portfolio') }}
+                    {{ $t('This system presents price history, information and analysis related to our product portfolio') }}
                 </p>
             </div>
         </div>

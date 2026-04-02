@@ -48,7 +48,7 @@ const tabs = [
                             @click="activeTab = tab.id"
                             class="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 sm:space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-300 group whitespace-nowrap"
                             :class="activeTab === tab.id
-                                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100'
+                                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-100'
                                 : 'text-slate-500 hover:text-slate-800'"
                         >
                             <component :is="tab.icon" class="w-4 h-4" />

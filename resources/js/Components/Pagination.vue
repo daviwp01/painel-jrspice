@@ -26,53 +26,48 @@ const cleanLabel = (label) => {
 </script>
 
 <template>
-    <div v-if="links?.length > 3" class="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-1 no-scrollbar">
+    <div v-if="links?.length > 3" class="flex flex-wrap items-center gap-1.5 justify-center md:justify-end">
         <template v-for="(link, key) in links" :key="key">
             <!-- Caso seja URL nula (primeiro ou último inativo) -->
             <div 
                 v-if="link.url === null" 
-                class="h-8 px-3 flex items-center justify-center text-slate-300 pointer-events-none gap-1 bg-slate-50 border border-slate-100 rounded-lg"
+                class="min-w-[32px] h-8 px-2.5 flex items-center justify-center text-slate-300 pointer-events-none gap-1 bg-slate-50 border border-slate-100 rounded-lg"
             >
-                <ChevronLeft v-if="isPrevious(link.label)" class="w-3.5 h-3.5" />
-                <span v-if="isPrevious(link.label) || isNext(link.label)" class="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                <ChevronLeft v-if="isPrevious(link.label)" class="w-3 h-3" />
+                <span v-if="isPrevious(link.label) || isNext(link.label)" class="text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
                     {{ cleanLabel(link.label) }}
                 </span>
-                <span v-else class="text-xs font-bold">{{ link.label }}</span>
-                <ChevronRight v-if="isNext(link.label)" class="w-3.5 h-3.5" />
+                <span v-else class="text-[10px] font-bold">{{ link.label }}</span>
+                <ChevronRight v-if="isNext(link.label)" class="w-3 h-3" />
             </div>
 
             <!-- Caso seja um Link Ativo ou Normal -->
             <Link 
                 v-else 
                 :href="link.url"
-                class="min-w-[32px] h-8 px-3 flex items-center justify-center rounded-lg text-xs font-bold transition-all gap-1.5 whitespace-nowrap"
+                class="min-w-[32px] h-8 px-2.5 flex items-center justify-center rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-200 border group select-none"
                 :class="[
                     link.active 
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200 pointer-events-none' 
-                        : 'bg-white text-slate-500 hover:bg-blue-50 hover:text-blue-600 border border-slate-100 hover:border-blue-200'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200 z-10' 
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50'
                 ]"
                 preserve-scroll
+                preserve-state
             >
-                <ChevronLeft v-if="isPrevious(link.label)" class="w-3.5 h-3.5" />
+                <ChevronLeft v-if="isPrevious(link.label)" class="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
                 
-                <span :class="(isPrevious(link.label) || isNext(link.label)) ? 'text-[10px] uppercase tracking-widest font-black' : ''">
+                <span v-if="isPrevious(link.label) || isNext(link.label)" class="whitespace-nowrap">
                     {{ cleanLabel(link.label) }}
                 </span>
+                <span v-else class="text-[10px] font-bold">{{ link.label }}</span>
                 
-                <ChevronRight v-if="isNext(link.label)" class="w-3.5 h-3.5" />
+                <ChevronRight v-if="isNext(link.label)" class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
         </template>
     </div>
 </template>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
 span {
     line-height: 1;
 }

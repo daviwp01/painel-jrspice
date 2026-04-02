@@ -49,20 +49,7 @@ const confirmDeleteSupplier = () => {
     });
 };
 
-const changePage = (url) => {
-    if (!url) return;
-    router.visit(url, { 
-        preserveState: true, 
-        preserveScroll: true,
-        only: ['suppliers']
-    });
-};
 
-const formatLabel = (label) => {
-    if (label.includes('pagination.previous') || label.includes('Previous')) return '&laquo; Anterior';
-    if (label.includes('pagination.next') || label.includes('Next')) return 'Próximo &raquo;';
-    return label;
-};
 </script>
 
 <template>
@@ -104,7 +91,7 @@ const formatLabel = (label) => {
                     >
                 </div>
 
-                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Fornecedores Cadastrados</p>
@@ -112,22 +99,26 @@ const formatLabel = (label) => {
                             {{ suppliers.total }} registros encontrados
                         </span>
                     </div>
-                    <div class="overflow-y-auto flex-1 relative">
+                    <div class="relative">
                         <table class="w-full text-left text-slate-600">
                             <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
-                            <tr>
-                                <th class="px-6 py-5">Nome do Fornecedor</th>
-                                <th class="px-6 py-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
+                                <tr>
+                                    <th class="px-6 py-3">Nome do Fornecedor</th>
+                                    <th class="px-6 py-3 text-right">Ações</th>
+                                </tr>
+                            </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="s in suppliers.data" :key="s.id" class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-800 text-sm uppercase tracking-tight">{{ s.name }}</td>
-                                <td class="px-6 py-4 text-right">
-                                    <button @click="editSupplier(s)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1"><PencilIcon class="w-4 h-4"/></button>
-                                    <button @click="deleteSupplier(s)" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors inline-block"><TrashIcon class="w-4 h-4"/></button>
-                                </td>
-                            </tr>
+                            <tr v-for="s in suppliers.data" :key="s.id" class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
+                                 <td class="px-6 py-3 font-bold text-slate-800 text-sm uppercase tracking-tight">{{ s.name }}</td>
+                                 <td class="px-6 py-3 text-right">
+                                     <button @click="editSupplier(s)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1">
+                                         <PencilIcon class="w-3.5 h-3.5"/>
+                                     </button>
+                                     <button @click="deleteSupplier(s)" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors inline-block">
+                                         <TrashIcon class="w-3.5 h-3.5"/>
+                                     </button>
+                                 </td>
+                             </tr>
                             <tr v-if="!suppliers.data?.length">
                                 <td colspan="2" class="px-6 py-8 text-center text-slate-400 font-medium">Nenhum fornecedor cadastrado.</td>
                             </tr>
@@ -136,17 +127,20 @@ const formatLabel = (label) => {
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="suppliers.links?.length > 3" class="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200 sm:px-6 mt-4 rounded-xl shadow-sm">
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <p class="text-xs text-slate-700 font-bold uppercase tracking-widest">
-                        Exibindo <span class="font-bold text-blue-600">{{ suppliers.from }}</span> até <span class="font-bold text-blue-600">{{ suppliers.to }}</span> de <span class="font-bold text-slate-900">{{ suppliers.total }}</span> resultados
+            <!-- Pagination Balanced -->
+            <div v-if="suppliers.links?.length > 3" class="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 shadow-sm transition-all duration-300">
+                <!-- Info Region Minimalist -->
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                    <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                        <span class="text-blue-600">{{ suppliers.from }}-{{ suppliers.to }}</span> 
+                        <span class="mx-2 text-slate-300">de</span>
+                        <span class="text-slate-900">{{ suppliers.total }}</span>
                     </p>
-                    <div class="flex gap-1">
-                        <button v-for="(link, i) in suppliers.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                            :class="['px-3 py-2 text-xs font-bold rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
-                    </div>
                 </div>
+
+                <!-- Navigation Buttons (Global Component) -->
+                <Pagination :links="suppliers.links" />
             </div>
         </div>
     </div>

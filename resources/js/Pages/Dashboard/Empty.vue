@@ -15,7 +15,7 @@ import { InboxIcon } from 'lucide-vue-next';
                 </div>
                 
                 <template v-if="$page.props.auth.user.is_master">
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">Configure Seu Painel Analítico</h3>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">Configure Seu Painel</h3>
                     <p class="text-sm text-slate-500 font-medium">Você ainda não possui painéis configurados no sistema. Crie as métricas para exibir seus gráficos internos.</p>
                     <div class="mt-8">
                         <Link :href="route('admin.data.index')" class="bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all">
@@ -26,7 +26,7 @@ import { InboxIcon } from 'lucide-vue-next';
 
                 <template v-else>
                     <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">Painel em Construção</h3>
-                    <p class="text-sm text-slate-500 font-medium">Nenhum dado analítico foi publicado pelo administrador ainda. Volte mais tarde.</p>
+                    <p class="text-sm text-slate-500 font-medium">Nenhum dado foi publicado pelo administrador ainda. Volte mais tarde.</p>
                 </template>
 
             </div>

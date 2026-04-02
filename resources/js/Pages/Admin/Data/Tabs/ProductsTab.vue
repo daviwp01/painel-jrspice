@@ -319,32 +319,32 @@ const defaultCountryData = computed(() =>
                         <table class="w-full text-left border-collapse">
                             <thead class="text-[10px] text-slate-400 bg-slate-50/50 uppercase font-bold border-b border-slate-100 tracking-[0.2em]">
                                 <tr>
-                                    <th class="px-6 py-4">Produto</th>
-                                    <th class="px-6 py-4">Origem</th>
-                                    <th class="px-6 py-4">Mês Safra</th>
-                                    <th class="px-6 py-4 text-right">Ações</th>
+                                    <th class="px-6 py-3">Produto</th>
+                                    <th class="px-6 py-3">Origem</th>
+                                    <th class="px-6 py-3">Mês Safra</th>
+                                    <th class="px-6 py-3 text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
-                                <tr v-for="p in products.data" :key="p.id" class="hover:bg-slate-50/80 transition-colors group">
-                                    <td class="px-6 py-4">
+                                <tr v-for="p in products.data" :key="p.id" class="hover:bg-slate-50/80 transition-colors group border-b border-slate-50 last:border-0">
+                                    <td class="px-6 py-3">
                                         <span class="font-bold text-slate-800 uppercase text-sm tracking-tight">{{ p.name }}</span>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <CountryFlag :name="p.country?.name || ''" class-name="w-4 h-3 object-cover rounded shadow-0" />
-                                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{{ p.country?.name }}</span>
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <CountryFlag :name="p.country?.name || ''" class-name="w-6 h-4 object-cover rounded-[2px] shadow-sm border border-slate-100" />
+                                            <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">{{ p.country?.name }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-6 py-3">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ p.harvest_month || '--' }}</span>
                                     </td>
-                                    <td class="px-6 py-4 text-right space-x-1">
-                                        <button @click="editProduct(p)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                                            <PencilIcon class="w-4 h-4"/>
+                                    <td class="px-6 py-3 text-right space-x-1">
+                                        <button @click="editProduct(p)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <PencilIcon class="w-3.5 h-3.5"/>
                                         </button>
-                                        <button @click="deleteProduct(p)" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">
-                                            <TrashIcon class="w-4 h-4"/>
+                                        <button @click="deleteProduct(p)" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                            <TrashIcon class="w-3.5 h-3.5"/>
                                         </button>
                                     </td>
                                 </tr>
@@ -355,11 +355,19 @@ const defaultCountryData = computed(() =>
                         </table>
                     </div>
 
-                    <!-- Footer Pagination -->
-                    <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Exibindo <span class="text-blue-600 font-bold">{{ products.from }}</span> até <span class="text-blue-600 font-bold">{{ products.to }}</span> de <span class="text-slate-900 font-bold">{{ products.total }}</span> resultados
-                        </p>
+                    <!-- Pagination Balanced -->
+                    <div v-if="products.links?.length > 3" class="bg-slate-50/20 px-6 py-5 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
+                        <!-- Info Region Minimalist -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+                                <span class="text-blue-600">{{ products.from }}-{{ products.to }}</span> 
+                                <span class="mx-2 text-slate-300">de</span>
+                                <span class="text-slate-900">{{ products.total }}</span>
+                            </p>
+                        </div>
+
+                        <!-- Navigation Buttons (Global Component) -->
                         <Pagination :links="products.links" />
                     </div>
                 </div>

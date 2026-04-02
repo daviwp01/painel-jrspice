@@ -26,12 +26,12 @@ defineProps({
         <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
 
                 <!-- Page Header -->
-                <div class="mb-10">
-                    <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center">
-                        <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
+                <div class="mb-8">
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center uppercase">
+                        <span class="bg-blue-600 w-1.5 h-7 rounded-full mr-3"></span>
                         {{ $t('My Profile') }}
                     </h1>
-                    <p class="mt-3 text-slate-500 font-medium text-lg">
+                    <p class="mt-1 text-slate-500 font-medium text-sm">
                         {{ $t('Manage your personal settings and security preferences.') }}
                     </p>
                 </div>
