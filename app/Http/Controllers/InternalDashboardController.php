@@ -458,8 +458,8 @@ class InternalDashboardController extends Controller
                     'niger' => 'ne', 'etiopia' => 'et', 'sirialanka' => 'lk', 'sri-lanka' => 'lk'
                 ];
                 
-                // Normalização do nome: remove acentos, pega apenas o primeiro nome se tiver barra /
-                $rawName = strtolower(trim($country->name));
+                // Normalização robusta: mb_strtolower para acentos em maiúsculo
+                $rawName = mb_strtolower(trim($country->name), 'UTF-8');
                 $parts = explode('/', $rawName);
                 $normalizedName = trim($parts[0]);
                 
@@ -471,9 +471,15 @@ class InternalDashboardController extends Controller
                 );
                 
                 $code = $countryMap[$normalizedName] ?? null;
+
                 if ($code) {
                     try {
                         $url = "https://flagcdn.com/w160/{$code}.png";
+                        $ctx = stream_context_create([
+                            'http' => [
+                                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n"
+                            ]
+                        ]);
                         $imgData = @file_get_contents($url, false, $ctx);
                         if ($imgData) {
                             $flagBase64 = 'data:image/png;base64,' . base64_encode($imgData);

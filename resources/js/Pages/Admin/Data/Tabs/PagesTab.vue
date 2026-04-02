@@ -94,7 +94,7 @@ const formatLabel = (label) => {
                         <input v-model="pageForm.order" type="number" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div class="pt-4 flex items-center gap-3">
-                        <button type="submit" :disabled="pageForm.processing" class="flex-1 bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center">
+                        <button type="submit" :disabled="pageForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20">
                             {{ editingPage ? 'Atualizar' : 'Adicionar' }}
                         </button>
                         <button v-if="editingPage" type="button" @click="cancelPageEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
@@ -108,7 +108,7 @@ const formatLabel = (label) => {
                 <!-- Header Tool Bar -->
                 <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Estrutura de Páginas e Menus</p>
-                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
                         {{ pages.total }} registros encontrados
                     </span>
                 </div>
@@ -143,11 +143,11 @@ const formatLabel = (label) => {
             <!-- Pagination for Pages -->
             <div v-if="pages.links?.length > 3" class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-slate-100">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Exibindo <span class="font-black text-indigo-600">{{ pages.from }}</span> até <span class="font-black text-indigo-600">{{ pages.to }}</span> de <span class="font-black text-slate-900">{{ pages.total }}</span> páginas
+                    Exibindo <span class="font-black text-blue-600">{{ pages.from }}</span> até <span class="font-black text-blue-600">{{ pages.to }}</span> de <span class="font-black text-slate-900">{{ pages.total }}</span> páginas
                 </p>
                 <div class="flex gap-1">
                     <button v-for="(link, i) in pages.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                        :class="['px-3 py-2 text-xs font-black rounded-lg border transition-all', link.active ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                        :class="['px-3 py-2 text-xs font-black rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
                 </div>
             </div>
         </div>
