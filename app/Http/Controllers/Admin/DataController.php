@@ -22,15 +22,81 @@ class DataController extends Controller
 {
     public function index(Request $request)
     {
+        $products_search = $request->input('products_search');
+        $countries_search = $request->input('countries_search');
+        $suppliers_search = $request->input('suppliers_search');
+        $prices_search = $request->input('prices_search');
+        $pages_search = $request->input('pages_search');
+
         return Inertia::render('Admin/Data/Index', [
-            'pages' => DashboardPage::orderBy('order')->paginate(15, ['*'], 'pages_page'),
-            'countries' => Country::with('products')->orderBy('name')->paginate(15, ['*'], 'countries_page'),
-            'products' => Product::with('country')->orderBy('name')->paginate(15, ['*'], 'products_page'),
-            'suppliers' => Supplier::orderBy('name')->paginate(15, ['*'], 'suppliers_page'),
-            'prices' => ProductPrice::with(['product.country', 'supplier'])->orderBy('date', 'desc')->paginate(15, ['*'], 'prices_page'),
+            'pages' => DashboardPage::orderBy('order')
+                ->when($pages_search, function($q, $search) {
+                    $q->where('title', 'like', "%{$search}%");
+                })
+                ->paginate(15, ['*'], 'pages_page')
+                ->withQueryString(),
+            
+            'countries' => Country::withCount('products')
+                ->when($countries_search, function($q, $search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'countries_page')
+                ->withQueryString(),
+            
+            'products' => Product::with('country')
+                ->when($products_search, function($q, $search) {
+                    $q->where(function($qq) use ($search) {
+                        $qq->where('name', 'like', "%{$search}%")
+                          ->orWhere('harvest_month', 'like', "%{$search}%")
+                          ->orWhereHas('country', function($sq) use ($search) {
+                              $sq->where('name', 'like', "%{$search}%");
+                          });
+                    });
+                })
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'products_page')
+                ->withQueryString(),
+            
+            'suppliers' => Supplier::when($suppliers_search, function($q, $search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'suppliers_page')
+                ->withQueryString(),
+            
+            'prices' => ProductPrice::with(['product.country', 'supplier'])
+                ->when($prices_search, function($q, $search) {
+                    $q->where(function($qq) use ($search) {
+                        $qq->whereHas('product', function($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%")
+                               ->orWhereHas('country', function($ssq) use ($search) {
+                                   $ssq->where('name', 'like', "%{$search}%");
+                               });
+                        })
+                        ->orWhereHas('supplier', function($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhere('date', 'like', "%{$search}%");
+                    });
+                })
+                ->orderBy('date', 'desc')
+                ->orderBy('id', 'desc')
+                ->paginate(15, ['*'], 'prices_page')
+                ->withQueryString(),
+                
             'settings' => \App\Models\Setting::all()->pluck('value', 'key'),
+            'all_countries' => Country::orderBy('name')->get(),
+            'all_products' => Product::with('country')->orderBy('name')->get(),
+            'all_suppliers' => Supplier::orderBy('name')->get(),
+            'filters' => $request->only(['products_search', 'countries_search', 'suppliers_search', 'prices_search', 'tab']),
+            'default_filter_config' => [
+                'country_id'  => \App\Models\Setting::get('default_filter_country_id'),
+                'product_ids' => \App\Models\Setting::get('default_filter_product_ids') ?? [],
+            ],
         ]);
     }
+
 
     public function storePage(Request $request)
     {
@@ -75,18 +141,13 @@ class DataController extends Controller
             'product_id' => 'required|exists:products,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'date' => 'required|date',
-            'min_price' => 'required|numeric',
-            'max_price' => 'required|numeric',
-            'average_price' => 'nullable|numeric',
+            'price' => 'required|numeric',
         ]);
 
         ProductPrice::updateOrCreate(
-            ['product_id' => $validated['product_id'], 'date' => $validated['date']],
+            ['product_id' => $validated['product_id'], 'date' => $validated['date'], 'supplier_id' => $validated['supplier_id'] ?? null],
             [
-                'supplier_id' => $validated['supplier_id'] ?? null,
-                'min_price' => $validated['min_price'], 
-                'max_price' => $validated['max_price'], 
-                'average_price' => $validated['average_price'] ?? null
+                'price' => $validated['price']
             ]
         );
 
@@ -130,9 +191,7 @@ class DataController extends Controller
     {
         $validated = $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'min_price' => 'required|numeric',
-            'max_price' => 'required|numeric',
-            'average_price' => 'nullable|numeric',
+            'price' => 'required|numeric',
         ]);
         $price->update($validated);
         return redirect()->back()->with('success', 'Preço atualizado.');
@@ -244,5 +303,23 @@ class DataController extends Controller
         }
 
         return response()->json($status);
+    }
+
+    /**
+     * Save the "Default Filter" configuration: a country + list of products
+     * that will be pre-selected when the user opens the dashboard.
+     */
+    public function saveDefaultFilters(Request $request)
+    {
+        $validated = $request->validate([
+            'country_id'  => 'nullable|exists:countries,id',
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'exists:products,id',
+        ]);
+
+        \App\Models\Setting::set('default_filter_country_id', $validated['country_id'] ?? null);
+        \App\Models\Setting::set('default_filter_product_ids', $validated['product_ids'] ?? []);
+
+        return redirect()->back()->with('success', 'Filtro padrão salvo com sucesso.');
     }
 }

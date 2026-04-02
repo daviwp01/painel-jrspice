@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductPrice extends Model
 {
-    protected $fillable = ['product_id', 'supplier_id', 'date', 'min_price', 'max_price', 'average_price'];
+    protected $fillable = ['product_id', 'supplier_id', 'date', 'price'];
 
     protected $casts = [
         'date' => 'date',

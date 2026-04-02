@@ -40,36 +40,12 @@ watch(() => page.props.flash, (flash) => {
     if (flash.error) toast.add(flash.error, 'error');
 }, { deep: true });
 
-const isGlobalLoading = ref(false);
-let removeStartListener = null;
-let removeFinishListener = null;
-
 onMounted(() => {
     if (page.props.flash.success) toast.add(page.props.flash.success, 'success');
     if (page.props.flash.error) toast.add(page.props.flash.error, 'error');
-
-    removeStartListener = router.on('start', (event) => {
-        const targetUrl = event.detail.visit.url.toString();
-        const isDataPage = targetUrl.includes('/dashboard/page');
-        const isInternalFilterNav = event.detail.visit.preserveState === true;
-
-        if (isDataPage && !isInternalFilterNav) {
-            isGlobalLoading.value = true;
-        }
-    });
-
-    removeFinishListener = router.on('finish', () => {
-        if (isGlobalLoading.value) {
-            setTimeout(() => {
-                isGlobalLoading.value = false;
-            }, 300);
-        }
-    });
 });
 
 onUnmounted(() => {
-    if (removeStartListener) removeStartListener();
-    if (removeFinishListener) removeFinishListener();
 });
 
 // Custom Navigation Items (Admin only)
@@ -86,7 +62,7 @@ const navItems = computed(() => [
 
         <!-- 📱 SIDEBAR (LEFT) -->
         <aside :class="[
-            'fixed inset-y-0 left-0 bg-white z-[60] flex flex-col w-72 md:relative transition-transform duration-300 ease-in-out shrink-0',
+            'fixed inset-y-0 left-0 bg-white z-[60] flex flex-col w-[330px] md:relative transition-transform duration-300 ease-in-out shrink-0',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         ]">
             <!-- Brand Logo -->
@@ -104,8 +80,8 @@ const navItems = computed(() => [
                 <!-- HOME / STANDARD -->
                 <div v-if="!user?.is_master">
                     <div class="space-y-1">
-                        <Link :href="route('dashboard')" :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all', route().current('dashboard') ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
-                            <LayoutDashboard class="w-4 h-4" :class="route().current('dashboard') ? 'text-white' : 'text-slate-400'" />
+                        <Link :href="route('dashboard')" :class="['flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all', route().current('dashboard') ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
+                            <LayoutDashboard class="w-5 h-5" :class="route().current('dashboard') ? 'text-white' : 'text-slate-400'" />
                             {{ $t('Dashboard Home') }}
                         </Link>
                     </div>
@@ -113,12 +89,12 @@ const navItems = computed(() => [
 
                 <!-- DASHBOARDS PAGES -->
                 <div v-if="$page.props.dashboardPages?.length > 0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-4">{{ $t('Dashboards') }}</p>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Dashboards') }}</p>
                     <div class="space-y-1">
                         <Link v-for="pg in $page.props.dashboardPages" :key="pg.id" :href="route('dashboard.page', { slug: pg.slug })"
-                            :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all', 
+                            :class="['flex items-center gap-3 px-3 py-3 rounded-xl text-base font-bold transition-all', 
                                      route().current('dashboard.page', { slug: pg.slug }) ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' : 'text-slate-600 hover:bg-slate-100']">
-                            <ChartLineIcon class="w-4 h-4" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-white' : 'text-slate-400'" />
+                            <ChartLineIcon class="w-5 h-5" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-white' : 'text-slate-400'" />
                             {{ pg.title }}
                         </Link>
                     </div>
@@ -126,13 +102,13 @@ const navItems = computed(() => [
 
                 <!-- ADMINISTRATIVO -->
                 <div v-if="user?.is_master">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-4">{{ $t('Administração') }}</p>
+                    <p class="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Administração') }}</p>
                     <div class="space-y-1">
                         <template v-for="item in navItems" :key="item.route">
                             <Link :href="route(item.route)" v-if="(!item.masterOnly || user?.is_master)"
-                                :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all', 
+                                :class="['flex items-center gap-3 px-3 py-3 rounded-xl text-base font-bold transition-all', 
                                          item.active ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100']">
-                                <component :is="item.icon" class="w-4 h-4" :class="item.active ? 'text-blue-600' : 'text-slate-400'" />
+                                <component :is="item.icon" class="w-5 h-5" :class="item.active ? 'text-blue-600' : 'text-slate-400'" />
                                 {{ $t(item.name) }}
                             </Link>
                         </template>
@@ -219,19 +195,6 @@ const navItems = computed(() => [
             </main>
         </div>
 
-        <!-- GLOBAL LOADING OVERLAY -->
-        <div v-if="isGlobalLoading" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-opacity">
-            <div class="bg-white p-10 rounded-3xl shadow-2xl border border-slate-200 flex flex-col items-center gap-5 animate-in zoom-in-95 duration-300">
-                <div class="relative flex items-center justify-center">
-                    <div class="absolute w-12 h-12 rounded-full border-4 border-slate-100"></div>
-                    <Loader2 class="w-12 h-12 text-blue-600 animate-spin relative z-10" />
-                </div>
-                <div class="text-center">
-                    <h3 class="text-sm font-black text-slate-900 uppercase tracking-[0.2em] mb-1">Processando Análise</h3>
-                    <p class="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Gerando insights e métricas...</p>
-                </div>
-            </div>
-        </div>
 
         <LegalModal :show="showLegalModal" :type="legalModalType" :content="legalContent" @close="showLegalModal = false" />
         <ToastContainer />

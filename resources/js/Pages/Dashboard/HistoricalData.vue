@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck } from 'lucide-vue-next';
+import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
@@ -39,7 +39,9 @@ watch(() => props.filters, (newFilters) => {
 }, { deep: true });
 
 const handleCountryChange = () => {
-    selectedProduct.value = ''; // Reset product to show all
+    selectedProduct.value = ''; 
+    selectedSupplier.value = '';
+    filterDateRange.value = 'Todos';
     applyFilters();
 };
 
@@ -51,13 +53,36 @@ const applyFilters = () => {
             country_id: selectedCountry.value,
             supplier_id: selectedSupplier.value,
             product_id: selectedProduct.value,
-            date_range: filterDateRange.value
+            date_range: filterDateRange.value,
+            sort_field: props.filters.sort_field,
+            sort_direction: props.filters.sort_direction
         },
         { 
             preserveState: true, 
             replace: true,
             onFinish: () => { isLoading.value = false; }
         }
+    );
+};
+
+const handleSort = (field) => {
+    let direction = 'asc';
+    if (props.filters.sort_field === field) {
+        direction = props.filters.sort_direction === 'asc' ? 'desc' : 'asc';
+    }
+    
+    isLoading.value = true;
+    router.get(
+        route('dashboard.page', { slug: props.currentPage.slug }),
+        { 
+            country_id: selectedCountry.value,
+            supplier_id: selectedSupplier.value,
+            product_id: selectedProduct.value,
+            date_range: filterDateRange.value,
+            sort_field: field,
+            sort_direction: direction
+        },
+        { preserveState: true, replace: true, onFinish: () => { isLoading.value = false; } }
     );
 };
 
@@ -89,14 +114,16 @@ const processedHistoricalData = computed(() => {
             displayDate: new Date(price.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
             yearMonth: `${y}/${(d.getUTCMonth()+1).toString().padStart(2, '0')}`,
             week: w,
-            priceVal: price.min_price || price.max_price
+            priceVal: price.price
         };
     });
 });
 
 const formatPaginationLabel = (label) => {
-    if (label.includes('Previous')) return '&laquo; Anterior';
-    if (label.includes('Next')) return 'Próximo &raquo;';
+    if (!label) return '';
+    const l = label.toLowerCase();
+    if (l.includes('previous')) return '&laquo; Anterior';
+    if (l.includes('next')) return 'Próximo &raquo;';
     return label;
 };
 
@@ -128,6 +155,7 @@ const changePage = (url) => {
                label="País"
                placeholder="Selecione o País"
                :icon="MapPinIcon"
+               :with-flag="true"
                @change="handleCountryChange"
             />
 
@@ -202,7 +230,7 @@ const changePage = (url) => {
         </div>
 
         <!-- Page Title Region -->
-        <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-8 mt-2">
+        <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-4 mt-2">
             <div>
                 <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
                 <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest rounded-full border border-slate-200 bg-white inline-block px-3 py-1 shadow-sm flex items-center gap-2">
@@ -218,32 +246,57 @@ const changePage = (url) => {
 
             <!-- TABELA HISTÓRICO -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-sm text-left whitespace-nowrap">
-                    <thead class="text-[10px] text-slate-500 bg-slate-50/80 font-black uppercase tracking-widest border-b border-slate-200">
+                <table class="w-full text-lg text-left whitespace-nowrap">
+                    <thead class="text-sm text-slate-500 bg-slate-50/80 font-black uppercase tracking-widest border-b border-slate-200">
                         <tr>
-                            <th class="px-6 py-5">PRODUTO</th>
-                            <th class="px-6 py-5">PAÍS</th>
-                            <th class="px-6 py-5">FORNECEDOR</th>
-                            <th class="px-6 py-5">DATA REGISTRO</th>
-                            <th class="px-6 py-5">ANO / MES</th>
-                            <th class="px-6 py-5 text-center">SEMANA</th>
-                            <th class="px-6 py-5 text-right">PREÇO</th>
+                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
+                                <div class="flex items-center gap-2">
+                                    PRODUTO
+                                    <ArrowUpDown :class="filters.sort_field === 'name' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
+                                <div class="flex items-center gap-2">
+                                    PAÍS
+                                    <ArrowUpDown :class="filters.sort_field === 'country' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
+                                <div class="flex items-center gap-2">
+                                    FORNECEDOR
+                                    <ArrowUpDown :class="filters.sort_field === 'supplier' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
+                                <div class="flex items-center gap-2">
+                                    DATA REGISTRO
+                                    <ArrowUpDown :class="filters.sort_field === 'date' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4">ANO / MES</th>
+                            <th class="px-5 py-4 text-center">SEMANA</th>
+                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
+                                <div class="flex items-center justify-end gap-2">
+                                    PREÇO
+                                    <ArrowUpDown :class="filters.sort_field === 'price' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white">
                             <tr v-for="(row, idx) in processedHistoricalData" :key="idx" class="hover:bg-blue-50/30 transition-colors">
-                                <td class="px-5 py-3 text-slate-800 font-bold uppercase tracking-wide text-xs">{{ row.productName }}</td>
-                                <td class="px-5 py-3 text-slate-500 uppercase text-xs">
+                                <td class="px-5 py-3 text-slate-800 font-bold uppercase tracking-wide text-base">{{ row.productName }}</td>
+                                <td class="px-5 py-3 text-slate-500 uppercase text-sm">
                                     <div class="flex items-center gap-2">
                                         <CountryFlag v-if="row.countryName" :name="row.countryName" class-name="w-4 h-3 rounded-[1px]" />
                                         {{ row.countryName }}
                                     </div>
                                 </td>
-                                <td class="px-5 py-3 text-slate-500 uppercase text-xs">{{ row.supplier }}</td>
-                                <td class="px-5 py-3 text-slate-500 text-xs">{{ row.displayDate }}</td>
-                                <td class="px-5 py-3 text-slate-500 font-mono text-xs">{{ row.yearMonth }}</td>
-                                <td class="px-5 py-3 text-slate-700 text-center font-bold text-xs">{{ row.week }}</td>
-                                <td class="px-5 py-3 text-right tabular-nums font-bold text-slate-900 pr-4 md:pr-8">
+                                <td class="px-5 py-3 text-slate-500 uppercase text-sm">{{ row.supplier }}</td>
+                                <td class="px-5 py-3 text-slate-500 text-base">{{ row.displayDate }}</td>
+                                <td class="px-5 py-3 text-slate-500 font-mono text-base">{{ row.yearMonth }}</td>
+                                <td class="px-5 py-3 text-slate-700 text-center font-bold text-base">{{ row.week }}</td>
+                                <td class="px-5 py-3 text-right tabular-nums font-bold text-slate-900 pr-4 md:pr-8 text-lg">
                                     {{ row.priceVal ? Number(row.priceVal).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                             </tr>

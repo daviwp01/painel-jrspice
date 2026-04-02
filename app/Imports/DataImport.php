@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Row;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
@@ -28,11 +29,11 @@ class DataImport implements OnEachRow, WithHeadingRow
         $data = $row->toArray();
         \Illuminate\Support\Facades\Log::info('Dados da linha importada:', $data);
 
-        $countryName = $data['pais'] ?? $data['country'] ?? null;
+        $countryName = $data['pais'] ?? $data['country'] ?? $data['país'] ?? null;
         $productName = $data['produto'] ?? $data['product'] ?? null;
         $supplierName = $data['fornecedor'] ?? $data['supplier'] ?? null;
-        $dateValue = $data['data_registro'] ?? $data['date'] ?? null;
-        $priceValue = $data['preco'] ?? $data['price'] ?? $data['preço'] ?? $data['valor'] ?? 0;
+        $dateValue = $data['data_registro'] ?? $data['date'] ?? $data['data'] ?? null;
+        $priceValue = $data['preco'] ?? $data['price'] ?? $data['preço'] ?? $data['valor'] ?? $data['valor_unitario'] ?? $data['valor_un'] ?? 0;
         
         // Advanced cleanup for currency strings in various formats
         if (is_string($priceValue)) {
@@ -81,9 +82,7 @@ class DataImport implements OnEachRow, WithHeadingRow
                     'date' => $date->format('Y-m-d'),
                 ],
                 [
-                    'min_price' => $priceValue,
-                    'max_price' => $priceValue,
-                    'average_price' => $priceValue,
+                    'price' => $priceValue,
                 ]
             );
         }
@@ -110,5 +109,9 @@ class DataImport implements OnEachRow, WithHeadingRow
         } catch (\Exception $e) {
             return null;
         }
+    }
+    public function headingRow(): int
+    {
+        return 3;
     }
 }

@@ -52,23 +52,62 @@ watch(() => props.chartData, (newData) => {
     visibleYears.value = Object.keys(newData || {});
 }, { immediate: true });
 
-const chartMode = ref('MENSAL');
+const chartMode = ref('SEMANAL');
 
 const toggleYear = (year) => {
-    const all = Object.keys(props.chartData || {});
-    // If in continuous mode, we don't really toggle years the same way, but let's keep it for compatibility
-    if (visibleYears.value.length === 1 && visibleYears.value.includes(year)) {
-        visibleYears.value = all;
+    const sYear = String(year);
+    if (visibleYears.value.includes(sYear)) {
+        visibleYears.value = visibleYears.value.filter(y => y !== sYear);
     } else {
-        visibleYears.value = [year];
+        visibleYears.value.push(sYear);
     }
 };
 
 const chartDataComputed = computed(() => {
     let datasets = [];
     let labels = [];
+    if (chartMode.value === 'SEMANAL') {
+        const monthNames = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+        const monthLabels = Array(52).fill("");
+        for (let i = 0; i < 52; i++) {
+            const d = new Date(2024, 0, 1 + (i * 7));
+            const month = monthNames[d.getMonth()];
+            const prevD = i > 0 ? new Date(2024, 0, 1 + ((i - 1) * 7)) : null;
+            const isMonthStart = !prevD || prevD.getMonth() !== d.getMonth();
+            if (isMonthStart) monthLabels[i] = month;
+        }
+        labels = monthLabels;
+        
+        const yearsAvail = Object.keys(props.chartData || {});
+        datasets = yearsAvail.filter(y => visibleYears.value.includes(y)).map(y => {
+            const yearWeeks = Array(52).fill(null);
+            props.pricesData.filter(p => new Date(p.date).getFullYear() == y).forEach(p => {
+                const dateVal = new Date(p.date);
+                const start = new Date(dateVal.getFullYear(), 0, 1);
+                const week = Math.floor((dateVal - start) / (7 * 24 * 60 * 60 * 1000));
+                if (week >= 0 && week < 52) {
+                    if (yearWeeks[week] === null || p.price < yearWeeks[week]) {
+                        yearWeeks[week] = p.price;
+                    }
+                }
+            });
 
-    if (chartMode.value === 'MENSAL') {
+            return {
+                label: y,
+                data: yearWeeks,
+                borderColor: yearColors[y] || '#cbd5e1',
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 8,
+                pointBackgroundColor: yearColors[y],
+                pointBorderColor: '#fff',
+                pointBorderWidth: 1.5,
+                fill: false,
+                spanGaps: true
+            };
+        });
+    } else if (chartMode.value === 'MENSAL') {
         labels = monthsFull.map(m => m.slice(0, 3));
         datasets = Object.entries(props.chartData || {})
             .filter(([year]) => visibleYears.value.includes(year))
@@ -77,54 +116,30 @@ const chartDataComputed = computed(() => {
                 data: data,
                 borderColor: yearColors[year] || '#cbd5e1',
                 backgroundColor: (yearColors[year] || '#cbd5e1') + '20',
-                borderWidth: 3,
+                borderWidth: 4,
                 tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                pointRadius: 5,
+                pointHoverRadius: 8,
                 pointBackgroundColor: yearColors[year] || '#cbd5e1',
                 pointBorderColor: '#fff',
-                pointBorderWidth: 1.5,
-                fill: false
+                pointBorderWidth: 2,
+                fill: false,
+                spanGaps: true
             }));
-    } else if (chartMode.value === 'SEMANAL') {
-        // We'll generate 52 weeks labels
-        labels = Array.from({length: 52}, (_, i) => `S${i+1}`);
-        // For Weekly mode, we filter pricesData and group by week
-        const yearsAvailable = Object.keys(props.chartData || {});
-        datasets = yearsAvailable
-            .filter(y => visibleYears.value.includes(y))
-            .map(y => {
-                const yearWeeks = Array(52).fill(null);
-                props.pricesData.filter(p => new Date(p.date).getFullYear() == y).forEach(p => {
-                    const d = new Date(p.date);
-                    const week = Math.floor((d - new Date(d.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
-                    if (week >= 0 && week < 52) yearWeeks[week] = p.min_price;
-                });
-                return {
-                    label: y,
-                    data: yearWeeks,
-                    borderColor: yearColors[y] || '#cbd5e1',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    fill: false
-                };
-            });
-    } else if (chartMode.value === 'CONTÍNUO') {
-        // One continuous line for the whole dataset
+    } else {
+        // CONTÍNUO
         labels = props.pricesData.map(p => new Date(p.date).toLocaleDateString('pt-BR', { month: 'short', year:'2-digit' }));
         datasets = [{
             label: 'Tendência Histórica',
-            data: props.pricesData.map(p => p.min_price),
+            data: props.pricesData.map(p => p.price),
             borderColor: '#2563eb', // Standard Blue
             backgroundColor: 'rgba(37, 99, 235, 0.1)',
-            borderWidth: 3,
+            borderWidth: 4,
             tension: 0.4,
-            pointRadius: 2,
+            pointRadius: 4,
             pointBackgroundColor: '#2563eb',
             pointBorderColor: '#fff',
-            pointBorderWidth: 1,
+            pointBorderWidth: 2,
             fill: true
         }];
     }
@@ -142,8 +157,8 @@ const chartOptions = {
             intersect: false,
             backgroundColor: '#0f172a',
             padding: 12,
-            titleFont: { size: 10, weight: 'bold' },
-            bodyFont: { size: 11 },
+            titleFont: { size: 14, weight: 'bold' },
+            bodyFont: { size: 15 },
             callbacks: {
                 label: (context) => `${context.dataset.label}: R$ ${context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
             }
@@ -153,7 +168,7 @@ const chartOptions = {
         y: {
             grid: { color: '#f1f5f9' },
             ticks: { 
-                font: { size: 10, weight: 'bold' },
+                font: { size: 14, weight: 'bold' },
                 color: '#94a3b8',
                 callback: (value) => `R$ ${Number(value).toLocaleString('pt-BR')}`
             }
@@ -161,11 +176,12 @@ const chartOptions = {
         x: {
             grid: { display: false },
             ticks: { 
-                font: { size: 9, weight: 'bold' },
+                font: { size: 10, weight: 'black' },
                 color: '#94a3b8',
-                autoSkip: true,
+                autoSkip: false,
                 maxRotation: 0,
-                minRotation: 0
+                minRotation: 0,
+                padding: 10
             }
         }
     }
@@ -190,6 +206,8 @@ watch(() => props.filters, (newFilters) => {
 
 const handleCountryChange = () => {
     selectedProduct.value = ''; // Limpa para que o backend decida o primeiro produto do novo país
+    selectedSupplier.value = '';
+    filterDateRange.value = 'Todos';
     applyFilters();
 };
 
@@ -259,6 +277,7 @@ const getAvgLabel = (min, max) => {
                label="País"
                placeholder="Selecione o País"
                :icon="MapPinIcon"
+               :with-flag="true"
                @change="handleCountryChange"
             />
 
@@ -345,95 +364,95 @@ const getAvgLabel = (min, max) => {
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 xl:gap-6 mb-8">
                     
                     <!-- BOX 1: PRODUTO -->
-                    <div class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
+                    <div class="lg:col-span-1 bg-white p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
                         <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <p class="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                           <BoxIcon class="w-4 h-4 text-slate-300" /> Produto
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                           <BoxIcon class="w-3 h-3 text-slate-300" /> Produto
                         </p>
-                        <h3 class="text-2xl font-black text-slate-900 mb-6 relative z-10 uppercase tracking-tight leading-none">{{ products.find(p => p.id == selectedProduct)?.name }}</h3>
+                        <h3 class="text-lg font-black text-slate-900 mb-3 relative z-10 uppercase tracking-tight leading-none">{{ products.find(p => p.id == selectedProduct)?.name }}</h3>
                         
-                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 relative z-10">
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 relative z-10">
                             <div>
-                                <p class="text-sm text-slate-400 font-black uppercase tracking-widest flex items-center gap-2 mb-2">
+                                <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2 mb-1">
                                     País
                                 </p>
-                                <div class="flex items-center gap-2.5">
-                                   <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-10 h-7 shadow-md rounded-[3px]" />
-                                   <p class="text-base font-bold text-slate-700 uppercase">{{ countries.find(c => c.id == selectedCountry)?.name }}</p>
+                                <div class="flex items-center gap-1.5">
+                                   <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-6 h-4.5 shadow-sm rounded-[2px]" />
+                                   <p class="text-xs font-bold text-slate-700 uppercase">{{ countries.find(c => c.id == selectedCountry)?.name }}</p>
                                 </div>
                             </div>
                             <div>
-                                <p class="text-sm text-slate-400 font-black uppercase tracking-widest mb-2">Safra</p>
-                                <p class="text-base font-bold text-slate-700 uppercase">{{ products.find(p => p.id == selectedProduct)?.harvest_month || '--' }}</p>
+                                <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Safra</p>
+                                <p class="text-xs font-bold text-slate-700 uppercase">{{ products.find(p => p.id == selectedProduct)?.harvest_month || '--' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 2: ÚLTIMA SEMANA -->
-                    <div class="bg-blue-600 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden border border-blue-500 group">
+                    <div class="bg-blue-600 text-white p-4 lg:p-5 rounded-3xl shadow-xl relative overflow-hidden border border-blue-500 group">
                         <div class="absolute right-0 top-0 w-32 h-32 bg-blue-500/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-400/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-blue-800 text-[11px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-lg border border-blue-400/30 z-10 tabular-nums">
+                        <div class="absolute right-4 top-4 bg-blue-800 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg shadow-lg border border-blue-400/30 z-10 tabular-nums">
                             {{ formatSpread(metrics.latest.spread) }}%
                         </div>
-                        <p class="text-xs font-black text-blue-100 uppercase tracking-[0.12em] mb-1 truncate pr-20 z-10 relative">{{ metrics.latest.label }}</p>
-                        <p class="text-[11px] font-bold text-blue-200/60 uppercase tracking-widest mb-6 z-10 relative">{{ metrics.latest.sub_label }}</p>
+                        <p class="text-[9px] font-black text-blue-100 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">{{ metrics.latest.label }}</p>
+                        <p class="text-[9px] font-bold text-blue-200/60 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.latest.sub_label }}</p>
                         
                         <div class="space-y-4 pt-1 z-10 relative">
                             <div class="pl-2 border-l-[3px] border-white/20">
                                 <p class="text-[11px] font-black text-blue-200 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-3xl font-black tabular-nums tracking-tight">{{ formatNumber(metrics.latest.min) }}</p>
+                                <p class="text-xl font-black tabular-nums tracking-tight">{{ formatNumber(metrics.latest.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-[3px] border-white/60">
                                 <p class="text-[11px] font-black text-blue-200 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-3xl font-black tabular-nums tracking-tight">{{ formatNumber(metrics.latest.max) }}</p>
+                                <p class="text-xl font-black tabular-nums tracking-tight">{{ formatNumber(metrics.latest.max) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 3: ANO -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
+                    <div class="bg-white p-4 lg:p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
                         <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-slate-100 text-slate-600 text-[11px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-sm z-10 tabular-nums border border-slate-200">
+                        <div class="absolute right-4 top-4 bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg shadow-sm z-10 tabular-nums border border-slate-200">
                             {{ formatSpread(metrics.year.spread) }}%
                         </div>
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-[0.12em] mb-1 truncate pr-20 z-10 relative">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">
                             <span class="text-slate-500">{{ metrics.year.label?.split(':')[0] }}:</span> 
                             <span class="text-blue-600 ml-1">{{ metrics.year.label?.split(':')[1] }}</span>
                         </p>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6 z-10 relative">{{ metrics.year.sub_label }}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.year.sub_label }}</p>
                         
                         <div class="space-y-4 pt-1 z-10 relative">
                             <div class="pl-2 border-l-[3px] border-blue-500/20">
                                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-3xl font-black text-slate-800/60 tabular-nums tracking-tight">{{ formatNumber(metrics.year.min) }}</p>
+                                <p class="text-xl font-black text-slate-800/60 tabular-nums tracking-tight">{{ formatNumber(metrics.year.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-[3px] border-blue-600">
                                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-3xl font-black text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.year.max) }}</p>
+                                <p class="text-xl font-black text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.year.max) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 4: DESDE -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
+                    <div class="bg-white p-4 lg:p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
                         <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-slate-100 text-rose-600 text-[11px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-sm z-10 tabular-nums border border-slate-200">
+                        <div class="absolute right-4 top-4 bg-slate-100 text-rose-600 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-lg shadow-sm z-10 tabular-nums border border-slate-200">
                             {{ formatSpread(metrics.all.spread) }}%
                         </div>
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-[0.12em] mb-1 truncate pr-20 z-10 relative">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">
                             <span class="text-slate-500">{{ metrics.all.label?.split(':')[0] }}:</span> 
                             <span class="text-blue-600 ml-1">{{ metrics.all.label?.split(':')[1] }}</span>
                         </p>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6 z-10 relative">{{ metrics.all.sub_label }}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.all.sub_label }}</p>
                         
                         <div class="space-y-4 pt-1 z-10 relative">
                             <div class="pl-2 border-l-[3px] border-blue-500/20">
                                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-3xl font-black text-slate-800/60 tabular-nums tracking-tight">{{ formatNumber(metrics.all.min) }}</p>
+                                <p class="text-xl font-black text-slate-800/60 tabular-nums tracking-tight">{{ formatNumber(metrics.all.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-[3px] border-blue-600">
                                 <p class="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-3xl font-black text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.all.max) }}</p>
+                                <p class="text-xl font-black text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.all.max) }}</p>
                             </div>
                         </div>
                     </div>
@@ -443,27 +462,28 @@ const getAvgLabel = (min, max) => {
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-slate-100 gap-4">
                         <div class="flex items-center gap-3">
-                           <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest">MELHOR PREÇO x TEMPO</h3>
+                           <h3 class="text-lg font-black text-slate-900 uppercase tracking-widest">MELHOR PREÇO x TEMPO</h3>
                         </div>
                         <div class="flex bg-slate-100 p-1 rounded-lg">
-                            <button @click="chartMode = 'MENSAL'" :class="[chartMode === 'MENSAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-4 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all">MENSAL</button>
-                            <button @click="chartMode = 'SEMANAL'" :class="[chartMode === 'SEMANAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-4 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all">SEMANAL</button>
-                            <button @click="chartMode = 'CONTÍNUO'" :class="[chartMode === 'CONTÍNUO' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-4 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-md transition-all">CONTÍNUO</button>
+                            <button @click="chartMode = 'MENSAL'" :class="[chartMode === 'MENSAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all">MENSAL</button>
+                            <button @click="chartMode = 'SEMANAL'" :class="[chartMode === 'SEMANAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all">SEMANAL</button>
+                            <button @click="chartMode = 'CONTÍNUO'" :class="[chartMode === 'CONTÍNUO' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-black uppercase tracking-wider rounded-md transition-all">CONTÍNUO</button>
                         </div>
                     </div>
                     
-                    <div class="relative h-80 w-full mt-4 flex flex-col pt-4">
+                    <div class="relative h-[650px] w-full mt-8 flex flex-col pt-4">
                         <!-- Y-AXIS LABELS -->
-                        <div class="absolute left-0 top-0 bottom-12 w-12 flex flex-col justify-between text-[10px] font-black text-slate-300 tabular-nums pb-2">
+                        <div class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-sm font-black text-slate-400 tabular-nums pb-2">
                            <span>{{ formatNumber(metrics.all.max, 0) }}</span>
                            <span>{{ getAvgLabel(metrics.all.min, metrics.all.max) }}</span>
                            <span>{{ formatNumber(metrics.all.min, 0) }}</span>
                         </div>
 
                         <!-- CHART AREA -->
-                        <div class="ml-14 flex-1 relative border-l border-b border-slate-100 mb-12 min-h-0">
+                        <div class="ml-20 flex-1 relative border-l border-b border-slate-100 mb-12 min-h-0">
                            <Line 
                               v-if="chartData && Object.keys(chartData).length"
+                              :key="chartMode"
                               :data="chartDataComputed" 
                               :options="chartOptions"
                            />
@@ -475,7 +495,7 @@ const getAvgLabel = (min, max) => {
                     <div v-if="chartMode !== 'CONTÍNUO'" class="mt-4 flex flex-wrap justify-center gap-6 pt-4 border-t border-slate-50 items-center">
                        <div v-for="(yearsValue, yearKey) in chartData" :key="yearKey" @click="toggleYear(yearKey)" class="flex items-center gap-2 group cursor-pointer transition-opacity duration-300" :class="{ 'opacity-30': !visibleYears.includes(yearKey) }">
                           <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: yearColors[yearKey] }"></div>
-                          <span class="text-[10px] font-black text-slate-600 uppercase tracking-widest group-hover:text-blue-600 transition-colors">{{ yearKey }}</span>
+                          <span class="text-sm font-black text-slate-600 uppercase tracking-widest group-hover:text-blue-600 transition-colors">{{ yearKey }}</span>
                        </div>
                     </div>
                 </div>

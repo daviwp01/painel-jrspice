@@ -2,9 +2,10 @@
 import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck } from 'lucide-vue-next';
+import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import axios from 'axios';
 
 const MapPinIcon = MapPin;
 const TruckIcon = Truck;
@@ -18,13 +19,70 @@ const props = defineProps({
 });
 
 const selectedCountry = ref(props.filters.country_id || '');
-const selectedSupplier = ref(props.filters.supplier_id || '');
 const isLoading = ref(false);
+
+// Export PDF Logic
+const isExportModalOpen = ref(false);
+const isDownloading = ref(false);
+const selectedExportCountries = ref([]);
+const selectAll = ref(false);
+
+const toggleAllCountries = () => {
+    if (selectAll.value) {
+        selectedExportCountries.value = props.countries.map(c => c.id);
+    } else {
+        selectedExportCountries.value = [];
+    }
+};
+
+const handleExportPdf = async () => {
+    if (selectedExportCountries.value.length === 0) {
+        alert('Por favor, selecione ao menos um país.');
+        return;
+    }
+
+    isDownloading.value = true;
+    try {
+        const response = await axios.get(route('dashboard.export.prices'), {
+            params: { country_ids: selectedExportCountries.value },
+            responseType: 'blob'
+        });
+        
+        // Se a resposta for JSON (erro), ler como texto
+        if (response.data.type === 'application/json') {
+            const text = await response.data.text();
+            const errorData = JSON.parse(text);
+            if (errorData.is_error) {
+                alert(`ERRO TÉCNICO: ${errorData.message}\nNo arquivo: ${errorData.file}\nLinha: ${errorData.line}`);
+                isDownloading.value = false;
+                return;
+            }
+        }
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        const dateStr = new Date().toISOString().split('T')[0];
+        link.setAttribute('download', `dados_data_${dateStr}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        
+        isExportModalOpen.value = false;
+    } catch (e) {
+        console.error(e);
+        alert('Ocorreu um erro ao gerar o PDF. Verifique os logs do servidor.');
+    } finally {
+        isDownloading.value = false;
+    }
+};
 
 watch(() => props.filters, (newFilters) => {
     selectedCountry.value = newFilters.country_id || '';
-    selectedSupplier.value = newFilters.supplier_id || '';
 }, { deep: true });
+
+const handleCountryChange = () => {
+    applyFilters();
+};
 
 const applyFilters = () => {
     isLoading.value = true;
@@ -32,13 +90,32 @@ const applyFilters = () => {
         route('dashboard.page', { slug: props.currentPage.slug }),
         { 
             country_id: selectedCountry.value,
-            supplier_id: selectedSupplier.value
+            sort_field: props.filters.sort_field,
+            sort_direction: props.filters.sort_direction
         },
         { 
             preserveState: true, 
             replace: true,
             onFinish: () => { isLoading.value = false; }
         }
+    );
+};
+
+const handleSort = (field) => {
+    let direction = 'asc';
+    if (props.filters.sort_field === field) {
+        direction = props.filters.sort_direction === 'asc' ? 'desc' : 'asc';
+    }
+    
+    isLoading.value = true;
+    router.get(
+        route('dashboard.page', { slug: props.currentPage.slug }),
+        { 
+            country_id: selectedCountry.value,
+            sort_field: field,
+            sort_direction: direction
+        },
+        { preserveState: true, replace: true, onFinish: () => { isLoading.value = false; } }
     );
 };
 
@@ -53,8 +130,8 @@ const processedProducts = computed(() => {
         const latestInfo = prices[0];
         const previousInfo = prices[1];
 
-        const latestPrice = latestInfo ? parseFloat(latestInfo.min_price) : null;
-        const previousPrice = previousInfo ? parseFloat(previousInfo.min_price) : latestPrice;
+        const latestPrice = latestInfo ? parseFloat(latestInfo.price) : null;
+        const previousPrice = previousInfo ? parseFloat(previousInfo.price) : latestPrice;
 
         let variation = 0;
         if (latestPrice && previousPrice) {
@@ -78,8 +155,10 @@ const processedProducts = computed(() => {
 });
 
 const formatPaginationLabel = (label) => {
-    if (label.includes('Previous')) return '&laquo; Anterior';
-    if (label.includes('Next')) return 'Próximo &raquo;';
+    if (!label) return '';
+    const l = label.toLowerCase();
+    if (l.includes('previous')) return '&laquo; Anterior';
+    if (l.includes('next')) return 'Próximo &raquo;';
     return label;
 };
 
@@ -109,17 +188,10 @@ const changePage = (url) => {
                label="País"
                placeholder="Selecione o País"
                :icon="MapPinIcon"
-               @change="applyFilters"
+               :with-flag="true"
+               @change="handleCountryChange"
             />
 
-            <SearchableSelect 
-               v-model="selectedSupplier"
-               :options="suppliers"
-               label="Fornecedor"
-               placeholder="Todos os Fornecedores"
-               :icon="TruckIcon"
-               @change="applyFilters"
-            />
           </div>
       </div>
     </template>
@@ -141,8 +213,16 @@ const changePage = (url) => {
                     <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
                 </p>
             </div>
-            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Gerenciador Analítico JRSpice
+            <div class="flex items-center gap-4">
+                <button 
+                    @click="isExportModalOpen = true"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
+                >
+                    <FileDown class="w-4 h-4" /> Exportar PDF
+                </button>
+                <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    Gerenciador Analítico JRSpice
+                </div>
             </div>
         </div>
 
@@ -150,9 +230,9 @@ const changePage = (url) => {
 
         <div class="transition-opacity duration-300" :class="{ 'opacity-50 pointer-events-none': isLoading }">
             
-            <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-8 mt-2 w-full">
+            <div class="flex flex-col lg:flex-row gap-4 mb-4 mt-2 w-full">
                 <!-- PAÍS DE ORIGEM -->
-                <div class="w-full lg:w-[40%] bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[140px] group">
+                <div class="w-full lg:w-[40%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-100/50 transition-colors"></div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
                         PAÍS DE ORIGEM
@@ -166,9 +246,9 @@ const changePage = (url) => {
                 </div>
 
                 <!-- LEGENDA -->
-                <div class="w-full lg:w-[60%] bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 relative min-h-[140px] flex flex-col justify-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5">LEGENDA DE VARIAÇÃO</p>
-                    <div class="flex flex-col lg:flex-row gap-8 lg:items-center justify-between w-full">
+                <div class="w-full lg:w-[60%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
+                    <div class="flex flex-col lg:flex-row gap-6 lg:items-center justify-between w-full">
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-8 whitespace-nowrap mt-2 overflow-visible">
                             <div class="flex items-center gap-4 text-sm font-black text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
@@ -188,21 +268,38 @@ const changePage = (url) => {
 
             <!-- TABELA -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-sm text-left whitespace-nowrap">
-                    <thead class="text-[10px] text-slate-500 bg-slate-50/80 font-black uppercase tracking-widest border-b border-slate-200">
+                <table class="w-full text-lg text-left whitespace-nowrap">
+                    <thead class="text-sm text-slate-500 bg-white/95 backdrop-blur-sm font-black uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
                         <tr>
-                            <th class="px-6 py-5">PRODUTO</th>
-                            <th class="px-6 py-5 text-right">ÚLTIMO MELHOR PREÇO</th>
-                            <th class="px-6 py-5 text-right">MELHOR PREÇO ANTERIOR</th>
-                            <th class="px-6 py-5 text-right">VARIAÇÃO</th>
+                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
+                                <div class="flex items-center gap-2">
+                                    PRODUTO
+                                    <ArrowUpDown :class="filters.sort_field === 'name' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
+                                <div class="flex items-center justify-end gap-2">
+                                    ÚLTIMO MELHOR PREÇO
+                                    <ArrowUpDown :class="filters.sort_field === 'latest_price' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
+                            <th class="px-5 py-4 text-right cursor-not-allowed text-slate-300">
+                                MELHOR PREÇO ANTERIOR
+                            </th>
+                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
+                                <div class="flex items-center justify-end gap-2">
+                                    VARIAÇÃO
+                                    <ArrowUpDown :class="filters.sort_field === 'variation' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                </div>
+                            </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-bold bg-white">
                             <tr v-for="prod in processedProducts" :key="prod.id" class="hover:bg-slate-50/50 transition-colors group">
-                                <td class="px-5 py-4 text-slate-900 group-hover:text-blue-600 transition-colors">{{ prod.name }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums text-slate-900 pr-6">{{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">
+                                <td class="px-5 py-3.5 text-slate-900 group-hover:text-blue-600 transition-colors">{{ prod.name }}</td>
+                                <td class="px-5 py-3.5 text-right tabular-nums text-slate-900 pr-6">{{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
+                                <td class="px-5 py-3.5 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
+                                <td class="px-5 py-3.5 text-right tabular-nums">
                                     <div class="flex items-center justify-end gap-2 pr-2">
                                     <span class="font-black tracking-tight" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
                                         {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
@@ -215,7 +312,7 @@ const changePage = (url) => {
                                 </td>
                             </tr>
                             <tr v-if="!processedProducts.length">
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium uppercase tracking-widest text-[10px]">Nenhum dado registrado para este país.</td>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium uppercase tracking-widest text-[10px]">Sem dados inseridos para a semana atual.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -235,4 +332,83 @@ const changePage = (url) => {
         </div>
     </div>
   </DashboardLayout>
+
+  <!-- LOADING OVERLAY REAL -->
+  <div v-if="isDownloading" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+      <div class="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 max-w-sm text-center">
+          <div class="relative">
+              <div class="w-20 h-20 border-4 border-blue-100 rounded-full animate-pulse"></div>
+              <Loader2 class="w-12 h-12 text-blue-600 animate-spin absolute inset-4" />
+          </div>
+          <div>
+              <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">Gerando PDF Analítico</h3>
+              <p class="text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest leading-loose">
+                  Estamos processando as bandeiras, tabelas e variações de preços... <br>
+                  <span class="text-blue-600">O download começará em instantes.</span>
+              </p>
+          </div>
+      </div>
+  </div>
+
+  <!-- MODAL DE EXPORTAÇÃO -->
+  <div v-if="isExportModalOpen" class="fixed inset-0 z-[90] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="isExportModalOpen = false"></div>
+      
+      <div class="bg-white w-full max-w-xl rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+          <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div>
+                  <h3 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Exportar Tabela de Preços</h3>
+                  <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Selecione os países para o relatório PDF</p>
+              </div>
+              <button @click="isExportModalOpen = false" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <X class="w-6 h-6 text-slate-400" />
+              </button>
+          </div>
+
+          <div class="p-8 overflow-y-auto">
+              <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
+                  <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Lista de Países Disponíveis</span>
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                      <input type="checkbox" v-model="selectAll" @change="toggleAllCountries" class="hidden">
+                      <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all" 
+                           :class="selectAll ? 'bg-blue-600 border-blue-600' : 'border-slate-200 group-hover:border-blue-400'">
+                          <Check v-if="selectAll" class="w-3.5 h-3.5 text-white stroke-[4]" />
+                      </div>
+                      <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Selecionar Todos</span>
+                  </label>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div v-for="country in countries" :key="country.id" 
+                       @click="!selectedExportCountries.includes(country.id) ? selectedExportCountries.push(country.id) : selectedExportCountries = selectedExportCountries.filter(id => id !== country.id)"
+                       class="flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group"
+                       :class="selectedExportCountries.includes(country.id) ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200' : 'border-slate-100 hover:border-blue-100 hover:bg-slate-50'">
+                      
+                      <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0" 
+                           :class="selectedExportCountries.includes(country.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-200'">
+                          <Check v-if="selectedExportCountries.includes(country.id)" class="w-3.5 h-3.5 text-white stroke-[4]" />
+                      </div>
+
+                      <div class="flex items-center gap-3">
+                        <CountryFlag :name="country.name" class-name="w-6 h-4 object-cover rounded-[2px]" />
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-tight group-hover:text-blue-600">{{ country.name }}</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <div class="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+              <button @click="isExportModalOpen = false" class="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-colors">
+                  Cancelar
+              </button>
+              <button 
+                  @click="handleExportPdf"
+                  :disabled="selectedExportCountries.length === 0"
+                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                  Gerar Relatório ({{ selectedExportCountries.length }})
+              </button>
+          </div>
+      </div>
+  </div>
 </template>

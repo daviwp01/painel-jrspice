@@ -44,67 +44,155 @@ class InternalDashboardController extends Controller
             ->filter(fn($p) => $user->canAccessPage($p->slug))
             ->values();
 
-        $countries = Country::orderBy('name')->get();
+        // --- Current Week Logic (Monday to Sunday) ---
+        $now = \Carbon\Carbon::now();
+        $startOfWeek = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $endOfWeek = $now->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        // ----------------------------------------------
+
+        // 1. Load Countries prioritized by most recent activity THIS WEEK
+        // We use a subquery to calculate the latest update per country to avoid GROUP BY issues
+        $latestUpdatesSubquery = ProductPrice::select('products.country_id')
+            ->join('products', 'product_prices.product_id', '=', 'products.id')
+            ->selectRaw('MAX(product_prices.date) as latest_weekly_update')
+            ->whereBetween('product_prices.date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
+            ->groupBy('products.country_id');
+
+        $countries = Country::leftJoinSub($latestUpdatesSubquery, 'latest_updates', function ($join) {
+                $join->on('countries.id', '=', 'latest_updates.country_id');
+            })
+            ->select('countries.*', 'latest_updates.latest_weekly_update')
+            ->orderByRaw('latest_weekly_update DESC') // Countries with newest weekly data first
+            ->orderBy('countries.name')               // Then alphabetical
+            ->get();
+
         $countryId = $request->query('country_id');
         $supplierId = $request->query('supplier_id');
         $productId = $request->query('product_id');
-        $dateRange = $request->query('date_range');
+        $dateRange = $request->query('date_range', 'Todos'); // Default to 'Todos'
+        $sortField = $request->query('sort_field', 'name'); // Default sort field
+        $sortDir = $request->query('sort_direction', 'asc'); // Default direction
 
+        // --- Default Filter Config (applied only when no explicit filter in URL) ---
+        $defaultCountryId  = \App\Models\Setting::get('default_filter_country_id');
+        $defaultProductIds = \App\Models\Setting::get('default_filter_product_ids') ?? [];
+
+        $isFirstVisit = !$request->hasAny(['country_id', 'product_id', 'supplier_id', 'date_range']);
+
+        if ($isFirstVisit && $defaultCountryId) {
+            $countryId = $defaultCountryId;
+        }
+
+        // 2. Initial Country Selection (if none provided, fallback to first with data)
         if (!$countryId && $countries->isNotEmpty()) {
             $countryId = $countries->first()->id;
         }
 
         // --- Smart Prop Filtering for Selectors ---
-        // Suppliers that have prices for products in the selected country
-        $suppliers = Supplier::whereHas('productPrices.product', function($q) use ($countryId) {
-                if ($countryId) $q->where('country_id', $countryId);
-            })
-            ->orderBy('name')
-            ->get();
         
-        // Products in the selected country
+        // 1. Products in the selected country (Sidebar list)
         $productsForSidebarQuery = Product::query();
         if ($countryId) {
             $productsForSidebarQuery->where('country_id', $countryId);
         }
         $productsSidebar = $productsForSidebarQuery->orderBy('name')->get();
 
+        // 2. Validate or Auto-Select productId
+        if ($productId) {
+            $productExists = Product::where('id', $productId)->exists();
+            if (!$productExists) $productId = null;
+        }
+
+        // Apply default product if the selected country is the default country 
+        // AND no specific product was requested in the URL.
+        if (!$productId && $countryId == $defaultCountryId && !empty($defaultProductIds)) {
+            $defaultProduct = $productsSidebar->first(fn($p) => in_array($p->id, $defaultProductIds));
+            if ($defaultProduct) {
+                $productId = $defaultProduct->id;
+            }
+        }
+
+        // Final fallback: first product in country (alphabetical)
+        if (!$productId && $productsSidebar->isNotEmpty()) {
+            $productId = $productsSidebar->first()->id;
+        }
+
+        // 3. Suppliers list for Sidebar: all that have prices for products in this country
+        $suppliersQuery = Supplier::whereHas('productPrices.product', function($q) use ($countryId) {
+                if ($countryId) $q->where('country_id', $countryId);
+            });
+        
+        // If on PriceTable, only show suppliers with prices THIS WEEK
+        if ($currentPage->component === 'Dashboard/PriceTable') {
+            $suppliersQuery->whereHas('productPrices', function($q) use ($startOfWeek, $endOfWeek) {
+                $q->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
+            });
+        }
+        
+        $suppliers = $suppliersQuery->orderBy('name')->get();
+
+        // Supplier selection: Default to 'All' unless explicitly provided.
+        if (!$request->has('supplier_id')) {
+            $supplierId = null;
+        }
+        
         // --- Logic for PriceTable / Main Content ---
-        $productsQuery = Product::with(['prices' => function($query) use ($supplierId) {
+        $productsQuery = Product::query();
+        
+        // Eager load everything needed
+        $productsQuery->with(['prices' => function($query) use ($supplierId) {
             $query->with('supplier')->orderBy('date', 'desc');
             if ($supplierId) {
                 $query->where('supplier_id', $supplierId);
             }
         }]);
-        
+
         if ($countryId) {
             $productsQuery->where('country_id', $countryId);
         }
+
+        // Apply Current Week Filter ONLY for PriceTable component
+        if ($currentPage->component === 'Dashboard/PriceTable') {
+            $productsQuery->whereHas('prices', function($q) use ($supplierId, $startOfWeek, $endOfWeek) {
+                $q->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
+                if ($supplierId) {
+                    $q->where('supplier_id', $supplierId);
+                }
+            });
+        }
+        
         if ($supplierId) {
             $productsQuery->whereHas('prices', function($q) use ($supplierId) {
                 $q->where('supplier_id', $supplierId);
             });
         }
-        
+
+        // --- SORTING LOGIC FOR PRICETABLE ---
+        if ($sortField === 'latest_price' || $sortField === 'variation') {
+            // Complex sorting: join with latest price subquery
+            $latestPriceSub = ProductPrice::select('product_id', 'price as l_price')
+                ->whereIn('id', function($q) use ($supplierId, $startOfWeek, $endOfWeek) {
+                    $q->selectRaw('MAX(id)')
+                      ->from('product_prices')
+                      ->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
+                    if ($supplierId) $q->where('supplier_id', $supplierId);
+                    $q->groupBy('product_id');
+                });
+            
+            $productsQuery->leftJoinSub($latestPriceSub, 'lp', 'lp.product_id', '=', 'id');
+            $productsQuery->orderBy('l_price', $sortDir);
+        } else {
+            // Default sort by name
+            $productsQuery->orderBy($sortField === 'name' ? 'name' : 'name', $sortDir);
+        }
+
         // Final Products list to be passed (paginated for PriceTable, full for others)
         if ($currentPage->component === 'Dashboard/PriceTable') {
-            $products = $productsQuery->orderBy('name')->paginate(20)->withQueryString();
+            $products = $productsQuery->select('products.*')->paginate(20)->withQueryString();
         } else {
-            $products = $productsQuery->orderBy('name')->get();
+            $products = $productsQuery->select('products.*')->get();
         }
 
-        // Validate productId
-        if ($productId) {
-            $productExists = Product::where('id', $productId)->exists();
-            if (!$productExists) {
-                $productId = null;
-            }
-        }
-
-        if (!$productId && $productsSidebar->isNotEmpty()) {
-            $productId = $productsSidebar->first()->id;
-        }
-        
         // For PriceTable we need the paginated list, but for Sidebar filters we need the full list from that country
         $productsProp = ($currentPage->component === 'Dashboard/PriceTable') ? $products : $productsSidebar;
 
@@ -130,7 +218,22 @@ class InternalDashboardController extends Controller
                     $hDataQuery->whereRaw('YEAR(date) = ? AND WEEK(date, 1) = ?', [$parts[0], $parts[1]]);
                 }
             }
-            $historicalData = $hDataQuery->orderBy('date', 'desc')->paginate(20)->withQueryString();
+
+            // JOIN everything needed for sorting
+            $hDataQuery->join('countries', 'countries.id', '=', 'products.country_id')
+                       ->join('suppliers', 'suppliers.id', '=', 'product_prices.supplier_id');
+
+            // Map sort fields for HistoricalData
+            $hMap = [
+                'name' => 'products.name',
+                'country' => 'countries.name',
+                'supplier' => 'suppliers.name',
+                'date' => 'date',
+                'price' => 'price'
+            ];
+            $hSort = $hMap[$sortField] ?? 'date';
+
+            $historicalData = $hDataQuery->orderBy($hSort, $sortDir)->paginate(20)->withQueryString();
         }
 
         // Metrics (Only for Dashboard/Show or specific needs)
@@ -143,12 +246,7 @@ class InternalDashboardController extends Controller
             if ($countryId) {
                 $pricesQuery->whereHas('product', fn($q) => $q->where('country_id', $countryId));
             }
-            if ($dateRange && $dateRange !== 'Todos') {
-                $parts = explode('-', $dateRange);
-                if (count($parts) === 2) {
-                    $pricesQuery->whereRaw('YEAR(date) = ? AND WEEK(date, 1) = ?', [$parts[0], $parts[1]]);
-                }
-            }
+            // NO dateRange filter here, so chart shows full history
             $pricesData = $pricesQuery->orderBy('date')->get();
 
             // Metrics: also ignoring supplier_id filter
@@ -158,29 +256,34 @@ class InternalDashboardController extends Controller
             }
             $allPricesForMetrics = $metricsQuery->get();
 
+            // Metrics: calculating benchmarks using explicit filtering
             $now = \Carbon\Carbon::now();
-            $globalFirstYear = \App\Models\ProductPrice::min('date')?->year ?? 2023;
-            $firstYear = $globalFirstYear;
+            $subWeek = $now->copy()->subWeek();
+            $startOfYear = $now->copy()->startOfYear();
             
-            // Metrics: calculating the real absolute benchmarks for the product and country
+            $globalFirstYear = $allPricesForMetrics->min('date')?->year ?? now()->year;
+
+            $latestPrices = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($subWeek) || $p->date->isSameDay($subWeek));
+            $yearPrices = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($startOfYear) || $p->date->isSameDay($startOfYear));
+
             $metrics = [
                 'latest' => [
                     'label' => 'ÚLTIMA SEMANA',
                     'sub_label' => 'RANGE DAS OFERTAS RECEBIDAS',
-                    'min' => $allPricesForMetrics->where('date', '>=', $now->copy()->subWeek())->where('date', '<=', $now->copy()->endOfDay())->min('min_price'),
-                    'max' => $allPricesForMetrics->where('date', '>=', $now->copy()->subWeek())->where('date', '<=', $now->copy()->endOfDay())->max('max_price')
+                    'min' => (float)$latestPrices->min('price'),
+                    'max' => (float)$latestPrices->max('price')
                 ],
                 'year' => [
                     'label' => 'ANO: ' . $now->year,
                     'sub_label' => 'MENORES E MAIORES PREÇOS',
-                    'min' => $allPricesForMetrics->where('date', '>=', $now->copy()->startOfYear())->where('date', '<=', $now->copy()->endOfDay())->min('min_price'),
-                    'max' => $allPricesForMetrics->where('date', '>=', $now->copy()->startOfYear())->where('date', '<=', $now->copy()->endOfDay())->max('max_price')
+                    'min' => (float)$yearPrices->min('price'),
+                    'max' => (float)$yearPrices->max('price')
                 ],
                 'all' => [
-                    'label' => 'DESDE: ' . $firstYear,
+                    'label' => 'DESDE: ' . $globalFirstYear,
                     'sub_label' => 'MENORES E MAIORES PREÇOS',
-                    'min' => $allPricesForMetrics->where('date', '<=', $now->copy()->endOfDay())->min('min_price'),
-                    'max' => $allPricesForMetrics->where('date', '<=', $now->copy()->endOfDay())->max('max_price')
+                    'min' => (float)$allPricesForMetrics->min('price'),
+                    'max' => (float)$allPricesForMetrics->max('price')
                 ]
             ];
 
@@ -195,18 +298,20 @@ class InternalDashboardController extends Controller
                 $metrics[$key]['spread'] = $spread;
             }
 
-            // Chart data: Monthly comparison from 2023 to present
+            // Chart data: Monthly comparison from the first record until present
             $chartData = [];
             $allPricesForChart = $metricsQuery->get();
-            $years = range(2023, now()->year);
+            $pricesByYearMonth = $allPricesForChart->groupBy(fn($p) => $p->date->format('Y-n'));
+            
+            $globalFirstYear = $allPricesForChart->min('date')?->year ?? now()->year;
+            $years = range($globalFirstYear, now()->year);
+            
             foreach ($years as $y) {
                 $monthlyData = [];
                 for ($m = 1; $m <= 12; $m++) {
-                    $avg = $allPricesForChart
-                        ->where('date', '>=', \Carbon\Carbon::create($y, $m, 1)->startOfMonth())
-                        ->where('date', '<=', \Carbon\Carbon::create($y, $m, 1)->endOfMonth())
-                        ->avg('min_price');
-                    $monthlyData[] = $avg ? round($avg, 2) : null;
+                    $key = "$y-$m";
+                    $val = $pricesByYearMonth->get($key)?->min('price');
+                    $monthlyData[] = $val ? (float)round($val, 2) : null;
                 }
                 $chartData[$y] = $monthlyData;
             }
@@ -242,7 +347,9 @@ class InternalDashboardController extends Controller
                 'country_id' => $countryId,
                 'product_id' => $productId,
                 'supplier_id' => $supplierId,
-                'date_range' => $dateRange
+                'date_range' => $dateRange,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDir
             ],
             'settings' => \App\Models\Setting::all()->pluck('value', 'key'),
         ]);
@@ -270,5 +377,136 @@ class InternalDashboardController extends Controller
         \Illuminate\Support\Facades\Mail::to($recipient)->send(new \App\Mail\DirectContact($data));
 
         return redirect()->back()->with('success', 'Sua mensagem foi enviada com sucesso!');
+    }
+
+    public function exportPricesPdf(HttpRequest $request)
+    {
+        ini_set('memory_limit', '512M');
+        set_time_limit(300);
+
+        try {
+            $countryIds = $request->input('country_ids'); // Array of IDs or 'all'
+            
+            $query = Country::orderBy('name');
+            if ($countryIds && $countryIds !== 'all') {
+                $ids = is_array($countryIds) ? $countryIds : explode(',', $countryIds);
+                $query->whereIn('id', $ids);
+            }
+            
+            $countries = $query->get();
+            
+            $exportData = [];
+            
+            // Contexto seguro para download das bandeiras
+            $ctx = stream_context_create([
+                'ssl' => ["verify_peer"=>false, "verify_peer_name"=>false],
+                'http' => ['timeout' => 5] // 5 segundos max por bandeira
+            ]);
+
+            foreach ($countries as $country) {
+                $products = Product::where('country_id', $country->id)
+                    ->with(['prices' => function($q) {
+                        $q->orderBy('date', 'desc')->with('supplier')->limit(2);
+                    }])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(function($p) {
+                        $latest = $p->prices->first();
+                        $previous = $p->prices->skip(1)->first();
+                        
+                        $latestPrice = $latest ? (float)$latest->price : null;
+                        $previousPrice = $previous ? (float)$previous->price : $latestPrice;
+                        
+                        $variation = 0;
+                        if ($latestPrice && $previousPrice && $previousPrice > 0) {
+                            $variation = (($latestPrice - $previousPrice) / $previousPrice) * 100;
+                        }
+                        
+                        $status = 'none';
+                        if ($variation > 0) $status = 'up';
+                        else if ($variation < 0) $status = 'down';
+                        
+                        if (!$previous && $latest) $status = 'new';
+                        
+                        return (object)[
+                            'name' => $p->name,
+                            'latestPrice' => $latestPrice,
+                            'previousPrice' => $previousPrice,
+                            'variation' => $variation,
+                            'status' => $status,
+                            'supplier' => $latest ? $latest->supplier?->name : 'N/A'
+                        ];
+                    });
+                    
+                // Handle Flag base64
+                $flagBase64 = null;
+                $countryMap = [
+                    'brasil' => 'br', 'china' => 'cn', 'india' => 'in', 'indonesia' => 'id', 'vietna' => 'vn', 'vietnam' => 'vn',
+                    'madagascar' => 'mg', 'egito' => 'eg', 'egypt' => 'eg', 'espanha' => 'es', 'spain' => 'es', 
+                    'argentina' => 'ar', 'paraguai' => 'py', 'paraguay' => 'py', 'uruguai' => 'uy', 'uruguay' => 'uy',
+                    'mexico' => 'mx', 'canada' => 'ca', 'franca' => 'fr', 'france' => 'fr', 'alemanha' => 'de', 'germany' => 'de', 
+                    'italia' => 'it', 'italy' => 'it', 'reino unido' => 'gb', 'united kingdom' => 'gb', 'uk' => 'gb', 
+                    'japao' => 'jp', 'japan' => 'jp', 'turquia' => 'tr', 'turkey' => 'tr', 'russia' => 'ru', 
+                    'africa do sul' => 'za', 'south africa' => 'za', 'nigeria' => 'ng', 'marrocos' => 'ma', 'morocco' => 'ma',
+                    'peru' => 'pe', 'colombia' => 'co', 'chile' => 'cl', 'bulgaria' => 'bg', 'guatemala' => 'gt', 
+                    'paquistao' => 'pk', 'pakistan' => 'pk', 'sri lanka' => 'lk', 'malaysia' => 'my', 'malasia' => 'my',
+                    'tailandia' => 'th', 'thailand' => 'th', 'equador' => 'ec', 'equator' => 'ec', 'holanda' => 'nl', 
+                    'netherlands' => 'nl', 'portugal' => 'pt', 'grecia' => 'gr', 'greece' => 'gr',
+                    'panama' => 'pa', 'costa rica' => 'cr', 'honduras' => 'hn', 'salvador' => 'sv', 'nicaragua' => 'ni',
+                    'venezuela' => 've', 'bolivia' => 'bo', 'africa' => 'za', 'emirados' => 'ae', 'dubai' => 'ae',
+                    'arabia' => 'sa', 'cambodia' => 'kh', 'catar' => 'qa', 'israel' => 'il',
+                    'niger' => 'ne', 'etiopia' => 'et', 'sirialanka' => 'lk', 'sri-lanka' => 'lk'
+                ];
+                
+                // Normalização do nome: remove acentos, pega apenas o primeiro nome se tiver barra /
+                $rawName = strtolower(trim($country->name));
+                $parts = explode('/', $rawName);
+                $normalizedName = trim($parts[0]);
+                
+                // Remover acentos básicos
+                $normalizedName = str_replace(
+                    ['á', 'à', 'â', 'ã', 'é', 'è', 'ê', 'í', 'ì', 'î', 'ó', 'ò', 'ô', 'õ', 'ú', 'ù', 'û', 'ç', 'ñ'], 
+                    ['a', 'a', 'a', 'a', 'e', 'e', 'e', 'i', 'i', 'i', 'o', 'o', 'o', 'o', 'u', 'u', 'u', 'c', 'n'], 
+                    $normalizedName
+                );
+                
+                $code = $countryMap[$normalizedName] ?? null;
+                if ($code) {
+                    try {
+                        $url = "https://flagcdn.com/w160/{$code}.png";
+                        $imgData = @file_get_contents($url, false, $ctx);
+                        if ($imgData) {
+                            $flagBase64 = 'data:image/png;base64,' . base64_encode($imgData);
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("PDF Flag Export Error: " . $e->getMessage());
+                    }
+                }
+
+                $exportData[] = (object)[
+                    'name' => $country->name,
+                    'flag' => $flagBase64,
+                    'products' => $products
+                ];
+            }
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.price-table', [
+                'exportData' => $exportData,
+                'date' => now()->format('d/m/Y')
+            ]);
+            
+            $filename = 'dados_data_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("PDF Export Fatal Error: " . $e->getMessage() . " in " . $e->getFile() . " line " . $e->getLine());
+            return response()->json([
+                'is_error' => true,
+                'error' => 'Falha técnica capturada.',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 200);
+        }
     }
 }

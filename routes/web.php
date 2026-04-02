@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::get('/dashboard', [InternalDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/page/{slug}', [InternalDashboardController::class, 'show'])->name('dashboard.page');
     Route::post('/dashboard/contact/send', [InternalDashboardController::class, 'sendContactEmail'])->name('dashboard.contact.send');
+    Route::get('/dashboard/export/prices', [InternalDashboardController::class, 'exportPricesPdf'])->name('dashboard.export.prices');
 });
 
 Route::middleware('auth')->group(function () {
@@ -76,4 +77,7 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     // Import Routes
     Route::post('/data/import', [DataController::class, 'importData'])->name('admin.data.import');
     Route::get('/data/import-status/{jobId}', [DataController::class, 'getImportStatus'])->name('admin.data.import-status');
+
+    // Default Filter Config
+    Route::post('/data/default-filters', [DataController::class, 'saveDefaultFilters'])->name('admin.data.default-filters.save');
 });

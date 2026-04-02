@@ -90,9 +90,14 @@ class ProcessDataImport implements ShouldQueue
                 $worksheet = $spreadsheet->getActiveSheet();
                 $rows = $worksheet->toArray();
                 
+                // Pular as 3 primeiras linhas (Filtros, vazia, cabeçalhos)
+                // Se startRow for 2 (primeira iteração do loop), pula se row < 4
                 foreach ($rows as $rowIndex => $row) {
-                    if (empty(array_filter($row)) || $rowIndex == 0) continue;
-                    \Illuminate\Support\Facades\Log::info('DEBUG: Capturando preço:', ['col5' => $row[5], 'col6' => $row[6]]);
+                    $currentRowNumber = $startRow + $rowIndex;
+                    if ($currentRowNumber < 4) continue;
+                    if (empty(array_filter($row))) continue;
+                    
+                    \Illuminate\Support\Facades\Log::info('DEBUG: Importando linha:', ['row' => $currentRowNumber, 'prod' => $row[0] ?? '', 'price' => $row[6] ?? '']);
                     $processedCount++;
                     
                     $productName = trim($row[0] ?? '');
@@ -146,9 +151,7 @@ class ProcessDataImport implements ShouldQueue
                                 'date' => $date->format('Y-m-d'),
                             ],
                             [
-                                'min_price' => $priceValue,
-                                'max_price' => $priceValue,
-                                'average_price' => $priceValue,
+                                'price' => $priceValue,
                             ]
                         );
                     }
