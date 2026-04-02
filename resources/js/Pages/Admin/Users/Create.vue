@@ -96,7 +96,7 @@ const isFormValid = computed(() => {
 
                 <!-- Page Header -->
                 <div class="mb-10">
-                    <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center">
+                    <h1 class="text-4xl font-bold text-slate-900 tracking-tight flex items-center">
                         <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
                         {{ $t('Add New User') }}
                     </h1>
@@ -111,14 +111,14 @@ const isFormValid = computed(() => {
                                 <User class="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('Account Information') }}</h3>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight">{{ $t('Account Information') }}</h3>
                                 <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('Basic profile data') }}</p>
                             </div>
                         </div>
 
                         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-2">
-                                <InputLabel for="name" :value="$t('Name')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="name" :value="$t('Name')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <TextInput
                                     id="name"
                                     type="text"
@@ -133,7 +133,7 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="email" :value="$t('Email')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="email" :value="$t('Email')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <TextInput
                                     id="email"
                                     type="email"
@@ -147,7 +147,7 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="phone" :value="$t('Phone')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="phone" :value="$t('Phone')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <div class="relative group">
                                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                                         <Phone class="w-5 h-5" />
@@ -164,7 +164,7 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="company_name" :value="$t('Company Name')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="company_name" :value="$t('Company Name')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <div class="relative group">
                                     <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
                                         <Building2 class="w-5 h-5" />
@@ -190,14 +190,14 @@ const isFormValid = computed(() => {
                                 <Lock class="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('Security') }}</h3>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight">{{ $t('Security') }}</h3>
                                 <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('Access credentials') }}</p>
                             </div>
                         </div>
 
                         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-2">
-                                <InputLabel for="password" :value="$t('Password')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="password" :value="$t('Password')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <PasswordInput
                                     id="password"
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
@@ -210,7 +210,7 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="password_confirmation" :value="$t('Confirm Password')" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="password_confirmation" :value="$t('Confirm Password')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <PasswordInput
                                     id="password_confirmation"
                                     class="block w-full py-4 px-5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50/50 transition-all font-medium"
@@ -232,7 +232,7 @@ const isFormValid = computed(() => {
                                     <ShieldCheck class="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('Permissions') }}</h3>
+                                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">{{ $t('Permissions') }}</h3>
                                     <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('Access levels and reports') }}</p>
                                 </div>
                             </div>
@@ -250,7 +250,7 @@ const isFormValid = computed(() => {
                                         <ShieldCheck class="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p class="text-base font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{{ $t('Grant Master Privileges') }}</p>
+                                        <p class="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{ $t('Grant Master Privileges') }}</p>
                                         <p class="text-xs text-slate-500 font-bold tracking-tight mt-0.5">{{ $t('Grants full administrative access to all system settings and users.') }}</p>
                                     </div>
                                 </div>
@@ -266,13 +266,13 @@ const isFormValid = computed(() => {
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <Layout class="w-4 h-4 text-indigo-500" />
-                                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ $t('Allowed Reports') }}</h4>
+                                        <h4 class="text-sm font-bold text-slate-800 uppercase tracking-widest">{{ $t('Allowed Reports') }}</h4>
                                     </div>
-                                    <span v-if="form.allowed_pages.length === 0" class="text-[10px] text-blue-600 font-black flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                                    <span v-if="form.allowed_pages.length === 0" class="text-[10px] text-blue-600 font-bold flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                         <AlertCircle class="w-3 h-3 mr-1" />
                                         {{ $t('DEFAULT (SYSTEM)') }}
                                     </span>
-                                    <span v-else class="text-[10px] text-emerald-600 font-black flex items-center bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                                    <span v-else class="text-[10px] text-emerald-600 font-bold flex items-center bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
                                         <CheckCircle2 class="w-3 h-3 mr-1" />
                                         {{ form.allowed_pages.length }} {{ $t('SELECTED') }}
                                     </span>
@@ -294,7 +294,7 @@ const isFormValid = computed(() => {
                                             <Layout class="w-5 h-5" />
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-black text-slate-800 truncate uppercase tracking-tight group-hover:text-indigo-700 transition-colors">
+                                            <p class="text-xs font-bold text-slate-800 truncate uppercase tracking-tight group-hover:text-indigo-700 transition-colors">
                                                 {{ page.title }}
                                             </p>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{{ page.slug }}</p>
@@ -312,7 +312,7 @@ const isFormValid = computed(() => {
                             <div v-else class="p-6 bg-amber-50 rounded-xl border border-amber-100 flex items-start space-x-4 animate-in fade-in zoom-in duration-300">
                                 <AlertCircle class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p class="text-sm font-black text-amber-900 uppercase tracking-tight">{{ $t('Full Access Enabled') }}</p>
+                                    <p class="text-sm font-bold text-amber-900 uppercase tracking-tight">{{ $t('Full Access Enabled') }}</p>
                                     <p class="text-sm text-amber-700 font-medium mt-1 leading-relaxed">
                                         {{ $t('As a Master Administrator, this user will have automatic access to all current and future reports in the system.') }}
                                     </p>
@@ -325,14 +325,14 @@ const isFormValid = computed(() => {
                     <div class="flex items-center justify-end space-x-6 pt-6">
                         <Link
                             :href="route('admin.users.index')"
-                            class="text-sm font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors"
+                            class="text-sm font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest transition-colors"
                         >
                             {{ $t('Cancel') }}
                         </Link>
 
                         <PrimaryButton
                             :disabled="!isFormValid || form.processing"
-                            class="px-12 py-4 text-base font-black uppercase tracking-[0.2em] rounded-xl bg-indigo-600 shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
+                            class="px-12 py-4 text-base font-bold uppercase tracking-[0.2em] rounded-xl bg-indigo-600 shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
                         >
                             <Loader2 v-if="form.processing" class="w-5 h-5 mr-3 animate-spin" />
                             <User v-else class="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />

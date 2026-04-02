@@ -71,7 +71,7 @@ const formatLabel = (label) => {
         <div class="flex flex-col xl:flex-row gap-8">
             <!-- Form -->
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-10 self-start shadow-sm shadow-slate-200/50">
-                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                     {{ editingPage ? 'Editando Página' : 'Adicionar Página' }}
                 </h3>
@@ -84,6 +84,7 @@ const formatLabel = (label) => {
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modelo de Layout</label>
                         <select v-model="pageForm.component" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             <option value="Dashboard/Show">Modelo: Dashboard com Gráficos</option>
+                            <option value="Dashboard/Demo">Modelo: Dashboard com Gráfico Demo</option>
                             <option value="Dashboard/PriceTable">Modelo: Listagem de Preços Semanais</option>
                             <option value="Dashboard/Contact">Modelo: Página de Contatos</option>
                             <option value="Dashboard/HistoricalData">Modelo: Consulta de Histórico</option>
@@ -107,14 +108,14 @@ const formatLabel = (label) => {
             <div class="w-full xl:w-2/3 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
                 <!-- Header Tool Bar -->
                 <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Estrutura de Páginas e Menus</p>
-                    <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Estrutura de Páginas e Menus</p>
+                    <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
                         {{ pages.total }} registros encontrados
                     </span>
                 </div>
                 <div class="overflow-y-auto flex-1 relative">
                     <table class="w-full text-sm text-left text-slate-600">
-                        <thead class="text-xs text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-black border-b border-slate-200 tracking-wider sticky top-0 z-10">
+                        <thead class="text-xs text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-wider sticky top-0 z-10">
                         <tr>
                             <th class="px-6 py-4">Título</th>
                             <th class="px-6 py-4">Slug</th>
@@ -142,12 +143,12 @@ const formatLabel = (label) => {
 
             <!-- Pagination for Pages -->
             <div v-if="pages.links?.length > 3" class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Exibindo <span class="font-black text-blue-600">{{ pages.from }}</span> até <span class="font-black text-blue-600">{{ pages.to }}</span> de <span class="font-black text-slate-900">{{ pages.total }}</span> páginas
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Exibindo <span class="font-bold text-blue-600">{{ pages.from }}</span> até <span class="font-bold text-blue-600">{{ pages.to }}</span> de <span class="font-bold text-slate-900">{{ pages.total }}</span> páginas
                 </p>
                 <div class="flex gap-1">
                     <button v-for="(link, i) in pages.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                        :class="['px-3 py-2 text-xs font-black rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                        :class="['px-3 py-2 text-xs font-bold rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
                 </div>
             </div>
         </div>

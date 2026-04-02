@@ -34,7 +34,7 @@ const submit = () => {
                 <Phone class="w-6 h-6" />
             </div>
             <div>
-                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">Canais de Contato</h3>
+                <h3 class="text-xl font-bold text-slate-800 uppercase tracking-tight">Canais de Contato</h3>
                 <p class="text-xs text-slate-500 font-medium">Configure os dados que aparecem na página de contato.</p>
             </div>
         </div>
@@ -43,7 +43,7 @@ const submit = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Phone -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Telefone Principal</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Telefone Principal</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <Phone class="w-4 h-4" />
@@ -54,7 +54,7 @@ const submit = () => {
 
                 <!-- Email -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">E-mail Corporativo</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">E-mail Corporativo</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <Mail class="w-4 h-4" />
@@ -65,7 +65,7 @@ const submit = () => {
 
                 <!-- WhatsApp -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Link WhatsApp</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Link WhatsApp</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <MessageSquare class="w-4 h-4" />
@@ -76,7 +76,7 @@ const submit = () => {
 
                 <!-- Address -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Endereço Completo</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Endereço Completo</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <MapPin class="w-4 h-4" />
@@ -87,7 +87,7 @@ const submit = () => {
 
                 <!-- Hours BR -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Horário (Brasil)</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horário (Brasil)</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <div class="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-[6px] text-white font-bold">BR</div>
@@ -98,7 +98,7 @@ const submit = () => {
 
                 <!-- Hours PT -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Horário (Portugal)</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Horário (Portugal)</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <div class="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-[6px] text-white font-bold">PT</div>
@@ -109,14 +109,14 @@ const submit = () => {
             </div>
 
             <div class="pt-6 border-t border-slate-100 flex items-center gap-4 mb-4">
-                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Redes Sociais (Links)</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Redes Sociais (Links)</span>
                 <div class="h-px flex-1 bg-slate-100"></div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Instagram -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Instagram</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Instagram</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <Instagram class="w-4 h-4" />
@@ -127,7 +127,7 @@ const submit = () => {
 
                 <!-- LinkedIn -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">LinkedIn</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">LinkedIn</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <Linkedin class="w-4 h-4" />
@@ -138,7 +138,7 @@ const submit = () => {
 
                 <!-- Twitter -->
                 <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Twitter / X</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Twitter / X</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <Twitter class="w-4 h-4" />
@@ -149,7 +149,7 @@ const submit = () => {
             </div>
 
             <div class="pt-8 flex justify-end">
-                <button type="submit" :disabled="form.processing" class="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest py-4 px-10 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50">
+                <button type="submit" :disabled="form.processing" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-widest py-4 px-10 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50">
                     Salvar Alterações
                 </button>
             </div>

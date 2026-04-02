@@ -75,7 +75,7 @@ const formatLabel = (label) => {
         <div class="flex flex-col xl:flex-row gap-8">
             <!-- Form -->
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-10 self-start shadow-sm shadow-slate-200/50">
-                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                     {{ editingCountry ? 'Editando País' : 'Adicionar País' }}
                 </h3>
@@ -85,7 +85,7 @@ const formatLabel = (label) => {
                         <input v-model="countryForm.name" type="text" placeholder="Ex: China, Índia..." required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div class="pt-4 flex items-center gap-3">
-                        <button type="submit" :disabled="countryForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20">
+                        <button type="submit" :disabled="countryForm.processing || !countryForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                             {{ editingCountry ? 'Atualizar' : 'Adicionar' }}
                         </button>
                         <button v-if="editingCountry" type="button" @click="cancelCountryEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
@@ -104,22 +104,22 @@ const formatLabel = (label) => {
                         :value="filters.countries_search" 
                         @input="$emit('updateSearch', 'countries_search', $event.target.value)"
                         type="text" 
-                        placeholder="Buscar país por nome..." 
-                        class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 rounded-2xl text-sm focus:border-blue-500 focus:ring-blue-500/20 shadow-sm transition-all"
+                        placeholder="BUSCAR PAÍSES..." 
+                        class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
 
                 <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Lista de Países Ativos</p>
-                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Países Ativos</p>
+                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
                             {{ countries.total }} países cadastrados
                         </span>
                     </div>
                     <div class="overflow-y-auto flex-1 relative">
-                        <table class="w-full text-lg text-left text-slate-600">
-                            <thead class="text-sm text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-black border-b border-slate-200 tracking-wider sticky top-0 z-10">
+                        <table class="w-full text-left text-slate-600">
+                            <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                             <tr>
                                 <th class="px-6 py-5">Nome do País</th>
                                 <th class="px-6 py-4 text-center">Produtos Cadastrados</th>
@@ -131,11 +131,11 @@ const formatLabel = (label) => {
                                 <td class="px-6 py-4 font-bold text-slate-800">
                                     <div class="flex items-center gap-3">
                                         <CountryFlag :name="c.name" class-name="w-6 h-4 object-cover rounded-sm border border-slate-100 shadow-sm" />
-                                        <span class="text-sm font-bold uppercase tracking-wide">{{ c.name }}</span>
+                                        <span class="text-sm font-bold uppercase tracking-tight">{{ c.name }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest border border-blue-100 shadow-sm">
+                                    <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest border border-blue-100 shadow-sm">
                                         {{ c.products_count || 0 }} {{ $t('produtos') }}
                                     </div>
                                 </td>
@@ -154,7 +154,7 @@ const formatLabel = (label) => {
 
             <!-- Pagination -->
             <div class="mt-6 flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Exibindo <span class="text-blue-600">{{ countries.from }}</span> até <span class="text-blue-600">{{ countries.to }}</span> de <span class="text-blue-600">{{ countries.total }}</span> resultados
                 </p>
                 <Pagination :links="countries.links" />

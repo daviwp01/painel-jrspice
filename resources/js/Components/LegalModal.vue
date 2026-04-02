@@ -42,7 +42,7 @@ const settings = computed(() => {
     <Modal :show="show" @close="emit('close')" maxWidth="2xl">
         <div class="flex flex-col h-[75vh] bg-white rounded-3xl overflow-hidden relative">
             <!-- Header -->
-            <div class="px-8 py-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 backdrop-blur-sm sticky top-0 z-10">
+            <div class="px-8 py-8 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
                 <div class="flex items-center space-x-5">
                     <div :class="['p-4 rounded-2xl shadow-sm', settings.iconClass]">
                         <component :is="settings.icon" class="w-7 h-7" />

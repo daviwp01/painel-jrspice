@@ -83,6 +83,14 @@ class InternalDashboardController extends Controller
             $countryId = $defaultCountryId;
         }
 
+        // --- Demo Page Strict Enforcement (Force Defaults) ---
+        if ($currentPage->component === 'Dashboard/Demo') {
+            $countryId = $defaultCountryId;
+            $productId = is_array($defaultProductIds) ? ($defaultProductIds[0] ?? null) : (json_decode($defaultProductIds, true)[0] ?? null);
+            $supplierId = null;
+            $dateRange = 'Todos';
+        }
+
         // 2. Initial Country Selection (if none provided, fallback to first with data)
         if (!$countryId && $countries->isNotEmpty()) {
             $countryId = $countries->first()->id;
@@ -256,34 +264,43 @@ class InternalDashboardController extends Controller
             }
             $allPricesForMetrics = $metricsQuery->get();
 
-            // Metrics: calculating benchmarks using explicit filtering
+            // Calculate spreading/metrics based on BEST PRICES (min price per week) 
+            // for the HISTORICAL and YEAR cards (to match the chart lines).
+            $bestWeeklyPrices = $allPricesForMetrics->groupBy(fn($p) => $p->date->format('Y-W'))
+                ->map(fn($group) => (float)$group->min('price'));
+
             $now = \Carbon\Carbon::now();
             $subWeek = $now->copy()->subWeek();
             $startOfYear = $now->copy()->startOfYear();
             
             $globalFirstYear = $allPricesForMetrics->min('date')?->year ?? now()->year;
 
-            $latestPrices = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($subWeek) || $p->date->isSameDay($subWeek));
-            $yearPrices = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($startOfYear) || $p->date->isSameDay($startOfYear));
+            // 1. LATEST WEEK: Should show the actual range of RAW OFFERS (from min to max received)
+            $latestPricesRaw = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($subWeek) || $p->date->isSameDay($subWeek));
+
+            // 2. YEAR BEST: Grouped by week to match the points seen on the chart
+            $yearBest = $allPricesForMetrics->filter(fn($p) => $p->date->isAfter($startOfYear) || $p->date->isSameDay($startOfYear))
+                ->groupBy(fn($p) => $p->date->format('Y-W'))
+                ->map(fn($group) => (float)$group->min('price'));
 
             $metrics = [
                 'latest' => [
                     'label' => 'ÚLTIMA SEMANA',
                     'sub_label' => 'RANGE DAS OFERTAS RECEBIDAS',
-                    'min' => (float)$latestPrices->min('price'),
-                    'max' => (float)$latestPrices->max('price')
+                    'min' => (float)$latestPricesRaw->min('price'),
+                    'max' => (float)$latestPricesRaw->max('price')
                 ],
                 'year' => [
                     'label' => 'ANO: ' . $now->year,
                     'sub_label' => 'MENORES E MAIORES PREÇOS',
-                    'min' => (float)$yearPrices->min('price'),
-                    'max' => (float)$yearPrices->max('price')
+                    'min' => (float)$yearBest->min(),
+                    'max' => (float)$yearBest->max()
                 ],
                 'all' => [
                     'label' => 'DESDE: ' . $globalFirstYear,
                     'sub_label' => 'MENORES E MAIORES PREÇOS',
-                    'min' => (float)$allPricesForMetrics->min('price'),
-                    'max' => (float)$allPricesForMetrics->max('price')
+                    'min' => (float)$bestWeeklyPrices->min(),
+                    'max' => (float)$bestWeeklyPrices->max()
                 ]
             ];
 
@@ -396,11 +413,15 @@ class InternalDashboardController extends Controller
             $countries = $query->get();
             
             $exportData = [];
+            $flagCache = []; // Cache temporário para não baixar a mesma bandeira várias vezes no mesmo PDF
             
-            // Contexto seguro para download das bandeiras
+            // Contexto seguro unificado para download das bandeiras
             $ctx = stream_context_create([
                 'ssl' => ["verify_peer"=>false, "verify_peer_name"=>false],
-                'http' => ['timeout' => 5] // 5 segundos max por bandeira
+                'http' => [
+                    'timeout' => 3, // 3 segundos max por bandeira para não travar o processo
+                    'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n"
+                ]
             ]);
 
             foreach ($countries as $country) {
@@ -473,19 +494,20 @@ class InternalDashboardController extends Controller
                 $code = $countryMap[$normalizedName] ?? null;
 
                 if ($code) {
-                    try {
-                        $url = "https://flagcdn.com/w160/{$code}.png";
-                        $ctx = stream_context_create([
-                            'http' => [
-                                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36\r\n"
-                            ]
-                        ]);
-                        $imgData = @file_get_contents($url, false, $ctx);
-                        if ($imgData) {
-                            $flagBase64 = 'data:image/png;base64,' . base64_encode($imgData);
+                    if (isset($flagCache[$code])) {
+                        $flagBase64 = $flagCache[$code];
+                    } else {
+                        try {
+                            $url = "https://flagcdn.com/w160/{$code}.png";
+                            $imgData = @file_get_contents($url, false, $ctx);
+                            if ($imgData) {
+                                $flagBase64 = 'data:image/png;base64,' . base64_encode($imgData);
+                                $flagCache[$code] = $flagBase64;
+                            }
+                        } catch (\Exception $e) {
+                            \Illuminate\Support\Facades\Log::error("PDF Flag Export Error: " . $e->getMessage());
+                            // Fallback silencioso: se a bandeira falhar, o PDF continua sem ela
                         }
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error("PDF Flag Export Error: " . $e->getMessage());
                     }
                 }
 
@@ -501,7 +523,7 @@ class InternalDashboardController extends Controller
                 'date' => now()->format('d/m/Y')
             ]);
             
-            $filename = 'dados_data_' . now()->format('Y-m-d') . '.pdf';
+            $filename = 'tabela-de-preco-jrspice-' . now()->format('d-m-Y') . '.pdf';
             return $pdf->download($filename);
 
         } catch (\Exception $e) {

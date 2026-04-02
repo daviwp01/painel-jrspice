@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Tabela de Preços - {{ $date }}</title>
+    <title>Tabela de Preços - JR Spice - {{ $date }}</title>
     <style>
-        @page { margin: 0.8cm; }
+        @page { margin: 60px 0 40px 0; }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             color: #1e293b;
@@ -13,8 +13,9 @@
             padding: 0;
             background-color: #fff;
         }
-        .container { width: 100%; }
-        .country-card { margin-bottom: 25px; page-break-inside: avoid; }
+        .content-wrapper { padding: 0 0.8cm; }
+        .container { width: 100%; position: relative; }
+        .country-card { margin-bottom: 25px; }
         
         /* HEADER BOX SYSTEM */
         .layout-table {
@@ -22,6 +23,7 @@
             border-collapse: separate;
             border-spacing: 12px 0;
             margin-bottom: 20px;
+            page-break-inside: avoid;
         }
         .box {
             border: 1px solid #eef2f6;
@@ -65,14 +67,15 @@
 
         /* LEGENDA SECTION */
         .legenda-table { width: 100%; border-collapse: collapse; }
-        .legenda-grid { width: 65%; }
+        .legenda-grid { width: 58%; }
         .legenda-notes {
-            width: 35%;
+            width: 42%;
             border-left: 2px solid #f1f5f9;
-            padding-left: 15px;
+            padding-left: 12px;
             font-size: 7px;
             color: #64748b;
             font-weight: bold;
+            letter-spacing: -0.1px;
         }
         .legenda-item {
             font-size: 8px;
@@ -103,7 +106,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #1e293b;
+            border-bottom: 2px solid #e2e8f0;
         }
         .data-table td {
             padding: 9px 0;
@@ -125,10 +128,46 @@
             color: #cbd5e1;
             text-align: center;
         }
+
+        /* HEADER BRAND BAR - ONLY ON FIRST PAGE */
+        header {
+            position: absolute;
+            top: -60px;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background-color: #0f172a;
+            width: 100%;
+        }
+        header table { width: 100%; border-collapse: collapse; margin: 0; padding: 0; }
+        header td { padding: 10px 35px; }
+        header img { height: 20px; display: block; }
+        header .brand-text {
+            color: #cbd5e1;
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
+    <header>
+        <table>
+            <tr>
+                <td style="text-align: left; vertical-align: middle; width: 40%;">
+                    <img src="{{ public_path('logo-white.png') }}">
+                </td>
+                <td style="text-align: right; vertical-align: middle; width: 60%;">
+                    <span class="brand-text">Gerado em {{ $date }}</span>
+                </td>
+            </tr>
+        </table>
+    </header>
+
     @php
+        $date = now()->format('d/m/Y');
         // Ícones em SVG Base64 para garantir renderização perfeita no PDF
         $icoDown = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMxMGI5ODEiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgNXYxNE0xOSAxMmwtNyA3LTctNyIvPjwvc3ZnPg==';
         $icoUp = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMTFkNDgiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTlWNU01IDEybDctNyA3IDciLz48L3N2Zz4=';
@@ -137,7 +176,8 @@
     @endphp
 
     <div class="container">
-        @foreach($exportData as $country)
+        <div class="content-wrapper">
+            @foreach($exportData as $country)
             <div class="country-card">
                 <table class="layout-table">
                     <tr>
@@ -192,8 +232,7 @@
                             <th style="width: 50%">PRODUTO</th>
                             <th style="text-align: right; width: 15%">ÚLTIMO PREÇO</th>
                             <th style="text-align: right; width: 15%">PREÇO ANTERIOR</th>
-                            <th style="text-align: right; width: 15%">VARIAÇÃO</th>
-                            <th style="width: 5%"></th>
+                            <th style="text-align: right; width: 20%; padding-right: 5px;" colspan="2">VARIAÇÃO</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -223,8 +262,9 @@
             </div>
         @endforeach
 
-        <div class="footer">
-            Gerado em {{ $date }} | JR Spice - BI Dashboard
+            <div class="footer">
+                Gerado em {{ $date }}
+            </div>
         </div>
     </div>
 </body>

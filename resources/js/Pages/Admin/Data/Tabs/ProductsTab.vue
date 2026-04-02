@@ -159,7 +159,7 @@ const defaultCountryData = computed(() =>
                 
                 <!-- 1. Form de Adição -->
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-sm shadow-slate-200/50">
-                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                         <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                         {{ editingProduct ? 'Editando Produto' : 'Adicionar Produto' }}
                     </h3>
@@ -188,7 +188,7 @@ const defaultCountryData = computed(() =>
                             />
                         </div>
                         <div class="pt-4 flex items-center gap-2">
-                            <button type="submit" :disabled="productForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-md shadow-blue-600/20">
+                            <button type="submit" :disabled="productForm.processing || !productForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 {{ editingProduct ? 'Atualizar' : 'Adicionar' }}
                             </button>
                             <button v-if="editingProduct" type="button" @click="cancelProductEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
@@ -205,7 +205,7 @@ const defaultCountryData = computed(() =>
                             <SlidersHorizontal class="w-3.5 h-3.5 text-white" />
                         </div>
                         <div>
-                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Filtro Padrão</h3>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest">Filtro Padrão</h3>
                             <p class="text-[9px] text-slate-500 font-medium mt-0.5">Configuração fixa inicial do painel</p>
                         </div>
                     </div>
@@ -223,7 +223,7 @@ const defaultCountryData = computed(() =>
 
                         <!-- Produtos para o país selecionado (Lista compacta) -->
                         <div v-if="defaultFilterForm.country_id" class="space-y-3">
-                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 flex items-center justify-between">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center justify-between">
                                 Produto Principal
                                 <span v-if="defaultFilterForm.product_ids.length" class="text-blue-600">(1 Selecionado)</span>
                             </label>
@@ -267,8 +267,8 @@ const defaultCountryData = computed(() =>
                         <div class="pt-5 border-t border-slate-200 flex flex-col gap-3">
                             <button
                                 @click="saveDefaultFilters"
-                                :disabled="defaultFilterForm.processing || !defaultFilterForm.country_id"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest px-4 py-3.5 rounded-xl shadow-md shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                :disabled="defaultFilterForm.processing || !defaultFilterForm.isDirty"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest px-4 py-3.5 rounded-xl shadow-md shadow-blue-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                             >
                                 <Check v-if="!defaultFilterForm.processing" class="w-3.5 h-3.5 inline mr-1" />
                                 <span v-else class="animate-spin mr-2">...</span>
@@ -279,7 +279,7 @@ const defaultCountryData = computed(() =>
                                 <button @click="clearDefaultFilters" type="button" class="text-[10px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">
                                     Limpar
                                 </button>
-                                <span v-if="defaultFilterForm.recentlySuccessful" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                                <span v-if="defaultFilterForm.recentlySuccessful" class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-1">
                                     <Check class="w-3 h-3" /> Salvo!
                                 </span>
                             </div>
@@ -298,8 +298,8 @@ const defaultCountryData = computed(() =>
                         :value="filters.products_search" 
                         @input="$emit('updateSearch', 'products_search', $event.target.value)"
                         type="text" 
-                        placeholder="Buscar produto por nome, país ou safra..." 
-                        class="w-full pl-11 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-sm focus:border-blue-500 focus:ring-blue-500/10 shadow-sm transition-all"
+                        placeholder="BUSCAR PRODUTO..." 
+                        class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
 
@@ -307,17 +307,17 @@ const defaultCountryData = computed(() =>
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Inventário Global</p>
-                            <h2 class="text-sm font-black text-slate-800 uppercase tracking-tight">Produtos Cadastrados</h2>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Inventário Global</p>
+                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Produtos Cadastrados</h2>
                         </div>
-                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1.5 px-4 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1.5 px-4 rounded-full text-[10px] font-bold uppercase tracking-widest">
                             {{ products.total }} produtos
                         </span>
                     </div>
 
                     <div class="overflow-x-auto relative">
                         <table class="w-full text-left border-collapse">
-                            <thead class="text-[11px] text-slate-400 bg-slate-50/50 uppercase font-black border-b border-slate-100 tracking-[0.1em]">
+                            <thead class="text-[10px] text-slate-400 bg-slate-50/50 uppercase font-bold border-b border-slate-100 tracking-[0.2em]">
                                 <tr>
                                     <th class="px-6 py-4">Produto</th>
                                     <th class="px-6 py-4">Origem</th>
@@ -328,16 +328,16 @@ const defaultCountryData = computed(() =>
                             <tbody class="divide-y divide-slate-50">
                                 <tr v-for="p in products.data" :key="p.id" class="hover:bg-slate-50/80 transition-colors group">
                                     <td class="px-6 py-4">
-                                        <span class="font-bold text-slate-800 uppercase text-xs">{{ p.name }}</span>
+                                        <span class="font-bold text-slate-800 uppercase text-sm tracking-tight">{{ p.name }}</span>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-2">
                                             <CountryFlag :name="p.country?.name || ''" class-name="w-4 h-3 object-cover rounded shadow-0" />
-                                            <span class="text-[11px] font-bold text-slate-600 uppercase">{{ p.country?.name }}</span>
+                                            <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{{ p.country?.name }}</span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="text-[11px] font-bold text-slate-400 uppercase">{{ p.harvest_month || '--' }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ p.harvest_month || '--' }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-right space-x-1">
                                         <button @click="editProduct(p)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
@@ -357,8 +357,8 @@ const defaultCountryData = computed(() =>
 
                     <!-- Footer Pagination -->
                     <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Exibindo <span class="text-blue-600 font-black">{{ products.from }}</span> até <span class="text-blue-600 font-black">{{ products.to }}</span> de <span class="text-slate-900 font-black">{{ products.total }}</span> resultados
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Exibindo <span class="text-blue-600 font-bold">{{ products.from }}</span> até <span class="text-blue-600 font-bold">{{ products.to }}</span> de <span class="text-slate-900 font-bold">{{ products.total }}</span> resultados
                         </p>
                         <Pagination :links="products.links" />
                     </div>

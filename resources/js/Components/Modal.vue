@@ -64,13 +64,15 @@ onUnmounted(() => {
 });
 
 const maxWidthClass = computed(() => {
-    return {
+    const predefined = {
         sm: 'sm:max-w-sm',
         md: 'sm:max-w-md',
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
         '2xl': 'sm:max-w-2xl',
     }[props.maxWidth];
+
+    return predefined || `sm:max-w-[${props.maxWidth}]`;
 });
 </script>
 
@@ -114,6 +116,7 @@ const maxWidthClass = computed(() => {
                     v-show="show"
                     class="transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full"
                     :class="maxWidthClass"
+                    :style="!['sm','md','lg','xl','2xl'].includes(props.maxWidth) ? { maxWidth: props.maxWidth } : {}"
                 >
                     <slot v-if="showSlot" />
                 </div>

@@ -51,7 +51,7 @@ const getIconClasses = (type) => {
                 </div>
 
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-black tracking-tight leading-snug">
+                    <p class="text-sm font-bold tracking-tight leading-snug">
                         {{ item.message }}
                     </p>
                 </div>

@@ -62,7 +62,7 @@ const navItems = computed(() => [
 
         <!-- 📱 SIDEBAR (LEFT) -->
         <aside :class="[
-            'fixed inset-y-0 left-0 bg-white z-[60] flex flex-col w-[330px] md:relative transition-transform duration-300 ease-in-out shrink-0',
+            'fixed inset-y-0 left-0 bg-white z-[60] flex flex-col w-[360px] md:relative transition-transform duration-300 ease-in-out shrink-0',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         ]">
             <!-- Brand Logo -->
@@ -78,23 +78,16 @@ const navItems = computed(() => [
             <div class="flex-1 overflow-y-auto p-5 space-y-8 border-r border-slate-200">
                 
                 <!-- HOME / STANDARD -->
-                <div v-if="!user?.is_master">
-                    <div class="space-y-1">
-                        <Link :href="route('dashboard')" :class="['flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-bold transition-all', route().current('dashboard') ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100']">
-                            <LayoutDashboard class="w-5 h-5" :class="route().current('dashboard') ? 'text-white' : 'text-slate-400'" />
-                            {{ $t('Dashboard Home') }}
-                        </Link>
-                    </div>
-                </div>
+
 
                 <!-- DASHBOARDS PAGES -->
                 <div v-if="$page.props.dashboardPages?.length > 0">
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Dashboards') }}</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Dashboards') }}</p>
                     <div class="space-y-1">
                         <Link v-for="pg in $page.props.dashboardPages" :key="pg.id" :href="route('dashboard.page', { slug: pg.slug })"
                             :class="['flex items-center gap-3 px-3 py-3 rounded-xl text-base font-bold transition-all', 
-                                     route().current('dashboard.page', { slug: pg.slug }) ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' : 'text-slate-600 hover:bg-slate-100']">
-                            <ChartLineIcon class="w-5 h-5" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-white' : 'text-slate-400'" />
+                                     route().current('dashboard.page', { slug: pg.slug }) ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100']">
+                            <ChartLineIcon class="w-5 h-5" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-blue-600' : 'text-slate-400'" />
                             {{ pg.title }}
                         </Link>
                     </div>
@@ -102,7 +95,7 @@ const navItems = computed(() => [
 
                 <!-- ADMINISTRATIVO -->
                 <div v-if="user?.is_master">
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Administração') }}</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Administração') }}</p>
                     <div class="space-y-1">
                         <template v-for="item in navItems" :key="item.route">
                             <Link :href="route(item.route)" v-if="(!item.masterOnly || user?.is_master)"
@@ -121,7 +114,7 @@ const navItems = computed(() => [
         </aside>
 
         <!-- BACKDROP MOBILE -->
-        <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[50] md:hidden" @click="closeMobileMenu"></div>
+        <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-slate-900/70 z-[50] md:hidden" @click="closeMobileMenu"></div>
 
         <!-- 🚀 MAIN STAGE -->
         <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f8fafc]">
@@ -132,10 +125,7 @@ const navItems = computed(() => [
                     <button class="md:hidden text-slate-400 hover:text-white p-2 -ml-2 rounded-lg" @click="isMobileMenuOpen = true">
                         <MenuIcon class="w-6 h-6" />
                     </button>
-                    <!-- Título dinâmico opcional via Header Slot -->
-                    <slot name="header">
-                        <h2 class="hidden sm:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Plataforma Analítica') }}</h2>
-                    </slot>
+                        <h2 class="hidden sm:block text-xs font-bold text-slate-400 uppercase tracking-widest"></h2>
                 </div>
 
                 <!-- Right Tools -->

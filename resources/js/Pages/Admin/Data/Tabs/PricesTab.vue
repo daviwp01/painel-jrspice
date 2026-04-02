@@ -91,7 +91,7 @@ const formatLabel = (label) => {
         <div class="flex flex-col xl:flex-row gap-8">
             <!-- Form -->
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-10 self-start shadow-sm shadow-slate-200/50">
-                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                     {{ editingPrice ? 'Editando Preço' : 'Adicionar Preço' }}
                 </h3>
@@ -126,7 +126,7 @@ const formatLabel = (label) => {
                     </div>
 
                     <div class="pt-4 flex items-center gap-3">
-                        <button type="submit" :disabled="priceForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 px-4 rounded-xl text-xs uppercase tracking-[0.15em] transition-all text-center shadow-md shadow-blue-200 transform active:scale-[0.98]">
+                        <button type="submit" :disabled="priceForm.processing || !priceForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-[0.15em] transition-all text-center shadow-md shadow-blue-200 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                             {{ editingPrice ? 'Atualizar' : 'Adicionar' }}
                         </button>
                         <button v-if="editingPrice" type="button" @click="cancelPriceEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
@@ -145,22 +145,22 @@ const formatLabel = (label) => {
                         @input="$emit('updateSearch', 'prices_search', $event.target.value)"
                         :value="filters.prices_search"
                         type="text" 
-                        placeholder="Buscar por produto, fornecedor ou data..." 
-                        class="w-full pl-11 pr-4 py-3 bg-white border-slate-200 border rounded-2xl text-sm focus:border-blue-500 focus:ring-blue-500/20 shadow-sm transition-all"
+                        placeholder="BUSCAR NO HISTÓRICO..." 
+                        class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
 
                 <div class="border border-slate-200 rounded-2xl overflow-hidden relative shadow-sm">
                     <!-- Header Tool Bar -->
                     <div class="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Lista de Histórico de Preços</p>
-                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Histórico de Preços</p>
+                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
                             {{ prices.total }} registros encontrados
                         </span>
                     </div>
                     <div class="max-h-[600px] overflow-y-auto">
-                         <table class="w-full text-lg text-left text-slate-600">
-                            <thead class="text-sm text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-black border-b border-slate-200 tracking-wider sticky top-0 z-10">
+                         <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                                 <tr>
                                     <th class="px-6 py-3">Data</th>
                                     <th class="px-6 py-3">Produto</th>
@@ -170,18 +170,18 @@ const formatLabel = (label) => {
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr v-for="pr in prices.data" :key="pr.id" class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-2 font-mono text-xs font-bold text-slate-700">{{ formatDate(pr.date) }}</td>
+                                    <td class="px-6 py-3 font-mono text-sm font-bold text-slate-700 uppercase tracking-tight">{{ formatDate(pr.date) }}</td>
                                     <td class="px-6 py-2">
-                                        <div class="font-bold text-slate-800">{{ pr.product?.name }}</div>
+                                        <div class="font-bold text-slate-800 uppercase text-sm tracking-tight">{{ pr.product?.name }}</div>
                                         <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-2">
                                             <CountryFlag :name="pr.product?.country?.name || ''" class-name="w-3 h-2 outline-slate-100 outline" />
                                             {{ pr.product?.country?.name }} • <span :class="pr.supplier ? 'text-blue-600' : 'text-slate-300 italic'">{{ pr.supplier?.name || 'S/ Fornecedor' }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-2 text-right">
-                                        <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-black text-xs"> ${{ pr.price }} </span>
+                                    <td class="px-6 py-3 text-right">
+                                        <span class="text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-bold text-xs"> ${{ pr.price }} </span>
                                     </td>
-                                    <td class="px-6 py-2 text-right">
+                                    <td class="px-6 py-3 text-right">
                                         <button @click="editPrice(pr)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1"><PencilIcon class="w-3.5 h-3.5"/></button>
                                         <button @click="deletePrice(pr)" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors inline-block"><TrashIcon class="w-3.5 h-3.5"/></button>
                                     </td>
@@ -197,11 +197,11 @@ const formatLabel = (label) => {
                 <div v-if="prices.links?.length > 3" class="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200 sm:px-6 mt-4 rounded-xl shadow-sm">
                     <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <p class="text-xs text-slate-700 font-bold uppercase tracking-widest">
-                            Exibindo <span class="font-black text-blue-600">{{ prices.from }}</span> até <span class="font-black text-blue-600">{{ prices.to }}</span> de <span class="font-black text-slate-900">{{ prices.total }}</span> resultados
+                            Exibindo <span class="font-bold text-blue-600">{{ prices.from }}</span> até <span class="font-bold text-blue-600">{{ prices.to }}</span> de <span class="font-bold text-slate-900">{{ prices.total }}</span> resultados
                         </p>
                         <div class="flex gap-1">
                             <button v-for="(link, i) in prices.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                                :class="['px-3 py-2 text-xs font-black rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                                :class="['px-3 py-2 text-xs font-bold rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
                         </div>
                     </div>
                 </div>

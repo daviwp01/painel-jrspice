@@ -52,7 +52,7 @@ const tabs = [
                                 : 'text-slate-500 hover:text-slate-800'"
                         >
                             <component :is="tab.icon" class="w-4 h-4" />
-                            <span class="text-xs sm:text-sm font-black uppercase tracking-wider sm:tracking-widest">{{ $t(tab.name) }}</span>
+                            <span class="text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest">{{ $t(tab.name) }}</span>
                         </button>
                     </div>
                 </div>
@@ -63,7 +63,7 @@ const tabs = [
                     <div v-if="activeTab === 'general'" class="space-y-12">
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Security & Approval') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Security & Approval') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <UserActivationSetting
@@ -73,7 +73,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Relatórios Permitidos (Padrão)</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Relatórios Permitidos (Padrão)</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <DefaultReportAccessSetting
@@ -87,7 +87,7 @@ const tabs = [
                     <div v-if="activeTab === 'communication'" class="space-y-12">
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Update Alerts') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Update Alerts') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <NotifyUpdateSetting :users="users" />
@@ -95,7 +95,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Dados de Atendimento & Redes</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Dados de Atendimento & Redes</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <ContactSettings :settings="settings" />
@@ -103,7 +103,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Email Template Customization') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Email Template Customization') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <EmailTemplateSettings :settings="settings" />
@@ -111,7 +111,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Legal & Privacy') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Legal & Privacy') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <LegalSettings :settings="settings" />
@@ -124,7 +124,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('SMTP Server') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('SMTP Server') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <SMTPSettings :settings="settings" />

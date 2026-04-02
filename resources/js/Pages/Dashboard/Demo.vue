@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Truck, ChevronDown, ChevronUp, Check, MapPin, Box, Calendar, Search, X, Loader2, Menu, ChartLine, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import UpgradeModal from '@/Components/UpgradeModal.vue';
+import { Truck, ChevronDown, ChevronUp, Check, MapPin, Box, Calendar, Search, X, Loader2, Menu, ChartLine, ZoomIn, ZoomOut, MessageSquare, Lock } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { Line } from 'vue-chartjs';
@@ -36,6 +37,7 @@ const props = defineProps({
   filters: Object,
   availableDates: Object,
   chartData: Object,
+  settings: Object,
 });
 
 const monthsFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -58,6 +60,14 @@ const chartMode = ref('SEMANAL');
 
 const toggleYear = (year) => {
     const sYear = String(year);
+    // In Demo Mode, only allow toggling if it's the current year (latest one)
+    const latestYear = String(Math.max(...Object.keys(props.chartData || {}).map(Number)));
+    
+    if (sYear !== latestYear) {
+        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
+        return;
+    }
+
     if (visibleYears.value.includes(sYear)) {
         visibleYears.value = visibleYears.value.filter(y => y !== sYear);
     } else {
@@ -195,8 +205,43 @@ const selectedProduct = ref(props.filters.product_id || '');
 const filterDateRange = ref(props.filters.date_range || 'Todos');
 const isDatePickerOpen = ref(false);
 const isLoading = ref(false);
-
 const isMobileMenuOpen = ref(false);
+const isUpgradeModalOpen = ref(false);
+const upgradeModalContent = ref({ title: '', message: '' });
+
+const openUpgradeModal = (option) => {
+    upgradeModalContent.value = {
+        title: option.is_locked ? 'Acesso Restrito' : 'Recurso Premium',
+        message: option.lock_message || 'Para visualizar detalhes por produto completo, fale conosco.'
+    };
+    isUpgradeModalOpen.value = true;
+};
+
+const demoCountryId = computed(() => props.settings?.default_filter_country_id || null);
+const demoProductIds = computed(() => {
+    try {
+        const val = props.settings?.default_filter_product_ids;
+        return Array.isArray(val) ? val : JSON.parse(val || '[]');
+    } catch (e) {
+        return [];
+    }
+});
+
+const countriesDemo = computed(() => {
+    return props.countries.map(c => ({
+        ...c,
+        is_locked: demoCountryId.value && c.id != demoCountryId.value,
+        lock_message: 'Para visualizar detalhes por produto completo, fale conosco.'
+    }));
+});
+
+const productsDemo = computed(() => {
+    return props.products.map(p => ({
+        ...p,
+        is_locked: demoCountryId.value && (p.country_id != demoCountryId.value || !demoProductIds.value.includes(p.id)),
+        lock_message: 'Para visualizar detalhes por produto completo, fale conosco.'
+    }));
+});
 
 // Sincroniza props que vieram do backend (já com os defaults da primeira página se não tinha ID na URL) com as refs
 watch(() => props.filters, (newFilters) => {
@@ -207,13 +252,24 @@ watch(() => props.filters, (newFilters) => {
 }, { deep: true });
 
 const handleCountryChange = () => {
-    selectedProduct.value = ''; // Limpa para que o backend decida o primeiro produto do novo país
-    selectedSupplier.value = '';
-    filterDateRange.value = 'Todos';
+    if (demoCountryId.value && selectedCountry.value != demoCountryId.value) {
+        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
+        selectedCountry.value = demoCountryId.value; // Reverte para o permitido
+        return;
+    }
     applyFilters();
 };
 
 const applyFilters = () => {
+  // Se for um produto bloqueado, barramos aqui no front também
+  const product = props.products.find(p => p.id == selectedProduct.value);
+  const isLocked = product?.country_id != demoCountryId.value || (demoProductIds.value.length > 0 && !demoProductIds.value.includes(selectedProduct.value));
+  
+  if (selectedProduct.value && isLocked) {
+     openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
+     return;
+  }
+
   isLoading.value = true;
   router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
     country_id: selectedCountry.value,
@@ -263,6 +319,21 @@ const getAvgLabel = (min, max) => {
 const chartHeight = ref(650);
 const zoomIn = () => { chartHeight.value += 100; };
 const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; };
+
+onMounted(() => {
+    // Se o usuário tentar acessar via URL algo que não é o padrão, o servidor já forçou os dados corretos.
+    // Apenas mostramos o modal para avisar que ele não tem essa permissão.
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlCountryId = urlParams.get('country_id');
+    const urlProductId = urlParams.get('product_id');
+
+    if ((urlCountryId && urlCountryId != demoCountryId.value) || 
+        (urlProductId && !demoProductIds.value.includes(parseInt(urlProductId)))) {
+        setTimeout(() => {
+            openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
+        }, 500);
+    }
+});
 </script>
 
 <template>
@@ -274,29 +345,32 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
       <div class="mt-8 border-t border-slate-100 pt-6">
          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
              <span class="flex items-center gap-2"><SearchIcon class="w-3 h-3"/> Filtros de Busca</span>
+             <div v-if="demoCountryId" class="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-200">MODO DEMO</div>
              <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
          </p>
          
           <div class="space-y-4">
             <SearchableSelect 
                v-model="selectedCountry"
-               :options="countries"
+               :options="countriesDemo"
                label="País"
                placeholder="Selecione o País"
                :icon="MapPinIcon"
                :with-flag="true"
                direction="up"
+               @locked-click="openUpgradeModal"
                @change="handleCountryChange"
             />
 
 
             <SearchableSelect 
                v-model="selectedProduct"
-               :options="products"
+               :options="productsDemo"
                label="Produto"
                placeholder="Selecione um Produto"
                :icon="BoxIcon"
                :disabled="!selectedCountry"
+               @locked-click="openUpgradeModal"
                direction="up"
                @change="applyFilters"
             />
@@ -312,7 +386,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                 </button>
 
                 <div v-if="isDatePickerOpen" class="absolute z-50 left-0 right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                   <div @click="() => { filterDateRange = 'Todos'; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider mb-2 border-b border-slate-100 pb-3" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === 'Todos' }">
+                   <div @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider mb-2 border-b border-slate-100 pb-3" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === 'Todos' }">
                       <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-300" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
                         <CheckIcon v-if="filterDateRange === 'Todos'" class="w-3 h-3 text-white stroke-[4]" />
                       </div>
@@ -324,7 +398,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         {{ group.year }}
                       </div>
                       <div class="space-y-1">
-                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="() => { filterDateRange = d.year + '-' + d.week; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === (d.year + '-' + d.week) }">
+                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === (d.year + '-' + d.week) }">
                            <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-300 ml-4" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
                               <CheckIcon v-if="filterDateRange === (d.year + '-' + d.week)" class="w-3 h-3 text-white stroke-[4]" />
                            </div>
@@ -493,9 +567,12 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
 
                     <!-- LEGEND -->
                     <div v-if="chartMode !== 'CONTÍNUO'" class="mt-4 flex flex-wrap justify-center gap-6 pt-4 border-t border-slate-50 items-center">
-                       <div v-for="(yearsValue, yearKey) in chartData" :key="yearKey" @click="toggleYear(yearKey)" class="flex items-center gap-2 group cursor-pointer transition-opacity duration-300" :class="{ 'opacity-30': !visibleYears.includes(yearKey) }">
+                       <div v-for="(yearsValue, yearKey) in chartData" :key="yearKey" @click="toggleYear(yearKey)" class="flex items-center gap-2 group cursor-pointer transition-opacity duration-300" :class="{ 'opacity-30': !visibleYears.includes(yearKey), 'grayscale opacity-40': yearKey != Math.max(...Object.keys(props.chartData || {}).map(Number)) }">
                           <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: yearColors[yearKey] }"></div>
-                          <span class="text-sm font-bold text-slate-600 uppercase tracking-widest group-hover:text-blue-600 transition-colors">{{ yearKey }}</span>
+                          <span class="text-sm font-bold text-slate-600 uppercase tracking-widest group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                             {{ yearKey }}
+                             <Lock v-if="yearKey != Math.max(...Object.keys(props.chartData || {}).map(Number))" class="w-3 h-3 text-slate-400" />
+                          </span>
                        </div>
                     </div>
                 </div>
@@ -511,5 +588,13 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
             </div>
 
         </div>
+
+    <!-- Upgrade / Conversion Modal -->
+    <UpgradeModal 
+        :show="isUpgradeModalOpen"
+        :title="upgradeModalContent.title"
+        :message="upgradeModalContent.message"
+        @close="isUpgradeModalOpen = false"
+    />
   </DashboardLayout>
 </template>

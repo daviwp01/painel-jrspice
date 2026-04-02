@@ -69,13 +69,13 @@ const pollProgress = (jobId) => {
 <template>
     <div class="animate-in fade-in zoom-in-95 duration-200">
         <div class="max-w-4xl mx-auto space-y-8">
-            <div class="bg-indigo-50/50 border border-indigo-100 rounded-3xl p-8 sm:p-12 text-center space-y-6">
-                <div class="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+            <div class="bg-blue-50/50 border border-blue-100 rounded-3xl p-8 sm:p-12 text-center space-y-6">
+                <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
                     <UploadCloudIcon class="w-10 h-10" />
                 </div>
                 <div class="space-y-2">
-                    <h2 class="text-2xl font-black text-slate-900 tracking-tight">Importação de Dados Automatizada</h2>
-                    <p class="text-slate-500 max-w-md mx-auto">Selecione sua planilha de preços (XLSX, XLS ou CSV) para atualizar rapidamente nossa base de dados analítica.</p>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Importação de Dados Automatizada</h2>
+                    <p class="text-slate-500 max-w-md mx-auto">Selecione sua planilha de preços (XLSX, XLS ou CSV) para atualizar rapidamente nossa base de dados Jrspice.</p>
                 </div>
                 
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm inline-block w-full max-w-md">
@@ -83,7 +83,7 @@ const pollProgress = (jobId) => {
                         type="file" 
                         @change="handleFileChange"
                         accept=".xlsx,.xls,.csv"
-                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-widest file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
                     />
                     <p class="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Formatos aceitos: Excel (.xlsx, .xls) e CSV</p>
                 </div>
@@ -91,7 +91,7 @@ const pollProgress = (jobId) => {
                 <div v-if="importFile && !isImporting && !importSuccess" class="pt-4">
                     <button 
                         @click="startImport"
-                        class="bg-[#0f172a] hover:bg-slate-800 text-white font-black py-4 px-12 rounded-2xl text-sm uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-200 active:scale-95"
+                        class="bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-4 px-12 rounded-2xl text-sm uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-200 active:scale-95"
                     >
                         Iniciar Importação
                     </button>
@@ -99,16 +99,16 @@ const pollProgress = (jobId) => {
 
                 <!-- Progress Bar -->
                 <div v-if="isImporting" class="max-w-md mx-auto space-y-4 pt-6 animate-in fade-in duration-500">
-                    <div class="flex items-center justify-between text-xs font-black uppercase tracking-widest text-slate-500">
+                    <div class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-500">
                         <div class="flex items-center gap-2">
-                            <Loader2Icon class="w-4 h-4 animate-spin text-indigo-600" />
+                            <Loader2Icon class="w-4 h-4 animate-spin text-blue-600" />
                             {{ importProgress?.status === 'queued' ? 'Aguardando na fila...' : 'Processando registros...' }}
                         </div>
                         <span>{{ importProgress?.percentage }}%</span>
                     </div>
                     <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
                         <div 
-                            class="h-full bg-indigo-600 rounded-full transition-all duration-500 shadow-sm shadow-indigo-200"
+                            class="h-full bg-blue-600 rounded-full transition-all duration-500 shadow-sm shadow-blue-200"
                             :style="{ width: `${importProgress?.percentage}%` }"
                         ></div>
                     </div>
@@ -121,7 +121,7 @@ const pollProgress = (jobId) => {
                 <div v-if="importSuccess" class="max-w-md mx-auto p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 text-emerald-800 animate-in bounce-in duration-500">
                     <CheckCircleIcon class="w-8 h-8 text-emerald-500 shrink-0" />
                     <div class="text-left">
-                        <p class="font-black text-sm uppercase tracking-tight">Sucesso!</p>
+                        <p class="font-bold text-sm uppercase tracking-tight">Sucesso!</p>
                         <p class="text-xs font-medium opacity-80">Todos os registros foram importados e as páginas atualizadas.</p>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ const pollProgress = (jobId) => {
                 <div v-if="importError" class="max-w-md mx-auto p-6 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-4 text-rose-800 animate-in shake duration-500">
                     <AlertCircleIcon class="w-8 h-8 text-rose-500 shrink-0" />
                     <div class="text-left">
-                        <p class="font-black text-sm uppercase tracking-tight">Falha na Importação</p>
+                        <p class="font-bold text-sm uppercase tracking-tight">Falha na Importação</p>
                         <p class="text-xs font-medium opacity-80">{{ importError }}</p>
                     </div>
                 </div>
@@ -138,15 +138,15 @@ const pollProgress = (jobId) => {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 space-y-3">
-                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px]">Instruções do Formato</h4>
+                    <h4 class="font-bold text-slate-800 uppercase tracking-widest text-[10px]">Instruções do Formato</h4>
                     <ul class="text-slate-500 space-y-2 text-xs font-medium">
-                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0"></span> A primeira linha deve conter os cabeçalhos.</li>
-                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0"></span> Colunas recomendadas: <b>Produto, País, Fornecedor, Data Registro, Preço</b>.</li>
-                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0"></span> O sistema identificará automaticamente países e fornecedores novos.</li>
+                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></span> A primeira linha deve conter os cabeçalhos.</li>
+                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></span> Colunas recomendadas: <b>Produto, País, Fornecedor, Data Registro, Preço</b>.</li>
+                        <li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></span> O sistema identificará automaticamente países e fornecedores novos.</li>
                     </ul>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 space-y-3">
-                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-[10px]">Dica Importante</h4>
+                    <h4 class="font-bold text-slate-800 uppercase tracking-widest text-[10px]">Dica Importante</h4>
                     <p class="text-xs text-slate-500 font-medium leading-relaxed">
                         Ao importar, o sistema usa as colunas <b>Produto, Fornecedor e Data</b> para evitar duplicatas. Se um registro com esse conjunto já existir, ele será atualizado com o novo preço.
                     </p>

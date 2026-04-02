@@ -38,7 +38,7 @@ const submit = () => {
                         <Layout class="w-6 h-6" />
                     </div>
                     <div>
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Acesso Padrão (Novos Usuários)</h3>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Acesso Padrão (Novos Usuários)</h3>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Define quais relatórios estarão visíveis por padrão para usuários não-master.</p>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ const submit = () => {
                     </div>
                     
                     <div>
-                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-tight leading-none mb-1">{{ page.title }}</h4>
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1">{{ page.title }}</h4>
                         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ page.slug }}</p>
                     </div>
 
@@ -80,19 +80,19 @@ const submit = () => {
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                     <Layout class="w-6 h-6 text-slate-300" />
                 </div>
-                <p class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Nenhum relatório disponível</p>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Nenhum relatório disponível</p>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-6">Certifique-se de que as páginas foram criadas na gestão de dados.</p>
             </div>
 
             <div class="flex items-center justify-between pt-8 border-t border-slate-100">
                 <div class="flex items-center space-x-2">
                     <ShieldCheck class="w-4 h-4 text-emerald-500" />
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Segurança de Acesso Ativa</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Segurança de Acesso Ativa</span>
                 </div>
                 <button
                     @click="submit"
                     :disabled="form.processing"
-                    class="bg-[#0f172a] hover:bg-slate-800 text-white px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                    class="bg-[#0f172a] hover:bg-slate-800 text-white px-8 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
                 >
                     Salvar Alterações
                     <div v-if="form.processing" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

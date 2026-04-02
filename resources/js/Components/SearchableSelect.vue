@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import { Search, ChevronDown, Check, X } from 'lucide-vue-next';
+import { Search, ChevronDown, Check, X, Lock } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 
 const props = defineProps({
@@ -37,7 +37,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['update:modelValue', 'change']);
+const emit = defineEmits(['update:modelValue', 'change', 'locked-click']);
 
 const isOpen = ref(false);
 const searchQuery = ref('');
@@ -62,6 +62,10 @@ const closeDropdown = () => {
 };
 
 const selectOption = (option) => {
+    if (option.is_locked) {
+        emit('locked-click', option);
+        return;
+    }
     emit('update:modelValue', option.id);
     emit('change', option.id);
     closeDropdown();
@@ -71,11 +75,14 @@ const selectedOption = computed(() => {
     return props.options.find(opt => opt.id == props.modelValue);
 });
 
+const normalize = (str) => 
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 const filteredOptions = computed(() => {
     if (!searchQuery.value) return props.options;
-    const query = searchQuery.value.toLowerCase();
+    const query = normalize(searchQuery.value);
     return props.options.filter(opt => 
-        opt.name.toLowerCase().includes(query)
+        normalize(opt.name || '').includes(query)
     );
 });
 
@@ -174,14 +181,16 @@ const resolveFlagName = (option) => {
                     @click="selectOption(option)"
                     :class="[
                         'flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all group mb-0.5',
-                        modelValue == option.id ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'
+                        modelValue == option.id ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700',
+                        option.is_locked ? 'opacity-40 grayscale cursor-default border border-dashed border-slate-200 bg-slate-50/50' : ''
                     ]"
                 >
                     <div class="flex items-center gap-2.5 overflow-hidden">
                         <CountryFlag v-if="withFlag" :name="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
                         <span class="text-xs font-bold uppercase tracking-wide truncate">{{ option.name }}</span>
                     </div>
-                    <Check v-if="modelValue == option.id" class="w-3.5 h-3.5 text-white stroke-[3]" />
+                    <Lock v-if="option.is_locked" class="w-3 h-3 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                    <Check v-else-if="modelValue == option.id" class="w-3.5 h-3.5 text-white stroke-[3]" />
                 </div>
 
                 <!-- Empty State -->

@@ -70,7 +70,7 @@ const formatLabel = (label) => {
         <div class="flex flex-col xl:flex-row gap-8">
             <!-- Form -->
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-10 self-start shadow-sm shadow-slate-200/50">
-                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                     {{ editingSupplier ? 'Editando Fornecedor' : 'Adicionar Fornecedor' }}
                 </h3>
@@ -80,7 +80,7 @@ const formatLabel = (label) => {
                         <input v-model="supplierForm.name" type="text" placeholder="Nome da Empresa..." required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div class="pt-4 flex items-center gap-3">
-                        <button type="submit" :disabled="supplierForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20">
+                        <button type="submit" :disabled="supplierForm.processing || !supplierForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                             {{ editingSupplier ? 'Atualizar' : 'Adicionar' }}
                         </button>
                         <button v-if="editingSupplier" type="button" @click="cancelSupplierEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
@@ -99,22 +99,22 @@ const formatLabel = (label) => {
                         :value="filters.suppliers_search" 
                         @input="$emit('updateSearch', 'suppliers_search', $event.target.value)"
                         type="text" 
-                        placeholder="Pesquisar fornecedores..."
-                        class="w-full pl-10 pr-4 py-3 bg-white border-slate-200 border rounded-2xl sm:text-xs font-black uppercase tracking-widest text-slate-600 focus:border-blue-600 focus:ring-blue-600/10 focus:ring-4 transition-all"
+                        placeholder="PESQUISAR FORNECEDORES..."
+                        class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
 
                 <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Lista de Fornecedores Cadastrados</p>
-                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Fornecedores Cadastrados</p>
+                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
                             {{ suppliers.total }} registros encontrados
                         </span>
                     </div>
                     <div class="overflow-y-auto flex-1 relative">
-                        <table class="w-full text-lg text-left text-slate-600">
-                            <thead class="text-sm text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-black border-b border-slate-200 tracking-wider sticky top-0 z-10">
+                        <table class="w-full text-left text-slate-600">
+                            <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                             <tr>
                                 <th class="px-6 py-5">Nome do Fornecedor</th>
                                 <th class="px-6 py-4 text-right">Ações</th>
@@ -122,7 +122,7 @@ const formatLabel = (label) => {
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="s in suppliers.data" :key="s.id" class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-4 font-bold text-slate-800">{{ s.name }}</td>
+                                <td class="px-6 py-4 font-bold text-slate-800 text-sm uppercase tracking-tight">{{ s.name }}</td>
                                 <td class="px-6 py-4 text-right">
                                     <button @click="editSupplier(s)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1"><PencilIcon class="w-4 h-4"/></button>
                                     <button @click="deleteSupplier(s)" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors inline-block"><TrashIcon class="w-4 h-4"/></button>
@@ -140,11 +140,11 @@ const formatLabel = (label) => {
             <div v-if="suppliers.links?.length > 3" class="flex items-center justify-between px-4 py-3 bg-white border-t border-slate-200 sm:px-6 mt-4 rounded-xl shadow-sm">
                 <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <p class="text-xs text-slate-700 font-bold uppercase tracking-widest">
-                        Exibindo <span class="font-black text-blue-600">{{ suppliers.from }}</span> até <span class="font-black text-blue-600">{{ suppliers.to }}</span> de <span class="font-black text-slate-900">{{ suppliers.total }}</span> resultados
+                        Exibindo <span class="font-bold text-blue-600">{{ suppliers.from }}</span> até <span class="font-bold text-blue-600">{{ suppliers.to }}</span> de <span class="font-bold text-slate-900">{{ suppliers.total }}</span> resultados
                     </p>
                     <div class="flex gap-1">
                         <button v-for="(link, i) in suppliers.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                            :class="['px-3 py-2 text-xs font-black rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                            :class="['px-3 py-2 text-xs font-bold rounded-lg border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
                     </div>
                 </div>
             </div>

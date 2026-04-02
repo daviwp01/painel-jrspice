@@ -65,7 +65,7 @@ onUnmounted(() => {
                 </div>
                 <div>
                     <div class="flex items-center space-x-2">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ $t('Email Queue Status') }}</h3>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Email Queue Status') }}</h3>
                         <span class="flex h-2 w-2 rounded-full" :class="stats.is_running ? 'bg-emerald-500' : 'bg-red-500'"></span>
                     </div>
                     <p class="text-[10px] font-bold uppercase tracking-widest" :class="stats.is_running ? 'text-emerald-500' : 'text-red-500'">
@@ -79,8 +79,8 @@ onUnmounted(() => {
                 <div class="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center space-x-3">
                     <Clock class="w-4 h-4 text-amber-500" />
                     <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $t('Pending') }}</p>
-                        <p class="text-sm font-black text-slate-700 leading-none">{{ stats.pending }}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $t('Pending') }}</p>
+                        <p class="text-sm font-bold text-slate-700 leading-none">{{ stats.pending }}</p>
                     </div>
                 </div>
 
@@ -88,8 +88,8 @@ onUnmounted(() => {
                 <div class="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center space-x-3">
                     <AlertCircle class="w-4 h-4 text-red-500" />
                     <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $t('Failed') }}</p>
-                        <p class="text-sm font-black text-slate-700 leading-none">{{ stats.failed }}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">{{ $t('Failed') }}</p>
+                        <p class="text-sm font-bold text-slate-700 leading-none">{{ stats.failed }}</p>
                     </div>
                 </div>
 

@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown } from 'lucide-vue-next';
+import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2 } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
@@ -146,7 +146,10 @@ const changePage = (url) => {
     <template #sidebar-filters>
       <!-- FILTERS -->
       <div class="mt-8 border-t border-slate-100 pt-6">
-         <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
+              <span class="flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</span>
+              <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
+          </p>
          
          <div class="space-y-5">
             <SearchableSelect 
@@ -156,6 +159,7 @@ const changePage = (url) => {
                placeholder="Selecione o País"
                :icon="MapPinIcon"
                :with-flag="true"
+               direction="up"
                @change="handleCountryChange"
             />
 
@@ -165,6 +169,7 @@ const changePage = (url) => {
                label="Fornecedor"
                placeholder="Todos os Fornecedores"
                :icon="TruckIcon"
+               direction="up"
                @change="applyFilters"
             />
 
@@ -180,7 +185,7 @@ const changePage = (url) => {
             />
 
             <div class="relative">
-              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Calendar class="w-3 h-3"/> Data (Ano / Semana)</label>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Calendar class="w-3 h-3"/> Data (Ano / Semana)</label>
               
               <!-- CUSTOM TREE SELECT -->
               <div class="relative group">
@@ -190,7 +195,7 @@ const changePage = (url) => {
                 </button>
 
                 <div v-if="isDatePickerOpen" class="absolute z-50 left-0 right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                   <div @click="() => { filterDateRange = 'Todos'; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded-lg cursor-pointer text-xs font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-3" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === 'Todos' }">
+                   <div @click="() => { filterDateRange = 'Todos'; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider mb-2 border-b border-slate-100 pb-3" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === 'Todos' }">
                       <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-300" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
                         <Check v-if="filterDateRange === 'Todos'" class="w-3 h-3 text-white stroke-[4]" />
                       </div>
@@ -198,7 +203,7 @@ const changePage = (url) => {
                    </div>
 
                    <div v-for="group in availableDates" :key="group.year" class="mb-4">
-                      <div class="flex items-center gap-2 p-1 px-2 text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 border-l-2 border-slate-100 ml-1">
+                      <div class="flex items-center gap-2 p-1 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-l-2 border-slate-100 ml-1">
                         {{ group.year }}
                       </div>
                       <div class="space-y-1">
@@ -224,7 +229,7 @@ const changePage = (url) => {
         
         <!-- Mobile Nav Guide -->
         <div class="md:hidden flex items-center justify-between bg-blue-50/50 text-blue-700 p-4 rounded-xl shadow-sm border border-blue-100 mb-6 cursor-pointer" @click="$emit('open-mobile-menu')">
-            <span class="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
                 <Menu class="w-4 h-4"/> Menu de Filtros Adicionais
             </span>
         </div>
@@ -232,12 +237,12 @@ const changePage = (url) => {
         <!-- Page Title Region -->
         <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-4 mt-2">
             <div>
-                <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
                 <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest rounded-full border border-slate-200 bg-white inline-block px-3 py-1 shadow-sm flex items-center gap-2">
                     <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
                 </p>
             </div>
-            <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 Gerenciador Analítico JRSpice
             </div>
         </div>
@@ -247,7 +252,7 @@ const changePage = (url) => {
             <!-- TABELA HISTÓRICO -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
                 <table class="w-full text-lg text-left whitespace-nowrap">
-                    <thead class="text-sm text-slate-500 bg-slate-50/80 font-black uppercase tracking-widest border-b border-slate-200">
+                    <thead class="text-sm text-slate-500 bg-slate-50/80 font-bold uppercase tracking-widest border-b border-slate-200">
                         <tr>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-2">

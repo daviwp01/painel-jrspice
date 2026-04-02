@@ -62,8 +62,10 @@ const handleExportPdf = async () => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        const dateStr = new Date().toISOString().split('T')[0];
-        link.setAttribute('download', `dados_data_${dateStr}.pdf`);
+        const day = String(new Date().getDate()).padStart(2, '0');
+        const month = String(new Date().getMonth() + 1).padStart(2, '0');
+        const year = new Date().getFullYear();
+        link.setAttribute('download', `tabela-de-preco-jrspice-${day}-${month}-${year}.pdf`);
         document.body.appendChild(link);
         link.click();
         
@@ -180,7 +182,10 @@ const changePage = (url) => {
     <template #sidebar-filters>
       <!-- FILTERS -->
       <div class="mt-8 border-t border-slate-100 pt-6">
-         <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
+              <span class="flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</span>
+              <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
+          </p>
                   <div class="space-y-4">
             <SearchableSelect 
                v-model="selectedCountry"
@@ -189,6 +194,7 @@ const changePage = (url) => {
                placeholder="Selecione o País"
                :icon="MapPinIcon"
                :with-flag="true"
+               direction="up"
                @change="handleCountryChange"
             />
 
@@ -200,7 +206,7 @@ const changePage = (url) => {
         
         <!-- Mobile Nav Guide -->
         <div class="md:hidden flex items-center justify-between bg-blue-50/50 text-blue-700 p-4 rounded-xl shadow-sm border border-blue-100 mb-6 cursor-pointer" @click="$emit('open-mobile-menu')">
-            <span class="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
                 <Menu class="w-4 h-4"/> Menu de Filtros Adicionais
             </span>
         </div>
@@ -208,7 +214,7 @@ const changePage = (url) => {
         <!-- Page Title Region -->
         <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-8">
             <div>
-                <h2 class="text-2xl font-black text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
                 <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest rounded-full border border-slate-200 bg-white inline-block px-3 py-1 shadow-sm flex items-center gap-2">
                     <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
                 </p>
@@ -216,11 +222,11 @@ const changePage = (url) => {
             <div class="flex items-center gap-4">
                 <button 
                     @click="isExportModalOpen = true"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
                 >
                     <FileDown class="w-4 h-4" /> Exportar PDF
                 </button>
-                <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                     Gerenciador Analítico JRSpice
                 </div>
             </div>
@@ -234,12 +240,12 @@ const changePage = (url) => {
                 <!-- PAÍS DE ORIGEM -->
                 <div class="w-full lg:w-[40%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-100/50 transition-colors"></div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
                         PAÍS DE ORIGEM
                     </p>
                     <div class="flex items-center gap-5 relative z-10">
                         <CountryFlag v-if="currentCountryData.name" :name="currentCountryData.name" class-name="w-14 h-10 object-cover" />
-                        <h2 class="text-3xl md:text-5xl font-black text-slate-800 tracking-tight uppercase break-all w-full leading-tight">
+                        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 tracking-tight uppercase break-all w-full leading-tight">
                             {{ currentCountryData.name || 'Selecione O País' }}
                         </h2>
                     </div>
@@ -247,14 +253,14 @@ const changePage = (url) => {
 
                 <!-- LEGENDA -->
                 <div class="w-full lg:w-[60%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
                     <div class="flex flex-col lg:flex-row gap-6 lg:items-center justify-between w-full">
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-8 whitespace-nowrap mt-2 overflow-visible">
-                            <div class="flex items-center gap-4 text-sm font-black text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
-                            <div class="flex items-center gap-4 text-sm font-black text-rose-600 uppercase tracking-wider pl-4 sm:pl-0"><ArrowUpIcon class="text-rose-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
-                            <div class="flex items-center gap-4 text-sm font-black text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-5 h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
-                            <div class="flex items-center gap-4 text-sm font-black text-amber-500 uppercase tracking-wider pl-4 sm:pl-0"><StarIcon class="text-amber-400 fill-amber-400 w-5 h-5 shrink-0" /> PRODUTO NOVO</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-rose-600 uppercase tracking-wider pl-4 sm:pl-0"><ArrowUpIcon class="text-rose-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-5 h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-amber-500 uppercase tracking-wider pl-4 sm:pl-0"><StarIcon class="text-amber-400 fill-amber-400 w-5 h-5 shrink-0" /> PRODUTO NOVO</div>
                         </div>
 
                         <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
@@ -269,7 +275,7 @@ const changePage = (url) => {
             <!-- TABELA -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
                 <table class="w-full text-lg text-left whitespace-nowrap">
-                    <thead class="text-sm text-slate-500 bg-white/95 backdrop-blur-sm font-black uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
+                    <thead class="text-sm text-slate-500 bg-white/95 backdrop-blur-sm font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
                         <tr>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-2">
@@ -301,7 +307,7 @@ const changePage = (url) => {
                                 <td class="px-5 py-3.5 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
                                 <td class="px-5 py-3.5 text-right tabular-nums">
                                     <div class="flex items-center justify-end gap-2 pr-2">
-                                    <span class="font-black tracking-tight" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
+                                    <span class="font-bold tracking-tight" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
                                         {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
                                     </span>
                                         <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-5 h-5 stroke-[3]" />
@@ -320,12 +326,12 @@ const changePage = (url) => {
 
                 <!-- Pagination -->
                 <div v-if="products.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         Exibindo <span class="text-blue-600">{{ products.from }}</span> até <span class="text-blue-600">{{ products.to }}</span> de <span class="text-slate-900">{{ products.total }}</span> produtos
                     </p>
                     <div class="flex gap-1">
                         <button v-for="(link, i) in products.links" :key="i" v-html="formatPaginationLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                            :class="['px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                            :class="['px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
                     </div>
                 </div>
 
@@ -334,14 +340,14 @@ const changePage = (url) => {
   </DashboardLayout>
 
   <!-- LOADING OVERLAY REAL -->
-  <div v-if="isDownloading" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+  <div v-if="isDownloading" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 animate-in fade-in duration-300">
       <div class="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 max-w-sm text-center">
           <div class="relative">
               <div class="w-20 h-20 border-4 border-blue-100 rounded-full animate-pulse"></div>
               <Loader2 class="w-12 h-12 text-blue-600 animate-spin absolute inset-4" />
           </div>
           <div>
-              <h3 class="text-xl font-black text-slate-900 uppercase tracking-tight">Gerando PDF Analítico</h3>
+              <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Gerando PDF Analítico</h3>
               <p class="text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest leading-loose">
                   Estamos processando as bandeiras, tabelas e variações de preços... <br>
                   <span class="text-blue-600">O download começará em instantes.</span>
@@ -352,12 +358,12 @@ const changePage = (url) => {
 
   <!-- MODAL DE EXPORTAÇÃO -->
   <div v-if="isExportModalOpen" class="fixed inset-0 z-[90] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="isExportModalOpen = false"></div>
+      <div class="absolute inset-0 bg-slate-900/70" @click="isExportModalOpen = false"></div>
       
       <div class="bg-white w-full max-w-xl rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
           <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
               <div>
-                  <h3 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Exportar Tabela de Preços</h3>
+                  <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tighter">Exportar Tabela de Preços</h3>
                   <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Selecione os países para o relatório PDF</p>
               </div>
               <button @click="isExportModalOpen = false" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -367,14 +373,14 @@ const changePage = (url) => {
 
           <div class="p-8 overflow-y-auto">
               <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
-                  <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Lista de Países Disponíveis</span>
+                  <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">Lista de Países Disponíveis</span>
                   <label class="flex items-center gap-2 cursor-pointer group">
                       <input type="checkbox" v-model="selectAll" @change="toggleAllCountries" class="hidden">
                       <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all" 
                            :class="selectAll ? 'bg-blue-600 border-blue-600' : 'border-slate-200 group-hover:border-blue-400'">
                           <Check v-if="selectAll" class="w-3.5 h-3.5 text-white stroke-[4]" />
                       </div>
-                      <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Selecionar Todos</span>
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Selecionar Todos</span>
                   </label>
               </div>
 
@@ -398,13 +404,13 @@ const changePage = (url) => {
           </div>
 
           <div class="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
-              <button @click="isExportModalOpen = false" class="flex-1 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-colors">
+              <button @click="isExportModalOpen = false" class="flex-1 px-6 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-colors">
                   Cancelar
               </button>
               <button 
                   @click="handleExportPdf"
                   :disabled="selectedExportCountries.length === 0"
-                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                   Gerar Relatório ({{ selectedExportCountries.length }})
               </button>

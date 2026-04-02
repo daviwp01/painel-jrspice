@@ -115,12 +115,7 @@ const searchableProducts = computed(() => {
 
         <div class="h-full bg-slate-50/50 pt-8 pb-16 px-4 sm:px-6 lg:px-8">
             <div class="w-full max-w-none">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Gerenciamento Analítico</h1>
-                        <p class="text-sm text-slate-500 mt-1">Configure as origens de dados, cadastre países, produtos e tabelas de histórico.</p>
-                    </div>
-                </div>
+
 
                 <!-- Tabs Navigation -->
                 <div class="bg-white rounded-t-2xl border-b border-slate-200 shadow-sm overflow-hidden flex flex-nowrap overflow-x-auto">
@@ -129,7 +124,7 @@ const searchableProducts = computed(() => {
                         :key="tab.id"
                         @click="activeTab = tab.id" 
                         :class="activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/10' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'" 
-                        class="px-6 py-5 border-b-[4px] font-black text-sm uppercase tracking-widest transition-all flex items-center gap-3 whitespace-nowrap"
+                        class="px-6 py-5 border-b-[4px] font-bold text-sm uppercase tracking-widest transition-all flex items-center gap-3 whitespace-nowrap"
                     >
                         <component :is="tab.icon" class="w-5 h-5" /> {{ tab.name }}
                     </button>
