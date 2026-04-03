@@ -45,16 +45,19 @@ const flagUrl = computed(() => {
 
     if (!props.name) return null;
     
-    // 2. Fallback: Busca no mapa manual (para nomes alternativos ou legados)
-    const normalizedName = removeAccents(props.name.toLowerCase().trim());
+    // 2. Normalização e Tratamento de Nomes Compostos (Ex: Malasia / Sri Lanka)
+    // Pegamos apenas a primeira parte do nome se houver uma barra
+    const rawBaseName = props.name.includes('/') ? props.name.split('/')[0] : props.name;
+    const normalizedName = removeAccents(rawBaseName.toLowerCase().trim());
+
+    // 3. Fallback: Busca no mapa manual (para nomes alternativos ou legados)
     let codeFromMap = countryMap[normalizedName];
     
     if (codeFromMap) {
         return `https://flagcdn.com/w40/${codeFromMap}.png`;
     }
 
-    // 3. Fallback Final: Busca exata no catálogo Global (globalCountries)
-    // Buscamos pelo nome ignorando acentos
+    // 4. Fallback Final: Busca exata no catálogo Global (globalCountries)
     const foundInGlobal = globalCountries.find(c => 
         removeAccents(c.name.toLowerCase()) === normalizedName
     );

@@ -212,12 +212,7 @@ const changePage = (url) => {
 
     <div class="px-4 py-6 md:p-8 space-y-6 w-full max-w-none">
         
-        <!-- Mobile Nav Guide -->
-        <div class="md:hidden flex items-center justify-between bg-blue-50/50 text-blue-700 p-4 rounded-xl shadow-sm border border-blue-100 mb-6 cursor-pointer" @click="$emit('open-mobile-menu')">
-            <span class="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                <Menu class="w-4 h-4"/> Menu de Filtros Adicionais
-            </span>
-        </div>
+
 
         <!-- Page Title Region -->
         <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-8">

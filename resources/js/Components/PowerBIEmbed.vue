@@ -423,69 +423,7 @@ watch(() => props.embedConfig, (newConfig) => {
                 </div>
             </transition>
 
-            <!-- 📱 MOBILE NAV BAR (só no mobile, com dropdown de navegação) -->
-            <div
-                v-if="activePage !== 'system_home'"
-                class="flex md:hidden w-full items-center bg-white border-b border-slate-100 px-3 py-2 z-30 gap-2"
-            >
-                <!-- Dropdown de navegação -->
-                <div class="relative flex-1">
-                    <div v-if="isNavOpen" class="fixed inset-0 z-40" @click="closeNav"></div>
 
-                    <button
-                        @click="toggleNav"
-                        class="w-full flex items-center gap-2 px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl text-left relative z-50 active:bg-slate-100"
-                    >
-                        <component
-                            :is="getPageIcon(filteredPages.find(p => p.name === activePage)?.displayName)"
-                            class="w-4 h-4 text-blue-600 flex-shrink-0"
-                        />
-                        <span class="flex-1 text-sm font-bold text-slate-800 truncate">
-                            {{ filteredPages.find(p => p.name === activePage)?.displayName?.replace(/_/g, ' ') || $t('Select Report') }}
-                        </span>
-                        <ChevronDown
-                            class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
-                            :class="isNavOpen ? 'rotate-180' : ''"
-                        />
-                    </button>
-
-                    <transition name="dropdown">
-                        <div
-                            v-if="isNavOpen"
-                            class="absolute top-full left-0 mt-1.5 w-full min-w-[220px] bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden"
-                        >
-                            <div class="p-1.5 max-h-60 overflow-y-auto">
-                                <button
-                                    v-for="page in filteredPages"
-                                    :key="page.name"
-                                    @click="() => { setActivePage(page); closeNav(); }"
-                                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all text-left"
-                                    :class="activePage === page.name ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'"
-                                >
-                                    <component
-                                        :is="getPageIcon(page.displayName)"
-                                        class="w-4 h-4 flex-shrink-0"
-                                        :class="activePage === page.name ? 'text-blue-600' : 'text-slate-400'"
-                                    />
-                                    {{ page.displayName.replace(/_/g, ' ') }}
-                                    <span v-if="activePage === page.name" class="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
-                                </button>
-                            </div>
-                        </div>
-                    </transition>
-                </div>
-
-                <!-- 🖨️ MOBILE PRINT/EXPORT PDF BUTTON -->
-                <button
-                    v-if="isPriceTable"
-                    @click="printReport"
-                    class="flex items-center gap-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 active:bg-slate-100 transition-all font-bold text-sm cursor-pointer"
-                >
-                    <Printer class="w-4 h-4 text-blue-600" />
-                </button>
-
-                <Loader2 v-if="isLoading" class="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" />
-            </div>
 
             <!-- 🏠 PREMIUM LANDING PAGE (SYSTEM HOME) -->
             <transition name="fade-slide">
