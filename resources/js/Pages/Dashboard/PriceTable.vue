@@ -363,7 +363,7 @@ const changePage = (url) => {
   <div v-if="isExportModalOpen" class="fixed inset-0 z-[90] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-slate-900/70" @click="isExportModalOpen = false"></div>
       
-      <div class="bg-white w-full max-w-xl rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div class="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
           <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
               <div>
                   <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tighter">Exportar Tabela de Preços</h3>
