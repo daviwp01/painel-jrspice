@@ -77,6 +77,10 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     // Import Routes
     Route::post('/data/import', [DataController::class, 'importData'])->name('admin.data.import');
     Route::get('/data/import-status/{jobId}', [DataController::class, 'getImportStatus'])->name('admin.data.import-status');
+    Route::post('/data/import-cancel', [DataController::class, 'cancelImport'])->name('admin.data.import-cancel');
+    Route::get('/data/download-backup', [DataController::class, 'downloadBackup'])->name('admin.data.download-backup');
+    Route::post('/data/restore-backup', [DataController::class, 'restoreBackup'])->name('admin.data.restore-backup');
+    Route::post('/data/create-backup', [DataController::class, 'createManualBackup'])->name('admin.data.create-backup');
 
     // Default Filter Config
     Route::post('/data/default-filters', [DataController::class, 'saveDefaultFilters'])->name('admin.data.default-filters.save');

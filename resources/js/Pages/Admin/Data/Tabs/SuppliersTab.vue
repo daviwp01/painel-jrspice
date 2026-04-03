@@ -56,7 +56,7 @@ const confirmDeleteSupplier = () => {
     <div class="animate-in fade-in zoom-in-95 duration-200">
         <div class="flex flex-col xl:flex-row gap-8">
             <!-- Form -->
-            <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-10 self-start shadow-sm shadow-slate-200/50">
+            <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-6 self-start shadow-sm shadow-slate-200/50 transition-all duration-300">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
                     {{ editingSupplier ? 'Editando Fornecedor' : 'Adicionar Fornecedor' }}

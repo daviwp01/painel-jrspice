@@ -154,8 +154,8 @@ const defaultCountryData = computed(() =>
         
         <div class="flex flex-col xl:flex-row gap-8">
             
-            <!-- LEFT COLUMN: FORMS & CONFIGS -->
-            <div class="w-full xl:w-1/3 space-y-8 xl:sticky xl:top-10 self-start">
+            <!-- LEFT COLUMN: FORMS & CONFIGS (STICKY) -->
+            <div class="w-full xl:w-1/3 space-y-8 xl:sticky xl:top-4 self-start">
                 
                 <!-- 1. Form de Adição -->
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-sm shadow-slate-200/50">
@@ -179,12 +179,12 @@ const defaultCountryData = computed(() =>
                             />
                             
                             <SearchableSelect 
-                            v-model="productForm.harvest_month"
-                            :options="months"
-                            label="Mês de Safra (Opcional)"
-                            placeholder="Selecione o Mês"
-                            :icon="CalendarIcon"
-                            :searchable="false"
+                                v-model="productForm.harvest_month"
+                                :options="months"
+                                label="Mês de Safra (Opcional)"
+                                placeholder="Selecione o Mês"
+                                :icon="CalendarIcon"
+                                :searchable="false"
                             />
                         </div>
                         <div class="pt-4 flex items-center gap-2">

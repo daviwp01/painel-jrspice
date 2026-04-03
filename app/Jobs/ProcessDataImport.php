@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use Illuminate\Bus\Batchable;
+use Illuminate\Bus\Batch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -30,6 +32,7 @@ class ChunkReadFilter implements IReadFilter
     }
 
     public function readCell($columnAddress, $row, $worksheetName = ''): bool {
+        // Sempre ler a primeira linha (cabeçalhos) para mapeamento
         if ($row == 1 || ($row >= $this->startRow && $row < $this->endRow)) {
             return true;
         }
@@ -39,7 +42,7 @@ class ChunkReadFilter implements IReadFilter
 
 class ProcessDataImport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $filePath;
     protected $jobId;
@@ -67,11 +70,36 @@ class ProcessDataImport implements ShouldQueue
 
             $info = $reader->listWorksheetInfo($tmpPath);
             $totalRows = $info[0]['totalRows'];
-            $chunkSize = 300; // REDUZIDO: Para máxima estabilidade no Docker 128MB
+            $chunkSize = 300; 
 
             if ($this->jobId) {
                 Cache::put("import_progress_{$this->jobId}", ['current' => 0, 'total' => $totalRows, 'status' => 'processing', 'percentage' => 1], 600);
             }
+
+            // --- MAPEAMENTO DE COLUNAS (Fidelidade Dinâmica) ---
+            $spreadsheetHeader = $reader->load($tmpPath);
+            $sheet = $spreadsheetHeader->getActiveSheet();
+            $rawHeaders = $sheet->toArray(null, true, true, true)[1] ?? [];
+            $headers = array_map(function($h) { return trim(mb_strtolower($h)); }, $rawHeaders);
+            
+            $colMap = [
+                'product'  => array_search('produto', $headers),
+                'country'  => array_search('país', $headers) ?: array_search('pais', $headers),
+                'supplier' => array_search('fornecedor', $headers),
+                'price'    => array_search('preço', $headers) ?: (array_search('preco', $headers) ?: array_search('valor', $headers)),
+                'date'     => null
+            ];
+
+            // Busca flexível pela coluna de Data
+            foreach ($headers as $key => $val) {
+                if (str_contains($val, 'data')) {
+                    $colMap['date'] = $key;
+                    break;
+                }
+            }
+
+            $spreadsheetHeader->disconnectWorksheets();
+            unset($spreadsheetHeader, $sheet, $rawHeaders, $headers);
 
             // --- PRÉ-CARREGAMENTO (TURBO) ---
             $countryCache = Country::all()->pluck('id', 'name')->toArray();
@@ -84,27 +112,32 @@ class ProcessDataImport implements ShouldQueue
             $reader->setReadFilter($filter);
             $processedCount = 0;
 
+            // Começa da linha 2 (Dados reais)
             for ($startRow = 2; $startRow <= $totalRows; $startRow += $chunkSize) {
+                if ($this->batch() && $this->batch()->cancelled()) {
+                    Log::warning("Importação Cancelada pelo Usuário: {$this->jobId}");
+                    @unlink($tmpPath);
+                    @unlink($this->filePath); // AUTO-LIMPEZA: Remove mesmo se cancelado
+                    return; 
+                }
+
                 $filter->setRows($startRow, $chunkSize);
                 $spreadsheet = $reader->load($tmpPath);
                 $worksheet = $spreadsheet->getActiveSheet();
-                $rows = $worksheet->toArray();
+                $rows = $worksheet->toArray(null, true, true, true);
                 
-                // Pular as 3 primeiras linhas (Filtros, vazia, cabeçalhos)
-                // Se startRow for 2 (primeira iteração do loop), pula se row < 4
                 foreach ($rows as $rowIndex => $row) {
-                    $currentRowNumber = $startRow + $rowIndex;
-                    if ($currentRowNumber < 4) continue;
+                    if ($rowIndex == 1) continue; // Pula cabeçalho se estiver no chunk
+                    if ($rowIndex < $startRow || $rowIndex >= $startRow + $chunkSize) continue;
                     if (empty(array_filter($row))) continue;
                     
-                    \Illuminate\Support\Facades\Log::info('DEBUG: Importando linha:', ['row' => $currentRowNumber, 'prod' => $row[0] ?? '', 'price' => $row[6] ?? '']);
                     $processedCount++;
                     
-                    $productName = trim($row[0] ?? '');
-                    $countryName = trim($row[1] ?? '');
-                    $supplierName = trim($row[2] ?? '');
-                    $dateValue = $row[3] ?? null;
-                    $rawPrice = $row[6] ?? 0;
+                    $productName = trim($row[$colMap['product']] ?? '');
+                    $countryName = trim($row[$colMap['country']] ?? '');
+                    $supplierName = trim($row[$colMap['supplier']] ?? '');
+                    $dateValue = $row[$colMap['date']] ?? null;
+                    $rawPrice = $row[$colMap['price']] ?? 0;
 
                     if (!$productName || !$countryName) continue;
 
@@ -157,7 +190,6 @@ class ProcessDataImport implements ShouldQueue
                     }
                 }
 
-                // Atualiza progresso após cada fatia processada
                 if ($this->jobId) {
                     Cache::put("import_progress_{$this->jobId}", [
                         'current' => $processedCount,
@@ -176,13 +208,15 @@ class ProcessDataImport implements ShouldQueue
                 Cache::put("import_progress_{$this->jobId}", ['current' => $totalRows, 'total' => $totalRows, 'status' => 'completed', 'percentage' => 100], 600);
             }
             @unlink($tmpPath);
+            @unlink($this->filePath); // AUTO-LIMPEZA: Remove o arquivo original após sucesso
 
         } catch (\Throwable $e) {
-            Log::error('ERRO INABALÁVEL: ' . $e->getMessage());
+            Log::error('ERRO NA IMPORTAÇÃO: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             if ($this->jobId) {
                 Cache::put("import_progress_{$this->jobId}", ['current' => 0, 'total' => 0, 'status' => 'failed', 'message' => $e->getMessage(), 'percentage' => 0], 600);
             }
             if (isset($tmpPath) && file_exists($tmpPath)) @unlink($tmpPath);
+            if (isset($this->filePath) && file_exists($this->filePath)) @unlink($this->filePath); // AUTO-LIMPEZA: Remove o arquivo mesmo em falha
             throw $e;
         }
     }

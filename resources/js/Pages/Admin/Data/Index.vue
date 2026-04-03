@@ -41,6 +41,8 @@ const props = defineProps({
     all_products: Array,
     all_suppliers: Array,
     default_filter_config: Object,
+    active_import_batch: Object,
+    backups: Array
 });
 
 const activeTab = ref(props.filters?.tab || 'pages');
@@ -173,6 +175,8 @@ const searchableProducts = computed(() => {
 
                     <ImportTab 
                         v-show="activeTab === 'import'" 
+                        :active_import_batch="active_import_batch"
+                        :backups="backups"
                     />
 
                 </div>

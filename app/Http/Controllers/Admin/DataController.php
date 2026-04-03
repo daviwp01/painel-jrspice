@@ -12,11 +12,14 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Supplier;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\DataImport;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Bus;
+use App\Services\BackupService;
+use Illuminate\Bus\Batch;
 
 class DataController extends Controller
 {
@@ -94,6 +97,8 @@ class DataController extends Controller
                 'country_id'  => \App\Models\Setting::get('default_filter_country_id'),
                 'product_ids' => \App\Models\Setting::get('default_filter_product_ids') ?? [],
             ],
+            'active_import_batch' => $this->getActiveBatchStatus(),
+            'backups' => BackupService::list(),
         ]);
     }
 
@@ -258,51 +263,259 @@ class DataController extends Controller
         return redirect()->back()->with('success', 'Preço removido.');
     }
 
-    /**
-     * Handle the spreadsheet import.
-     */
     public function importData(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv'
-        ]);
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls']);
+        
+        $file = $request->file('file');
+        
+        if (!$file->isValid()) {
+            return response()->json(['status' => 'error', 'message' => 'Upload do arquivo falhou.'], 422);
+        }
+
+        $filePath = $file->getPathname();
+        if (!file_exists($filePath) || filesize($filePath) === 0) {
+            return response()->json(['status' => 'error', 'message' => 'O arquivo enviado parece estar vazio ou não foi processado corretamente.'], 422);
+        }
+
+        // 1. VALIDAÇÃO RIGOROSA DE CABEÇALHOS (Fidelidade Backend)
+        try {
+            // Usa o motor do Laravel Excel que é mais robusto para arquivos temporários
+            $data = \Maatwebsite\Excel\Facades\Excel::toArray([], $file);
+            $rows = $data[0] ?? [];
+            $headers = $rows[0] ?? [];
+
+            if (empty($headers)) {
+                return response()->json(['status' => 'error', 'message' => 'Planilha vazia ou ilegível.'], 422);
+            }
+            
+            $normalize = function($str) {
+                // Se o cabeçalho for nulo ou não string, vira vazio
+                if (!is_string($str)) return '';
+                
+                $str = trim(mb_strtolower($str));
+                $str = preg_replace('/[áàâãä]/u', 'a', $str);
+                $str = preg_replace('/[éèêë]/u', 'e', $str);
+                $str = preg_replace('/[íìîï]/u', 'i', $str);
+                $str = preg_replace('/[óòôõö]/u', 'o', $str);
+                $str = preg_replace('/[úùûü]/u', 'u', $str);
+                $str = preg_replace('/[ç]/u', 'c', $str);
+                
+                // Normaliza barras e espaços: "ano/mes" ou "ano  /  mes" -> "ano / mes"
+                $str = preg_replace('/\s*\/\s*/', ' / ', $str);
+                return $str;
+            };
+
+            $headers = array_map($normalize, array_values($headers));
+            
+            // LISTA OFICIAL JRSPICE (Sem acentos para comparação)
+            $requiredMap = [
+                'produto' => 'PRODUTO',
+                'pais' => 'PAÍS',
+                'fornecedor' => 'FORNECEDOR',
+                'data registro' => 'DATA REGISTRO',
+                'ano / mes' => 'ANO / MES',
+                'semana' => 'SEMANA',
+                'preco' => 'PREÇO'
+            ];
+
+            $missing = [];
+            foreach($requiredMap as $key => $label) {
+                // Checagem especial para Preço/Valor e Mes/Mês
+                $found = false;
+                if ($key === 'preco') {
+                    if (in_array('preco', $headers) || in_array('valor', $headers)) $found = true;
+                } elseif ($key === 'ano / mes') {
+                    if (in_array('ano / mes', $headers) || in_array('mes', $headers)) $found = true;
+                } else {
+                    if (in_array($key, $headers)) $found = true;
+                }
+
+                if (!$found) $missing[] = $label;
+            }
+
+            if (!empty($missing)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Planilha Inválida. Faltam as colunas obrigatórias: ' . implode(', ', $missing) . '. Certifique-se de que os cabeçalhos estão na PRIMEIRA LINHA.'
+                ], 422);
+            }
+
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => 'Erro ao ler cabeçalhos da planilha: ' . $e->getMessage()], 422);
+        }
+
+        // 2. GERAR BACKUP DE SEGURANÇA (Snapshot Pré-Importação Ativo)
+        BackupService::generate('importacao');
 
         $jobId = Str::uuid()->toString();
-        
-        // Inicializa o progresso no cache
-        Cache::put("import_progress_{$jobId}", [
-            'current' => 0,
-            'total' => 0,
-            'status' => 'queued',
-            'percentage' => 0
-        ], 300);
+        $path = $file->store('imports');
+        $fullPath = Storage::disk('local')->path($path);
 
-        // Caminho do arquivo
-        $path = $request->file('file')->store('imports');
+        $batch = Bus::batch([
+            new \App\Jobs\ProcessDataImport($fullPath, $jobId)
+        ])->name("Importação de Dados - {$jobId}")->dispatch();
 
-        // Dispara o import (Background)
-        \App\Jobs\ProcessDataImport::dispatch(Storage::disk('local')->path($path), $jobId);
+        // Persiste esse ID para que possamos recuperar no refresh da página
+        \App\Models\Setting::set('active_import_batch_id', $batch->id);
+        \App\Models\Setting::set('active_import_job_id', $jobId);
 
         return response()->json([
             'jobId' => $jobId,
-            'message' => __('Import started in background.')
+            'batchId' => $batch->id,
+            'message' => __('Import started.')
         ]);
     }
 
-    /**
-     * Get the current status of an import job.
-     */
     public function getImportStatus($jobId)
     {
-        $status = Cache::get("import_progress_{$jobId}");
+        try {
+            $batchId = request()->query('batchId') ?? \App\Models\Setting::get('active_import_batch_id');
+            
+            // 1. Tentar pegar o progresso detalhado do Cache primeiro (fino-grão)
+            $cachedStatus = Cache::get("import_progress_{$jobId}");
+            
+            // 2. Tentar pegar o status do Batch (Lote)
+            if ($batchId) {
+                $batch = Bus::findBatch($batchId);
+                if ($batch) {
+                    $status = ($batch->progress() >= 100) ? 'completed' : 'processing';
+                    if ($batch->cancelled()) $status = 'cancelled';
+                    if ($batch->hasFailures()) $status = 'failed';
 
-        if (!$status) {
+                    // Se temos um status de lote (cancelado/falhou), isso manda
+                    if ($status === 'cancelled' || $status === 'failed') {
+                        return response()->json([
+                            'status' => $status,
+                            'percentage' => $cachedStatus['percentage'] ?? $batch->progress(),
+                            'total' => $cachedStatus['total'] ?? $batch->totalJobs,
+                            'current' => $cachedStatus['current'] ?? $batch->processedJobs(),
+                            'id' => $batch->id
+                        ]);
+                    }
+
+                    // Se está processando, retorna o híbrido (progresso do cache + status do batch)
+                    return response()->json([
+                        'status' => $status,
+                        'percentage' => $cachedStatus['percentage'] ?? $batch->progress(),
+                        'total' => $cachedStatus['total'] ?? $batch->totalJobs,
+                        'current' => $cachedStatus['current'] ?? $batch->processedJobs(),
+                        'id' => $batch->id
+                    ]);
+                }
+            }
+
+            // Fallback total se não houver batch ou se batchId não devolver nada
+            if ($cachedStatus) return response()->json($cachedStatus);
+
+            return response()->json(['status' => 'not_found'], 404);
+
+        } catch (\Throwable $e) {
+            Log::error('Erro no Status da Importação: ' . $e->getMessage(), [
+                'jobId' => $jobId,
+                'batchId' => request()->query('batchId'),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
-                'status' => 'not_found'
-            ], 404);
+                'status' => 'error',
+                'message' => 'Erro interno ao consultar status.',
+                'debug' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cancelImport(Request $request)
+    {
+        try {
+            $batchId = $request->input('batchId') ?? \App\Models\Setting::get('active_import_batch_id');
+            if ($batchId) {
+                $batch = Bus::findBatch($batchId);
+                if ($batch) {
+                    $batch->cancel();
+                    // Opcional: Limpar cache de progresso para "zerar" se necessário
+                    return response()->json(['message' => 'Importação cancelada com sucesso.']);
+                }
+            }
+            return response()->json(['message' => 'Nenhuma importação ativa encontrada para cancelamento.'], 404);
+        } catch (\Throwable $e) {
+            Log::error('Erro ao cancelar importação: ' . $e->getMessage());
+            return response()->json(['message' => 'Erro ao processar cancelamento.'], 500);
+        }
+    }
+
+    public function downloadBackup(Request $request)
+    {
+        $path = $request->query('path');
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            abort(404, 'Backup não encontrado.');
         }
 
-        return response()->json($status);
+        return Storage::disk('local')->download($path);
+    }
+
+    public function createManualBackup()
+    {
+        BackupService::generate('manual');
+        return redirect()->back()->with('success', 'Backup manual gerado com sucesso!');
+    }
+
+    public function restoreBackup(Request $request)
+    {
+        $path = $request->input('path');
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            return response()->json(['message' => 'Backup não encontrado.'], 404);
+        }
+
+        // 1. Snapshot de segurança antes da restauração
+        BackupService::generate('pre_restauracao');
+
+        // 2. Preparação: O Job deleta o arquivo fonte no final, então precisamos de uma cópia
+        $jobId = Str::uuid()->toString();
+        $importDir = storage_path('app/private/imports');
+        if (!file_exists($importDir)) mkdir($importDir, 0755, true);
+        
+        $tempImportPath = 'imports/restore_' . $jobId . '.xlsx';
+        Storage::disk('local')->copy($path, $tempImportPath);
+        
+        $fullPath = Storage::disk('local')->path($tempImportPath);
+
+        // 3. Disparar restauração (é essencialmente uma importação do backup)
+        $batch = Bus::batch([
+            new \App\Jobs\ProcessDataImport($fullPath, $jobId)
+        ])->name("Restauração de Dados - {$jobId}")->dispatch();
+
+        \App\Models\Setting::set('active_import_batch_id', $batch->id);
+        \App\Models\Setting::set('active_import_job_id', $jobId);
+
+        return response()->json([
+            'jobId' => $jobId,
+            'batchId' => $batch->id,
+            'message' => 'Restauração iniciada com sucesso.'
+        ]);
+    }
+
+    private function getActiveBatchStatus()
+    {
+        try {
+            $batchId = \App\Models\Setting::get('active_import_batch_id');
+            $jobId = \App\Models\Setting::get('active_import_job_id');
+
+            if ($batchId) {
+                $batch = Bus::findBatch($batchId);
+                if ($batch && !$batch->finished() && !$batch->cancelled()) {
+                    return [
+                        'id' => $batch->id,
+                        'jobId' => $jobId,
+                        'progress' => $batch->progress(),
+                        'status' => 'processing'
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Erro ao recuperar status de lote ativo: ' . $e->getMessage());
+        }
+        return null;
     }
 
     /**
