@@ -437,10 +437,10 @@ onMounted(() => {
 
 
             <!-- Dashboard Content -->
-            <div v-if="selectedProduct && metrics?.all" class="transition-opacity duration-300" :class="{ 'opacity-50 pointer-events-none': isLoading }">
+            <div class="transition-opacity duration-300" :class="{ 'opacity-50 pointer-events-none': isLoading }">
                 
                 <!-- GRID -> Info + Price Metrics -->
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 xl:gap-6 mb-8">
+                <div v-if="metrics?.all" class="grid grid-cols-1 lg:grid-cols-4 gap-4 xl:gap-6 mb-8">
                     
                     <!-- BOX 1: PRODUTO -->
                     <div class="lg:col-span-1 bg-white p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
@@ -448,7 +448,7 @@ onMounted(() => {
                         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
                            <BoxIcon class="w-3 h-3 text-slate-300" /> Produto
                         </p>
-                        <h3 class="text-lg font-bold text-slate-900 mb-3 relative z-10 uppercase tracking-tight leading-none">{{ products.find(p => p.id == selectedProduct)?.name }}</h3>
+                        <h3 class="text-lg font-bold text-slate-900 mb-3 relative z-10 uppercase tracking-tight leading-none">{{ products.find(p => p.id == selectedProduct)?.name || 'Todos os Produtos' }}</h3>
                         
                         <div :class="[products.find(p => p.id == selectedProduct)?.harvest_month ? 'grid-cols-2' : 'grid-cols-1']" class="grid gap-4 border-t border-slate-100 pt-4 relative z-10">
                             <div>
@@ -457,7 +457,7 @@ onMounted(() => {
                                 </p>
                                 <div class="flex items-center gap-3">
                                    <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-11 h-8 rounded-[4px] border border-slate-100" />
-                                   <p class="text-base font-bold text-slate-900 uppercase tracking-tight">{{ countries.find(c => c.id == selectedCountry)?.name }}</p>
+                                   <p class="text-base font-bold text-slate-900 uppercase tracking-tight">{{ countries.find(c => c.id == selectedCountry)?.name || 'GLOBAL' }}</p>
                                 </div>
                             </div>
                             <div v-if="products.find(p => p.id == selectedProduct)?.harvest_month">
@@ -559,7 +559,7 @@ onMounted(() => {
                     
                     <div class="relative w-full mt-8 flex flex-col pt-4" :style="{ height: chartHeight + 'px' }">
                         <!-- Y-AXIS LABELS -->
-                        <div class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-sm font-bold text-slate-400 tabular-nums pb-2">
+                        <div v-if="metrics" class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-sm font-bold text-slate-400 tabular-nums pb-2">
                            <span>{{ formatNumber(metrics.all.max, 0) }}</span>
                            <span>{{ getAvgLabel(metrics.all.min, metrics.all.max) }}</span>
                            <span>{{ formatNumber(metrics.all.min, 0) }}</span>
@@ -573,6 +573,10 @@ onMounted(() => {
                               :data="chartDataComputed" 
                               :options="chartOptions"
                            />
+                           <div v-else-if="!isLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
+                               <SearchIcon class="w-12 h-12 mb-4 opacity-20" />
+                               <p class="text-[10px] font-bold uppercase tracking-widest">Aguardando seleção de produto</p>
+                           </div>
                         </div>
 
                     </div>
@@ -588,15 +592,6 @@ onMounted(() => {
                        </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- EMPTY STATE PARA FILTROS FALTANTES -->
-            <div v-else class="bg-white border border-dashed border-slate-300 rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[50vh]">
-                <div class="w-20 h-20 bg-slate-50 text-slate-300 border border-slate-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                    <SearchIcon class="w-8 h-8"/>
-                </div>
-                <h3 class="text-xl font-bold text-slate-800 uppercase tracking-tight mb-2">Selecione um Produto</h3>
-                <p class="text-xs font-semibold text-slate-400 max-w-sm leading-relaxed uppercase tracking-widest">Utilize os filtros à esquerda para escolher o país e o produto correspondente para analisar os dados.</p>
             </div>
 
         </div>

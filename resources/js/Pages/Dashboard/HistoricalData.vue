@@ -298,9 +298,6 @@ const changePage = (url) => {
                                     {{ row.priceVal ? Number(row.priceVal).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                             </tr>
-                            <tr v-if="!processedHistoricalData.length">
-                                <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium uppercase tracking-widest text-[10px]">Nenhuma tabela de preço histórico localizada.</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
