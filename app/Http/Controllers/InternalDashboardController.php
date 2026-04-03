@@ -149,7 +149,7 @@ class InternalDashboardController extends Controller
         
         // Eager load everything needed
         $productsQuery->with(['prices' => function($query) use ($supplierId) {
-            $query->with('supplier')->orderBy('date', 'desc');
+            $query->with('supplier')->orderBy('date', 'desc')->orderBy('price', 'asc');
             if ($supplierId) {
                 $query->where('supplier_id', $supplierId);
             }
@@ -427,13 +427,18 @@ class InternalDashboardController extends Controller
             foreach ($countries as $country) {
                 $products = Product::where('country_id', $country->id)
                     ->with(['prices' => function($q) {
-                        $q->orderBy('date', 'desc')->with('supplier')->limit(2);
+                        $q->orderBy('date', 'desc')->orderBy('price', 'asc')->with('supplier');
                     }])
                     ->orderBy('name')
                     ->get()
                     ->map(function($p) {
                         $latest = $p->prices->first();
-                        $previous = $p->prices->skip(1)->first();
+                        
+                        // Busca o primeiro preço que tenha uma DATA (YYYY-MM-DD) diferente da última
+                        $latestDateStr = $latest ? $latest->date->format('Y-m-d') : null;
+                        $previous = $p->prices->first(function($pr) use ($latestDateStr) {
+                            return $pr->date->format('Y-m-d') !== $latestDateStr;
+                        });
                         
                         $latestPrice = $latest ? (float)$latest->price : null;
                         $previousPrice = $previous ? (float)$previous->price : $latestPrice;

@@ -130,13 +130,21 @@ const processedProducts = computed(() => {
     return list.map(p => {
         const prices = p.prices || [];
         const latestInfo = prices[0];
-        const previousInfo = prices[1];
+        
+        // Extrai apenas a porção da DATA (YYYY-MM-DD) para ignorar variações de hora do mesmo dia
+        const latestDateStr = latestInfo && latestInfo.date ? latestInfo.date.substring(0, 10) : null;
+        
+        // Busca o primeiro preço que pertença a um DIA diferente do último
+        const previousInfo = prices.find(pr => {
+            const prDateStr = pr.date ? pr.date.substring(0, 10) : null;
+            return prDateStr !== latestDateStr;
+        });
 
         const latestPrice = latestInfo ? parseFloat(latestInfo.price) : null;
         const previousPrice = previousInfo ? parseFloat(previousInfo.price) : latestPrice;
 
         let variation = 0;
-        if (latestPrice && previousPrice) {
+        if (latestPrice && previousPrice && previousPrice > 0) {
             variation = ((latestPrice - previousPrice) / previousPrice) * 100;
         }
 
