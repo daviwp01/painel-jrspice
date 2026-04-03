@@ -189,7 +189,7 @@ const changePage = (url) => {
   <DashboardLayout>
     <template #sidebar-filters>
       <!-- FILTERS -->
-      <div class="mt-8 border-t border-slate-100 pt-6">
+      <div class="mt-8">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
               <span class="flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</span>
               <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />

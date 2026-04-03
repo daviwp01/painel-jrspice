@@ -15,10 +15,10 @@ import {
     Lock,
     ShieldCheck,
     ArrowLeft,
-    CheckCircle2,
     Layout,
     Phone,
-    Building2
+    Building2,
+    Check
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -263,48 +263,60 @@ const isFormValid = computed(() => {
                                 </div>
                             </div>
 
-                            <!-- Reports Grid -->
+                            <!-- Reports Selection Grid -->
                             <div v-if="!form.is_master" class="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <Layout class="w-4 h-4 text-indigo-500" />
-                                        <h4 class="text-sm font-bold text-slate-800 uppercase tracking-widest">{{ $t('Allowed Reports') }}</h4>
+                                <!-- Grid Section Header -->
+                                <div class="flex items-center justify-between px-1">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                                            <Layout class="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Relatórios Permitidos') }}</h4>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $t('Define o acesso inicial deste usuário aos Dashboards.') }}</p>
+                                        </div>
                                     </div>
-                                    <span v-if="form.allowed_pages.length === 0" class="text-[10px] text-blue-600 font-bold flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                                        <AlertCircle class="w-3 h-3 mr-1" />
-                                        {{ $t('DEFAULT (SYSTEM)') }}
-                                    </span>
-                                    <span v-else class="text-[10px] text-emerald-600 font-bold flex items-center bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                                        <CheckCircle2 class="w-3 h-3 mr-1" />
-                                        {{ form.allowed_pages.length }} {{ $t('SELECTED') }}
-                                    </span>
+                                    
+                                    <div class="flex items-center">
+                                        <span v-if="form.allowed_pages.length === 0" class="text-[9px] text-blue-600 font-bold flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                                            <AlertCircle class="w-3 h-3 mr-1.5" />
+                                            {{ $t('DEFAULT (SYSTEM)') }}
+                                        </span>
+                                        <span v-else class="text-[9px] text-emerald-600 font-bold flex items-center bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                                            <Check class="w-3 h-3 mr-1.5" />
+                                            {{ form.allowed_pages.length }} {{ $t('SELECTED') }}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div v-if="isLoadingPages" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div v-for="n in 4" :key="n" class="h-16 bg-slate-50 rounded-xl animate-pulse border border-slate-100"></div>
-                                </div>
-
-                                <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Actual Grid -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <div
                                         v-for="page in available_pages.filter(p => !p.slug.toLowerCase().includes('home'))"
                                         :key="page.id"
                                         @click="togglePageAccess(page.slug)"
-                                        class="relative flex items-center p-3 rounded-xl border-2 transition-all cursor-pointer group hover:shadow-sm"
-                                        :class="form.allowed_pages.includes(page.slug) ? 'border-blue-500 bg-blue-50/30' : 'border-slate-100 bg-white hover:border-blue-200'"
+                                        class="relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-4"
+                                        :class="form.allowed_pages.includes(page.slug)
+                                            ? 'border-blue-500 bg-blue-50/30 shadow-sm'
+                                            : 'border-slate-100 bg-slate-50/30 hover:border-slate-200'"
                                     >
-                                        <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-all mr-2.5" :class="form.allowed_pages.includes(page.slug) ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-400'">
-                                            <Layout class="w-4 h-4" />
+                                        <div
+                                            class="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+                                            :class="form.allowed_pages.includes(page.slug)
+                                                ? 'bg-blue-500 text-white shadow-md shadow-blue-100'
+                                                : 'bg-white border border-slate-200 text-slate-300'"
+                                        >
+                                            <Check v-if="form.allowed_pages.includes(page.slug)" class="w-4 h-4" />
+                                            <div v-else class="w-2 h-2 rounded-full bg-slate-200"></div>
                                         </div>
+                                        
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-[10px] font-bold text-slate-800 truncate uppercase tracking-tight group-hover:text-blue-700 transition-colors">
-                                                {{ page.title }}
-                                            </p>
-                                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest truncate mt-0.5">{{ page.slug }}</p>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1 truncate">{{ page.title }}</h4>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{{ page.slug }}</p>
                                         </div>
-                                        <div class="ml-2">
-                                            <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all" :class="form.allowed_pages.includes(page.slug) ? 'bg-blue-600 border-blue-600' : 'border-slate-200'">
-                                                <CheckCircle2 v-if="form.allowed_pages.includes(page.slug)" class="w-2.5 h-2.5 text-white" />
-                                            </div>
+
+                                        <div v-if="form.allowed_pages.includes(page.slug)" class="absolute top-2 right-2">
+                                             <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></div>
                                         </div>
                                     </div>
                                 </div>

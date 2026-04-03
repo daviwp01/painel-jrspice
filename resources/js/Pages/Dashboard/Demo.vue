@@ -353,7 +353,7 @@ onMounted(() => {
   <DashboardLayout>
     <template #sidebar-filters>
       <!-- FILTERS -->
-      <div class="mt-8 border-t border-slate-100 pt-6">
+      <div class="mt-8">
          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
              <span class="flex items-center gap-2"><SearchIcon class="w-3 h-3"/> Filtros de Busca</span>
              <div v-if="demoCountryId" class="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-200">MODO DEMO</div>
@@ -369,6 +369,7 @@ onMounted(() => {
                :icon="MapPinIcon"
                :with-flag="true"
                direction="up"
+               @click.stop
                @locked-click="openUpgradeModal"
                @change="handleCountryChange"
             />

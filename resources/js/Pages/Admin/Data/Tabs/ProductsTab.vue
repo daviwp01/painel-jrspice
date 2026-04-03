@@ -181,8 +181,8 @@ const defaultCountryData = computed(() =>
                             <SearchableSelect 
                                 v-model="productForm.harvest_month"
                                 :options="months"
-                                label="Mês de Safra (Opcional)"
-                                placeholder="Selecione o Mês"
+                                label="Safra (Opcional)"
+                                placeholder="Selecione a Safra"
                                 :icon="CalendarIcon"
                                 :searchable="false"
                             />
@@ -321,7 +321,7 @@ const defaultCountryData = computed(() =>
                                 <tr>
                                     <th class="px-6 py-3">Produto</th>
                                     <th class="px-6 py-3">Origem</th>
-                                    <th class="px-6 py-3">Mês Safra</th>
+                                    <th class="px-6 py-3">Safra</th>
                                     <th class="px-6 py-3 text-right">Ações</th>
                                 </tr>
                             </thead>

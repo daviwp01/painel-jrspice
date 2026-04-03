@@ -230,8 +230,8 @@
                     <thead>
                         <tr>
                             <th style="width: 50%">PRODUTO</th>
-                            <th style="text-align: right; width: 15%">ÚLTIMO PREÇO</th>
-                            <th style="text-align: right; width: 15%">PREÇO ANTERIOR</th>
+                            <th style="text-align: right; width: 15%">ÚLTIMO MELHOR PREÇO</th>
+                            <th style="text-align: right; width: 15%">MELHOR PREÇO ANTERIOR</th>
                             <th style="text-align: right; width: 20%; padding-right: 5px;" colspan="2">VARIAÇÃO</th>
                         </tr>
                     </thead>

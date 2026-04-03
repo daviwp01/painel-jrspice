@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { Search, ChevronDown, Check, X, Lock } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 
@@ -43,11 +43,30 @@ const isOpen = ref(false);
 const searchQuery = ref('');
 const dropdownRef = ref(null);
 const searchInput = ref(null);
+const calculatedDirection = ref(props.direction);
+
+const updateDirection = () => {
+    if (!dropdownRef.value) return;
+    const rect = dropdownRef.value.getBoundingClientRect();
+    const spaceAbove = rect.top;
+    
+    // Se a direção for 'up' mas tivermos menos de 220px de espaço no teto, forçamos 'down'
+    if (props.direction === 'up' && spaceAbove < 220) {
+        calculatedDirection.value = 'down';
+    } else {
+        calculatedDirection.value = props.direction;
+    }
+};
+
+watch(() => props.direction, (newDir) => {
+    calculatedDirection.value = newDir;
+});
 
 const toggleDropdown = () => {
     if (props.disabled) return;
     isOpen.value = !isOpen.value;
     if (isOpen.value) {
+        updateDirection();
         searchQuery.value = '';
         if (props.searchable) {
             nextTick(() => {
@@ -141,7 +160,7 @@ const resolveFlagName = (option) => {
             <div class="flex items-center gap-2 overflow-hidden">
                 <span v-if="!selectedOption" class="text-slate-400 text-sm font-medium uppercase truncate">{{ placeholder }}</span>
                 <div v-else class="flex items-center gap-2 overflow-hidden">
-                    <CountryFlag v-if="withFlag" :name="resolveFlagName(selectedOption)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
+                    <CountryFlag v-if="withFlag" :name="selectedOption.name" :code="resolveFlagName(selectedOption)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
                     <span class="text-slate-800 text-sm font-bold uppercase truncate">{{ selectedOption.name }}</span>
                 </div>
             </div>
@@ -152,7 +171,7 @@ const resolveFlagName = (option) => {
             v-if="isOpen" 
             :class="[
                 'absolute z-[100] left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden duration-200',
-                direction === 'up' ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2' : 'top-full mt-2 animate-in fade-in slide-in-from-top-2'
+                calculatedDirection === 'up' ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2' : 'top-full mt-2 animate-in fade-in slide-in-from-top-2'
             ]"
         >
             <!-- Search Input -->
@@ -186,7 +205,7 @@ const resolveFlagName = (option) => {
                     ]"
                 >
                     <div class="flex items-center gap-2.5 overflow-hidden">
-                        <CountryFlag v-if="withFlag" :name="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
+                        <CountryFlag v-if="withFlag" :name="option.name" :code="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
                         <span class="text-xs font-bold uppercase tracking-wide truncate">{{ option.name }}</span>
                     </div>
                     <Lock v-if="option.is_locked" class="w-3 h-3 text-slate-400 group-hover:text-blue-400 transition-colors" />

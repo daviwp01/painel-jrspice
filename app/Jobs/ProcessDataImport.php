@@ -84,6 +84,7 @@ class ProcessDataImport implements ShouldQueue
             
             $colMap = [
                 'product'  => array_search('produto', $headers),
+                'safra'    => array_search('safra', $headers) ?: array_search('harvest', $headers),
                 'country'  => array_search('país', $headers) ?: array_search('pais', $headers),
                 'supplier' => array_search('fornecedor', $headers),
                 'price'    => array_search('preço', $headers) ?: (array_search('preco', $headers) ?: array_search('valor', $headers)),
@@ -134,6 +135,7 @@ class ProcessDataImport implements ShouldQueue
                     $processedCount++;
                     
                     $productName = trim($row[$colMap['product']] ?? '');
+                    $harvestMonth = trim($row[$colMap['safra']] ?? '');
                     $countryName = trim($row[$colMap['country']] ?? '');
                     $supplierName = trim($row[$colMap['supplier']] ?? '');
                     $dateValue = $row[$colMap['date']] ?? null;
@@ -158,12 +160,15 @@ class ProcessDataImport implements ShouldQueue
                     }
                     $countryId = $countryCache[$countryName];
 
-                    // 2. Produto (Turbo)
+                    // 2. Produto (Turbo - Agora atualiza a Safra)
                     $productKey = $countryId . '_' . $productName;
-                    if (!isset($productCache[$productKey])) {
-                        $productCache[$productKey] = Product::firstOrCreate(['name' => $productName, 'country_id' => $countryId])->id;
-                    }
-                    $productId = $productCache[$productKey];
+                    
+                    $product = Product::updateOrCreate(
+                        ['name' => $productName, 'country_id' => $countryId],
+                        ['harvest_month' => $harvestMonth ?: null]
+                    );
+                    $productId = $product->id;
+                    $productCache[$productKey] = $productId;
 
                     // 3. Fornecedor (Turbo)
                     $supplierId = null;

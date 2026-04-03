@@ -93,8 +93,11 @@ const navItems = computed(() => [
                     </div>
                 </div>
 
+                <!-- DYNAMIC FILTERS SLOT -->
+                <slot name="sidebar-filters"></slot>
+
                 <!-- ADMINISTRATIVO -->
-                <div v-if="user?.is_master">
+                <div v-if="user?.is_master" class="mt-8 border-t border-slate-100 pt-8">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mb-4 px-2">{{ $t('Administração') }}</p>
                     <div class="space-y-1">
                         <template v-for="item in navItems" :key="item.route">
@@ -107,9 +110,6 @@ const navItems = computed(() => [
                         </template>
                     </div>
                 </div>
-
-                <!-- DYNAMIC FILTERS SLOT -->
-                <slot name="sidebar-filters"></slot>
             </div>
         </aside>
 

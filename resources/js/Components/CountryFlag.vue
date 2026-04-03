@@ -1,10 +1,15 @@
 <script setup>
 import { computed } from 'vue';
+import { globalCountries } from '@/Constants/globalCountries';
 
 const props = defineProps({
     name: {
         type: String,
         required: true
+    },
+    code: {
+        type: String,
+        default: null
     },
     className: {
         type: String,
@@ -25,6 +30,7 @@ const countryMap = {
     'netherlands': 'nl', 'portugal': 'pt', 'grecia': 'gr', 'greece': 'gr', 'panama': 'pa', 'costa rica': 'cr',
     'honduras': 'hn', 'salvador': 'sv', 'nicaragua': 'ni', 'venezuela': 've', 'bolivia': 'bo', 
     'africa': 'za', 'emirados': 'ae', 'dubai': 'ae', 'arabia': 'sa', 'combodia': 'kh', 'catar': 'qa', 'israel': 'il',
+    'suica': 'ch', 'switzerland': 'ch',
 };
 
 const removeAccents = (str) => {
@@ -32,18 +38,29 @@ const removeAccents = (str) => {
 }
 
 const flagUrl = computed(() => {
+    // 1. Prioridade: Código ISO passado via prop (validamos se tem 2 caracteres)
+    if (props.code && props.code.length === 2) {
+        return `https://flagcdn.com/w40/${props.code.toLowerCase()}.png`;
+    }
+
     if (!props.name) return null;
     
-    let nameToSearch = props.name.toLowerCase().trim();
-    if (nameToSearch.includes('/')) {
-        nameToSearch = nameToSearch.split('/')[0].trim();
+    // 2. Fallback: Busca no mapa manual (para nomes alternativos ou legados)
+    const normalizedName = removeAccents(props.name.toLowerCase().trim());
+    let codeFromMap = countryMap[normalizedName];
+    
+    if (codeFromMap) {
+        return `https://flagcdn.com/w40/${codeFromMap}.png`;
     }
-    
-    nameToSearch = removeAccents(nameToSearch);
-    const code = countryMap[nameToSearch];
-    
-    if (code) {
-        return `https://flagcdn.com/w40/${code}.png`;
+
+    // 3. Fallback Final: Busca exata no catálogo Global (globalCountries)
+    // Buscamos pelo nome ignorando acentos
+    const foundInGlobal = globalCountries.find(c => 
+        removeAccents(c.name.toLowerCase()) === normalizedName
+    );
+
+    if (foundInGlobal) {
+        return `https://flagcdn.com/w40/${foundInGlobal.code.toLowerCase()}.png`;
     }
     
     return null;

@@ -311,6 +311,7 @@ class DataController extends Controller
             // LISTA OFICIAL JRSPICE (Sem acentos para comparação)
             $requiredMap = [
                 'produto' => 'PRODUTO',
+                'safra' => 'SAFRA',
                 'pais' => 'PAÍS',
                 'fornecedor' => 'FORNECEDOR',
                 'data registro' => 'DATA REGISTRO',
@@ -458,6 +459,51 @@ class DataController extends Controller
     {
         BackupService::generate('manual');
         return redirect()->back()->with('success', 'Backup manual gerado com sucesso!');
+    }
+
+    /**
+     * Gera e disponibiliza para download um modelo padrão de planilha Excel
+     * com os cabeçalhos necessários para a importação.
+     */
+    public function downloadTemplate()
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Modelo de Importação');
+
+        // Cabeçalhos Oficiais JRSPICE
+        $headers = [
+            'PRODUTO',
+            'SAFRA',
+            'PAÍS',
+            'FORNECEDOR',
+            'DATA REGISTRO',
+            'ANO / MES',
+            'SEMANA',
+            'PREÇO'
+        ];
+
+        // Populando a primeira linha
+        reset($headers);
+        foreach ($headers as $index => $label) {
+            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $label);
+            
+            // Estilização Premium: Negrito e Auto-Width
+            $sheet->getStyle($column . '1')->getFont()->setBold(true);
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        // Criando uma linha de exemplo invisível/fictícia (opcional)
+        // $sheet->setCellValue('A2', 'Exemplo de Produto');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        
+        $fileName = 'jrspice_modelo_importacao.xlsx';
+        $tempPath = storage_path('app/public/' . $fileName);
+        $writer->save($tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
     }
 
     public function restoreBackup(Request $request)

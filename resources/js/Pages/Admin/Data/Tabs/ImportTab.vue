@@ -215,13 +215,23 @@ const cancelImport = async () => {
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 shrink-0"></span> 
-                                <span class="font-bold whitespace-normal">Colunas Obrigatórias: <b class="text-blue-600 uppercase text-[9px] tracking-tight bg-blue-50 px-2 py-0.5 rounded leading-relaxed">Produto, País, Fornecedor, Data Registro, Ano / Mes, Semana, Preço</b>.</span>
+                                <span class="font-bold whitespace-normal">Colunas Obrigatórias: <b class="text-blue-600 uppercase text-[9px] tracking-tight bg-blue-50 px-2 py-0.5 rounded leading-relaxed">Produto, Safra, País, Fornecedor, Data Registro, Ano / Mes, Semana, Preço</b>.</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></span> 
                                 <span class="text-slate-600 leading-relaxed">O sistema <b class="text-slate-900 font-bold">recusará planilhas</b> que não contenham todas as colunas obrigatórias acima.</span>
                             </li>
                         </ul>
+                        <div class="px-8 pb-8 pt-4">
+                            <a 
+                                :href="route('admin.data.download-template')"
+                                class="w-full flex items-center justify-center gap-2.5 py-4 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-blue-200 active:scale-95 group/btn"
+                            >
+                                <DownloadIcon class="w-4 h-4 group-hover/btn:-translate-y-0.5 transition-transform" />
+                                Baixar Modelo Exemplo
+                            </a>
+                            <p class="mt-4 text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">Basta preencher e importar para o sistema</p>
+                        </div>
                     </div>
 
 

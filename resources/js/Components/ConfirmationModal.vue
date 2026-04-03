@@ -55,7 +55,7 @@ const emit = defineEmits(['close', 'confirm']);
                 <SecondaryButton
                     @click="emit('close')"
                     :disabled="loading"
-                    class="px-8 py-3.5 rounded-[1.2rem] text-[10px] font-black tracking-widest uppercase transition-all bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-500 whitespace-nowrap"
+                    class="px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest uppercase transition-all bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-500 whitespace-nowrap shadow-sm"
                 >
                     {{ cancelText || $t('Cancel') }}
                 </SecondaryButton>
@@ -64,7 +64,7 @@ const emit = defineEmits(['close', 'confirm']);
                     @click="emit('confirm')"
                     :disabled="loading"
                     :class="{ 'opacity-75': loading }"
-                    class="px-8 py-3.5 rounded-[1.2rem] text-[10px] font-black tracking-widest uppercase shadow-lg shadow-blue-100 transition-all transform hover:-translate-y-0.5 bg-blue-600 hover:bg-blue-700 text-white border-transparent whitespace-nowrap"
+                    class="px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest uppercase shadow-lg shadow-blue-100 transition-all transform hover:-translate-y-0.5 bg-blue-600 hover:bg-blue-700 text-white border-transparent whitespace-nowrap"
                 >
                     <span v-if="loading" class="mr-2">
                         <svg class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

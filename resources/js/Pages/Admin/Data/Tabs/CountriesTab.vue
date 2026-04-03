@@ -8,6 +8,8 @@ import {
 import Pagination from '@/Components/Pagination.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import CountryFlag from '@/Components/CountryFlag.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { globalCountries } from '@/Constants/globalCountries';
 
 const props = defineProps({
     countries: Object,
@@ -81,8 +83,15 @@ const formatLabel = (label) => {
                 </h3>
                 <form @submit.prevent="submitCountry" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nome do País</label>
-                        <input v-model="countryForm.name" type="text" placeholder="Ex: China, Índia..." required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.10em] mb-3">{{ $t('Nome do País') }}</label>
+                        <SearchableSelect 
+                            v-model="countryForm.name"
+                            :options="globalCountries"
+                            :placeholder="$t('Selecione um país...')"
+                            direction="down"
+                            with-flag
+                            flag-property="code"
+                        />
                     </div>
                     <div class="pt-4 flex items-center gap-3">
                         <button type="submit" :disabled="countryForm.processing || !countryForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">

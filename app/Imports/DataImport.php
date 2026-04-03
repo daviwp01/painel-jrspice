@@ -29,11 +29,52 @@ class DataImport implements OnEachRow, WithHeadingRow
         $data = $row->toArray();
         \Illuminate\Support\Facades\Log::info('Dados da linha importada:', $data);
 
-        $countryName = $data['pais'] ?? $data['country'] ?? $data['país'] ?? null;
-        $productName = $data['produto'] ?? $data['product'] ?? null;
-        $supplierName = $data['fornecedor'] ?? $data['supplier'] ?? null;
-        $dateValue = $data['data_registro'] ?? $data['date'] ?? $data['data'] ?? null;
-        $priceValue = $data['preco'] ?? $data['price'] ?? $data['preço'] ?? $data['valor'] ?? $data['valor_unitario'] ?? $data['valor_un'] ?? 0;
+        // 1. "Rede de Arraste" para capturar colunas por similaridade
+        $harvestMonth = null;
+        $countryName = null;
+        $productName = null;
+        $supplierName = null;
+        $dateValue = null;
+        $priceValue = 0;
+
+        foreach ($data as $key => $val) {
+            $key = mb_strtolower(trim($key));
+            
+            // Lógica de Safra (Fuzzy match)
+            if (str_contains($key, 'safra') || str_contains($key, 'harvest') || $key === 'mes') {
+                $harvestMonth = $val;
+            }
+            
+            // Lógica de Produto
+            if (str_contains($key, 'produto') || str_contains($key, 'product')) {
+                $productName = $val;
+            }
+
+            // Lógica de País
+            if (str_contains($key, 'pais') || str_contains($key, 'país') || str_contains($key, 'country') || str_contains($key, 'origem')) {
+                $countryName = $val;
+            }
+
+            // Lógica de Fornecedor
+            if (str_contains($key, 'fornecedor') || str_contains($key, 'supplier')) {
+                $supplierName = $val;
+            }
+
+            // Lógica de Data
+            if (str_contains($key, 'data') || str_contains($key, 'date')) {
+                $dateValue = $val;
+            }
+
+            // Lógica de Preço
+            if (str_contains($key, 'preco') || str_contains($key, 'preço') || str_contains($key, 'price') || str_contains($key, 'valor')) {
+                $priceValue = $val;
+            }
+        }
+        
+        // Fallbacks adicionais se a rede de arraste falhar em chaves exatas
+        $countryName  = $countryName ?? $data['pais'] ?? $data['country'] ?? null;
+        $productName  = $productName ?? $data['produto'] ?? $data['product'] ?? null;
+        $harvestMonth = $harvestMonth ?? $data['safra'] ?? $data['harvest'] ?? null;
         
         // Advanced cleanup for currency strings in various formats
         if (is_string($priceValue)) {
@@ -49,8 +90,6 @@ class DataImport implements OnEachRow, WithHeadingRow
             elseif (str_contains($priceValue, ',')) {
                 $priceValue = str_replace(',', '.', $priceValue);
             }
-            // If it's "1.400" (US format vs BR format?) -> This is tricky.
-            // But usually raw numeric cells from Excel come as numbers, strings are formatted.
         }
         $priceValue = (float) $priceValue;
 
@@ -59,11 +98,16 @@ class DataImport implements OnEachRow, WithHeadingRow
         // 1. Pais
         $country = Country::firstOrCreate(['name' => trim($countryName)]);
 
-        // 2. Produto
+        // 2. Produto (Update para persistir a SAFRA se houver dado)
         $product = Product::firstOrCreate([
             'name' => trim($productName),
             'country_id' => $country->id
         ]);
+        
+        if ($harvestMonth) {
+            $product->harvest_month = trim($harvestMonth);
+            $product->save();
+        }
 
         // 3. Fornecedor
         $supplier = null;
@@ -112,6 +156,6 @@ class DataImport implements OnEachRow, WithHeadingRow
     }
     public function headingRow(): int
     {
-        return 3;
+        return 1;
     }
 }
