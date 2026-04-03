@@ -353,14 +353,13 @@ onMounted(() => {
   <DashboardLayout>
     <template #sidebar-filters>
       <!-- FILTERS -->
-      <div class="mt-8">
-         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
-             <span class="flex items-center gap-2"><SearchIcon class="w-3 h-3"/> Filtros de Busca</span>
-             <div v-if="demoCountryId" class="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-amber-200">MODO DEMO</div>
+      <div class="border-t border-slate-800/50 pt-4">
+         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center justify-between">
+             <span class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca</span>
              <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
          </p>
          
-          <div class="space-y-4">
+         <div class="space-y-5">
             <SearchableSelect 
                v-model="selectedCountry"
                :options="countriesDemo"
@@ -369,6 +368,7 @@ onMounted(() => {
                :icon="MapPinIcon"
                :with-flag="true"
                direction="up"
+               variant="dark"
                @click.stop
                @locked-click="openUpgradeModal"
                @change="handleCountryChange"
@@ -382,36 +382,39 @@ onMounted(() => {
                placeholder="Selecione um Produto"
                :icon="BoxIcon"
                :disabled="!selectedCountry"
+               variant="dark"
                @locked-click="openUpgradeModal"
                direction="up"
                @change="applyFilters"
             />
 
-            <div class="relative">
-              <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><CalendarIcon class="w-3 h-3"/> Data (Ano / Semana)</label>
+            <div class="relative px-1">
+              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 cursor-pointer">
+                  <CalendarIcon class="w-3.5 h-3.5"/> Data (Ano / Semana)
+              </label>
               
               <!-- CUSTOM TREE SELECT -->
               <div class="relative group">
-                <button @click="isDatePickerOpen = !isDatePickerOpen" class="w-full bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 font-bold px-3 py-2.5 flex items-center justify-between hover:bg-slate-100 transition-colors uppercase">
+                <button @click="isDatePickerOpen = !isDatePickerOpen" class="w-full bg-[#1e293b]/40 border border-slate-800 rounded-xl text-sm text-slate-300 font-bold px-3 py-3 flex items-center justify-between hover:bg-[#1e293b]/60 transition-colors uppercase">
                   <span>{{ filterDateRange === 'Todos' ? 'Todos os Registros' : filterDateRange.replace('-', ' - Sem. ') }}</span>
-                  <ChevronDownIcon :class="{ 'rotate-180': isDatePickerOpen }" class="w-4 h-4 text-slate-400 transition-transform" />
+                  <ChevronDownIcon :class="{ 'rotate-180 text-blue-500': isDatePickerOpen }" class="w-4 h-4 text-slate-500 transition-transform duration-300" />
                 </button>
 
-                <div v-if="isDatePickerOpen" class="absolute z-50 left-0 right-0 bottom-full mb-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                   <div @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider mb-2 border-b border-slate-100 pb-3" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === 'Todos' }">
-                      <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-300" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
+                <div v-if="isDatePickerOpen" class="absolute z-50 left-0 right-0 bottom-full mb-2 bg-[#0f172a] border border-slate-800 rounded-xl shadow-2xl max-h-[300px] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-800 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                   <div @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider mb-2 border-b border-slate-800/50 pb-3 text-slate-400" :class="{ 'text-blue-400 bg-blue-600/10': filterDateRange === 'Todos' }">
+                      <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
                         <CheckIcon v-if="filterDateRange === 'Todos'" class="w-3 h-3 text-white stroke-[4]" />
                       </div>
                       TODOS OS REGISTROS
                    </div>
 
                    <div v-for="group in availableDates" :key="group.year" class="mb-4">
-                      <div class="flex items-center gap-2 p-1 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 border-l-2 border-slate-100 ml-1">
+                      <div class="flex items-center gap-2 p-1 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-l-2 border-slate-800 ml-1">
                         {{ group.year }}
                       </div>
                       <div class="space-y-1">
-                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider" :class="{ 'text-blue-600 bg-blue-50/50': filterDateRange === (d.year + '-' + d.week) }">
-                           <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-300 ml-4" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
+                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' })" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider text-slate-400" :class="{ 'text-blue-400 bg-blue-600/10': filterDateRange === (d.year + '-' + d.week) }">
+                           <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700 ml-4" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
                               <CheckIcon v-if="filterDateRange === (d.year + '-' + d.week)" class="w-3 h-3 text-white stroke-[4]" />
                            </div>
                            SEMANA {{ d.week }}

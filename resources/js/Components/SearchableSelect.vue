@@ -34,6 +34,10 @@ const props = defineProps({
     searchable: {
         type: Boolean,
         default: true
+    },
+    variant: {
+        type: String,
+        default: 'light' // 'light' or 'dark'
     }
 });
 
@@ -141,8 +145,10 @@ const resolveFlagName = (option) => {
         <label 
             v-if="label" 
             @click="toggleDropdown"
-            class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 transition-colors cursor-pointer" 
-            :class="{ 'text-blue-600': isOpen }"
+            class="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5 transition-colors cursor-pointer" 
+            :class="[
+                isOpen ? 'text-blue-500' : (variant === 'dark' ? 'text-slate-500' : 'text-slate-500')
+            ]"
         >
             <component :is="icon" class="w-3.5 h-3.5" v-if="icon" />
             {{ label }}
@@ -152,72 +158,80 @@ const resolveFlagName = (option) => {
         <div 
             @click="toggleDropdown"
             :class="[
-                'w-full bg-white border transition-all duration-200 cursor-pointer rounded-xl px-3 py-3 flex items-center justify-between group',
-                isOpen ? 'bg-white border-blue-500 ring-4 ring-blue-50' : 'border-slate-200 hover:border-slate-300 hover:bg-white/50',
+                'w-full border transition-all duration-200 cursor-pointer rounded-xl px-3 py-3 flex items-center justify-between group',
+                variant === 'dark' 
+                ? (isOpen ? 'bg-[#1e293b] border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'bg-[#1e293b]/40 border-slate-800 hover:border-slate-700 hover:bg-[#1e293b]/60')
+                : (isOpen ? 'bg-white border-blue-500 ring-4 ring-blue-50' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-white/50'),
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
             ]"
         >
             <div class="flex items-center gap-2 overflow-hidden">
-                <span v-if="!selectedOption" class="text-slate-400 text-sm font-medium uppercase truncate">{{ placeholder }}</span>
+                <span v-if="!selectedOption" class="text-slate-500 text-sm font-medium uppercase truncate">{{ placeholder }}</span>
                 <div v-else class="flex items-center gap-2 overflow-hidden">
-                    <CountryFlag v-if="withFlag" :name="selectedOption.name" :code="resolveFlagName(selectedOption)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
-                    <span class="text-slate-800 text-sm font-bold uppercase truncate">{{ selectedOption.name }}</span>
+                    <CountryFlag v-if="withFlag" :name="selectedOption.name" :code="resolveFlagName(selectedOption)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-800/10" />
+                    <span :class="[variant === 'dark' ? 'text-slate-200' : 'text-slate-800']" class="text-sm font-bold uppercase truncate">{{ selectedOption.name }}</span>
                 </div>
             </div>
-            <ChevronDown class="w-4 h-4 text-slate-400 transition-transform duration-300" :class="{ 'rotate-180 text-blue-500': isOpen }" />
+            <ChevronDown class="w-4 h-4 text-slate-500 transition-transform duration-300" :class="{ 'rotate-180 text-blue-500': isOpen }" />
         </div>
 
         <div 
             v-if="isOpen" 
             :class="[
-                'absolute z-[100] left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden duration-200',
+                'absolute z-[100] left-0 right-0 border rounded-2xl shadow-2xl overflow-hidden duration-200',
+                variant === 'dark' ? 'bg-[#0f172a] border-slate-800' : 'bg-white border-slate-200',
                 calculatedDirection === 'up' ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2' : 'top-full mt-2 animate-in fade-in slide-in-from-top-2'
             ]"
         >
             <!-- Search Input -->
-            <div v-if="searchable" class="p-2 border-b border-slate-100 bg-white">
+            <div v-if="searchable" :class="[variant === 'dark' ? 'p-2 border-b border-slate-800 bg-[#1e293b]/30' : 'p-2 border-b border-slate-100 bg-white']">
                 <div class="relative">
-                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                     <input 
                         ref="searchInput"
                         v-model="searchQuery"
                         type="text"
                         placeholder="Buscar..."
-                        class="w-full bg-white border-slate-200 rounded-lg text-[11px] font-bold py-2 pl-9 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all uppercase"
+                        :class="[
+                            'w-full rounded-lg text-[11px] font-bold py-2 pl-9 pr-8 transition-all uppercase',
+                            variant === 'dark' ? 'bg-[#0f172a] border-slate-800 text-slate-200 focus:ring-blue-500 focus:border-blue-500' : 'bg-white border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800'
+                        ]"
                         @click.stop
                     >
-                    <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-md transition-colors">
-                        <X class="w-3 h-3 text-slate-400" />
+                    <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded-md transition-colors">
+                        <X class="w-3 h-3 text-slate-500" />
                     </button>
                 </div>
             </div>
 
             <!-- Options List -->
-            <div class="max-h-[280px] overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-slate-200">
+            <div :class="['max-h-[280px] overflow-y-auto p-1 scrollbar-thin', variant === 'dark' ? 'scrollbar-thumb-slate-800' : 'scrollbar-thumb-slate-200']">
                 <div 
                     v-for="option in filteredOptions" 
                     :key="option.id"
                     @click="selectOption(option)"
                     :class="[
                         'flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all group mb-0.5',
-                        modelValue == option.id ? 'bg-blue-600 text-white shadow-md shadow-blue-100' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700',
-                        option.is_locked ? 'opacity-40 grayscale cursor-default border border-dashed border-slate-200 bg-slate-50/50' : ''
+                        modelValue == option.id 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : (variant === 'dark' ? 'text-slate-400 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-blue-50 hover:text-blue-700'),
+                        option.is_locked ? 'opacity-40 grayscale cursor-default border border-dashed border-slate-800 bg-black/10' : ''
                     ]"
                 >
                     <div class="flex items-center gap-2.5 overflow-hidden">
-                        <CountryFlag v-if="withFlag" :name="option.name" :code="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-100" />
+                        <CountryFlag v-if="withFlag" :name="option.name" :code="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-800/20" />
                         <span class="text-xs font-bold uppercase tracking-wide truncate">{{ option.name }}</span>
                     </div>
-                    <Lock v-if="option.is_locked" class="w-3 h-3 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                    <Lock v-if="option.is_locked" class="w-3 h-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
                     <Check v-else-if="modelValue == option.id" class="w-3.5 h-3.5 text-white stroke-[3]" />
                 </div>
 
                 <!-- Empty State -->
                 <div v-if="filteredOptions.length === 0" class="py-10 px-4 text-center">
-                    <div class="w-10 h-10 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div class="w-10 h-10 bg-slate-900/50 text-slate-500 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-800">
                         <Search class="w-5 h-5" />
                     </div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum resultado para "{{ searchQuery }}"</p>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">Nenhum resultado para "{{ searchQuery }}"</p>
                 </div>
             </div>
         </div>

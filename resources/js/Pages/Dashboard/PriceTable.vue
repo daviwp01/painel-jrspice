@@ -189,12 +189,13 @@ const changePage = (url) => {
   <DashboardLayout>
     <template #sidebar-filters>
       <!-- FILTERS -->
-      <div class="mt-8">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center justify-between">
-              <span class="flex items-center gap-2"><Search class="w-3 h-3"/> Filtros de Busca</span>
-              <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
-          </p>
-                  <div class="space-y-4">
+      <div class="border-t border-slate-800/50 pt-4">
+         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center justify-between">
+             <span class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca</span>
+             <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
+         </p>
+         
+         <div class="space-y-5">
             <SearchableSelect 
                v-model="selectedCountry"
                :options="countries"
@@ -202,10 +203,10 @@ const changePage = (url) => {
                placeholder="Selecione o País"
                :icon="MapPinIcon"
                :with-flag="true"
+               variant="dark"
                direction="up"
                @change="handleCountryChange"
             />
-
           </div>
       </div>
     </template>
