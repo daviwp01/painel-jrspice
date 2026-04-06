@@ -10,7 +10,7 @@ import LegalModal from '@/Components/LegalModal.vue';
 import { 
     LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, 
     Settings as SettingsIcon2, Database as DatabaseIcon, 
-    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, User as UserIcon, Loader2 
+    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, User as UserIcon, LogOut as LogOutIcon, Loader2 
 } from 'lucide-vue-next';
 
 const page = usePage();
