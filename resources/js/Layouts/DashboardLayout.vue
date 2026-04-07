@@ -140,7 +140,7 @@ const navItems = computed(() => [
 
                 <!-- Right Tools -->
                 <div class="flex items-center space-x-4 sm:space-x-6">
-                    <LanguageSwitcher />
+                <!-- <LanguageSwitcher /> -->
 
                     <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
 

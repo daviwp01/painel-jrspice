@@ -39,18 +39,22 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'settings' => [
-                'legal_privacy_policy' => \App\Models\Setting::get('legal_privacy_policy'),
-                'legal_terms_of_use' => \App\Models\Setting::get('legal_terms_of_use'),
+                'legal_privacy_policy' => \Illuminate\Support\Facades\Cache::remember('setting_privacy', 3600, fn() => \App\Models\Setting::get('legal_privacy_policy')),
+                'legal_terms_of_use' => \Illuminate\Support\Facades\Cache::remember('setting_terms', 3600, fn() => \App\Models\Setting::get('legal_terms_of_use')),
             ],
-            'dashboardPages' => \App\Models\DashboardPage::where('is_active', true)
-                ->orderBy('order')
-                ->get()
-                ->filter(function ($page) use ($request) {
-                    $user = $request->user();
-                    if (!$user) return false;
-                    return $user->canAccessPage($page->slug);
-                })
-                ->values(),
+            'dashboardPages' => function() use ($request) {
+                $user = $request->user();
+                if (!$user) return [];
+
+                $allPages = \Illuminate\Support\Facades\Cache::remember('active_dashboard_pages', 3600, function() {
+                    return \App\Models\DashboardPage::where('is_active', true)
+                        ->orderBy('order')
+                        ->get();
+                });
+
+                return $allPages->filter(fn($page) => $user->canAccessPage($page->slug))->values();
+            },
+
         ];
     }
 }

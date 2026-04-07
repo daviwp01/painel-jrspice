@@ -1,8 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\PowerBiController;
-use App\Services\PowerBiService;
+
 use App\Http\Middleware\EnsureUserIsMaster;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;

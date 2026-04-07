@@ -72,9 +72,9 @@ const openLegal = (type) => {
         <div class="flex-1 lg:w-[40%] bg-white h-screen flex flex-col relative overflow-y-auto">
 
             <!-- Language Switcher (Fixed Position) -->
-            <div class="absolute top-8 right-8 z-50">
+            <!-- <div class="absolute top-8 right-8 z-50">
                 <LanguageSwitcher />
-            </div>
+            </div> -->
 
             <!-- 📱 MOBILE LOGO (Visible only on < lg screens) -->
             <div class="flex lg:hidden flex-col items-center pt-10 pb-4 px-6 flex-shrink-0">
