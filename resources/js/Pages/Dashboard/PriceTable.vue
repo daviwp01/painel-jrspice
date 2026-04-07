@@ -341,16 +341,16 @@ const changePage = (url) => {
     </div>
   </DashboardLayout>
 
-  <!-- LOADING OVERLAY REAL -->
-  <div v-if="isDownloading" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 animate-in fade-in duration-300">
-      <div class="bg-white p-10 rounded-[32px] shadow-2xl flex flex-col items-center gap-6 max-w-sm text-center">
-          <div class="relative">
-              <div class="w-20 h-20 border-4 border-blue-100 rounded-full animate-pulse"></div>
-              <Loader2 class="w-12 h-12 text-blue-600 animate-spin absolute inset-4" />
+  <!-- LOADING OVERLAY MINIMALISTA -->
+  <div v-if="isDownloading" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/20">
+      <div class="bg-white/90 border border-slate-200 backdrop-blur-sm p-6 rounded-[2rem] shadow-2xl flex items-center gap-4 animate-in zoom-in-95 duration-300">
+          <div class="relative w-10 h-10 flex items-center justify-center">
+              <div class="absolute inset-0 border-2 border-slate-100 rounded-full"></div>
+              <Loader2 class="w-6 h-6 text-blue-600 animate-spin" />
           </div>
-          <div>
-              <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Gerando...</h3>
-              <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-[0.2em]">Aguarde.</p>
+          <div class="pr-2">
+              <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest whitespace-nowrap">Gerando PDF</h3>
+              <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none mt-0.5">Aguarde um instante</p>
           </div>
       </div>
   </div>

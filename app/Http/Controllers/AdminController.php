@@ -255,17 +255,7 @@ class AdminController extends Controller
         return redirect()->route('admin.users.index')->with('success', __('User updated successfully.'));
     }
 
-    /**
-     * Get Power BI Pages (API)
-     */
-    public function getPowerBiPages(\App\Services\PowerBiService $powerBiService)
-    {
-        try {
-            return response()->json($powerBiService->getReportPages());
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
+
     /**
      * Toggle user active status.
      */
