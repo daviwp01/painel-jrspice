@@ -16,10 +16,7 @@ class InternalDashboardController extends Controller
     {
         $user = auth()->user();
         $pages = DashboardPage::where('is_active', true)->orderBy('order')->get();
-        
-        $allowedPages = $pages->filter(function ($page) use ($user) {
-            return $user->canAccessPage($page->slug);
-        });
+        $allowedPages = $pages->filter(fn($page) => $user->canAccessPage($page->slug));
 
         if ($allowedPages->isEmpty()) {
             return Inertia::render('Dashboard/Empty');
@@ -37,7 +34,6 @@ class InternalDashboardController extends Controller
             abort(403);
         }
 
-        // 1. Basic properties
         $viewData = [
             'currentPage' => $currentPage,
             'filters' => [
@@ -50,9 +46,7 @@ class InternalDashboardController extends Controller
             ]
         ];
 
-        // 2. Load technical data IF needed
         $technicalDashboards = ['Dashboard/Show', 'Dashboard/PriceTable', 'Dashboard/HistoricalData', 'Dashboard/Demo'];
-        
         if (in_array($currentPage->component, $technicalDashboards)) {
             $this->loadDashboardData($request, $currentPage, $viewData);
         }
@@ -67,240 +61,215 @@ class InternalDashboardController extends Controller
         $startOfWeek = $now->copy()->startOfWeek(Carbon::MONDAY);
         $endOfWeek = $now->copy()->endOfWeek(Carbon::SUNDAY);
 
-        // a. Countries Activity
+        // 1. Countries - Using select() for optimization but keeping logic
         $latestUpdatesSubquery = ProductPrice::select('products.country_id')
             ->join('products', 'product_prices.product_id', '=', 'products.id')
             ->selectRaw('MAX(product_prices.date) as latest_weekly_update')
             ->whereBetween('product_prices.date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
             ->groupBy('products.country_id');
 
-        $countries = Country::leftJoinSub($latestUpdatesSubquery, 'latest_updates', function ($join) {
-                $join->on('countries.id', '=', 'latest_updates.country_id');
-            })
-            ->select('countries.*', 'latest_updates.latest_weekly_update')
-            ->orderByRaw('latest_weekly_update DESC')
-            ->orderBy('countries.name')
-            ->get();
+        $countries = Country::leftJoinSub($latestUpdatesSubquery, 'latest_updates', fn($join) => $join->on('countries.id', '=', 'latest_updates.country_id'))
+            ->select('countries.id', 'countries.name', 'latest_updates.latest_weekly_update')
+            ->orderByRaw('latest_weekly_update DESC')->orderBy('name')->get();
 
-        // b. Settings for Defaults
-        $defaultCountryId  = \App\Models\Setting::get('default_filter_country_id');
+        $defaultCountryId = \App\Models\Setting::get('default_filter_country_id');
         $defaultProductIds = \App\Models\Setting::get('default_filter_product_ids') ?? [];
-
-        // c. Check if it's first visit to apply default filters
         $isFirstVisit = !$request->hasAny(['country_id', 'product_id', 'supplier_id', 'date_range']);
         
         $countryId = $viewData['filters']['country_id'];
         $productId = $viewData['filters']['product_id'];
         $supplierId = $viewData['filters']['supplier_id'];
         $dateRange = $viewData['filters']['date_range'];
-        $sortField = $viewData['filters']['sort_field'];
-        $sortDir = $viewData['filters']['sort_direction'];
 
-        if ($isFirstVisit && $defaultCountryId) {
-            $countryId = $defaultCountryId;
-        }
-
-        // Forced Defaults for Demo (Overwrites everything)
+        if ($isFirstVisit && $defaultCountryId) $countryId = $defaultCountryId;
         if ($currentPage->component === 'Dashboard/Demo') {
             $countryId = $defaultCountryId;
-            $productId = is_array($defaultProductIds) ? ($defaultProductIds[0] ?? null) : (json_decode($defaultProductIds, true)[0] ?? null);
-            $supplierId = null;
-            $dateRange = 'Todos';
+            $decodedIds = is_array($defaultProductIds) ? $defaultProductIds : json_decode($defaultProductIds, true);
+            $productId = $decodedIds[0] ?? null;
+            $supplierId = null; $dateRange = 'Todos';
         }
+        if (!$countryId && $countries->isNotEmpty()) $countryId = $countries->first()->id;
 
-        if (!$countryId && $countries->isNotEmpty()) {
-            $countryId = $countries->first()->id;
-        }
+        // 2. Sidebar Products - Minimal columns
+        $productsSidebar = Product::where('country_id', $countryId)->select('id', 'name', 'country_id', 'harvest_month')->orderBy('name')->get();
 
-        // d. Products for Sidebar
-        $productsSidebar = Product::where('country_id', $countryId)->orderBy('name')->get();
-
-        // Product Auto-Selection logic
         if ($productId && !Product::where('id', $productId)->exists()) $productId = null;
         if (!$productId && $countryId == $defaultCountryId && !empty($defaultProductIds)) {
             $decodedIds = is_array($defaultProductIds) ? $defaultProductIds : json_decode($defaultProductIds, true);
             $defaultProduct = $productsSidebar->first(fn($p) => in_array($p->id, $decodedIds));
             if ($defaultProduct) $productId = $defaultProduct->id;
         }
-        if (!$productId && $productsSidebar->isNotEmpty()) {
-            $productId = $productsSidebar->first()->id;
-        }
+        if (!$productId && $productsSidebar->isNotEmpty()) $productId = $productsSidebar->first()->id;
 
-        // e. Suppliers for Sidebar
-        $suppliersQuery = Supplier::whereHas('productPrices.product', function($q) use ($countryId) {
+        // 3. Suppliers
+        $suppliers = Supplier::whereHas('productPrices.product', function($q) use ($countryId) {
             if ($countryId) $q->where('country_id', $countryId);
-        });
+        })->select('id', 'name')->orderBy('name')->get();
+
+        // 4. Main Content Logic
         if ($currentPage->component === 'Dashboard/PriceTable') {
-            $suppliersQuery->whereHas('productPrices', function($q) use ($startOfWeek, $endOfWeek) {
-                $q->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
-            });
-        }
-        $suppliers = $suppliersQuery->orderBy('name')->get();
-
-        // f. Main Content logic
-        $productsQuery = Product::query();
-        $productsQuery->with(['prices' => function($query) use ($supplierId) {
-            $query->with('supplier')->orderBy('date', 'desc')->orderBy('price', 'asc');
-            if ($supplierId) $query->where('supplier_id', $supplierId);
-        }]);
-
-        if ($countryId) $productsQuery->where('country_id', $countryId);
-
-        if ($currentPage->component === 'Dashboard/PriceTable') {
+            $productsQuery = Product::query()->where('country_id', $countryId);
             $productsQuery->whereHas('prices', function($q) use ($supplierId, $startOfWeek, $endOfWeek) {
                 $q->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
                 if ($supplierId) $q->where('supplier_id', $supplierId);
             });
             
+            // Reverting to with('prices') but selecting specific columns
+            $productsQuery->with(['prices' => function($query) use ($supplierId) {
+                if ($supplierId) $query->where('supplier_id', $supplierId);
+                $query->with('supplier:id,name')->orderBy('date', 'desc')->orderBy('price', 'asc');
+            }]);
+
+            $sortField = $viewData['filters']['sort_field']; $sortDir = $viewData['filters']['sort_direction'];
             if ($sortField === 'latest_price' || $sortField === 'variation') {
-                $latestPriceSub = ProductPrice::select('product_id', 'price as l_price')
-                    ->whereIn('id', function($q) use ($supplierId, $startOfWeek, $endOfWeek) {
-                        $q->selectRaw('MAX(id)')->from('product_prices')->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
-                        if ($supplierId) $q->where('supplier_id', $supplierId);
-                        $q->groupBy('product_id');
-                    });
+                $latestPriceSub = ProductPrice::select('product_id', 'price as l_price')->whereIn('id', function($q) use ($supplierId, $startOfWeek, $endOfWeek) {
+                    $q->selectRaw('MAX(id)')->from('product_prices')->whereBetween('date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')]);
+                    if ($supplierId) $q->where('supplier_id', $supplierId); $q->groupBy('product_id');
+                });
                 $productsQuery->leftJoinSub($latestPriceSub, 'lp', 'lp.product_id', '=', 'id')->orderBy('l_price', $sortDir);
-            } else {
-                $productsQuery->orderBy('name', $sortDir);
-            }
-            $productsProp = $productsQuery->select('products.*')->paginate(20)->withQueryString();
+            } else { $productsQuery->orderBy('name', $sortDir); }
+            
+            $productsProp = $productsQuery->paginate(20)->withQueryString();
         } else {
             $productsProp = $productsSidebar;
         }
 
-        // g. Component Specific Data
         if ($currentPage->component === 'Dashboard/HistoricalData') {
-            $hDataQuery = ProductPrice::with(['product.country', 'supplier'])
+            $hDataQuery = ProductPrice::with(['product:id,name,country_id', 'product.country:id,name', 'supplier:id,name'])
                 ->join('products', 'products.id', '=', 'product_prices.product_id')
-                ->join('countries', 'countries.id', '=', 'products.country_id')
-                ->join('suppliers', 'suppliers.id', '=', 'product_prices.supplier_id')
                 ->select('product_prices.*');
-
             if ($countryId) $hDataQuery->where('products.country_id', $countryId);
             if ($productId) $hDataQuery->where('product_id', $productId);
             if ($supplierId) $hDataQuery->where('supplier_id', $supplierId);
             if ($dateRange && $dateRange !== 'Todos') {
                 $parts = explode('-', $dateRange);
-                if (count($parts) === 2) $hDataQuery->whereRaw('YEAR(date) = ? AND WEEK(date, 1) = ?', [$parts[0], $parts[1]]);
+                if (count($parts) === 2) $hDataQuery->whereRaw('YEAR(product_prices.date) = ? AND WEEK(product_prices.date, 1) = ?', [$parts[0], $parts[1]]);
             }
-
-            $hMap = ['name' => 'products.name', 'country' => 'countries.name', 'supplier' => 'suppliers.name', 'date' => 'date', 'price' => 'price'];
-            $hSort = $hMap[strtolower($sortField)] ?? 'date';
-            $viewData['historicalData'] = $hDataQuery->orderBy($hSort, $sortDir)->paginate(20)->withQueryString();
+            $viewData['historicalData'] = $hDataQuery->orderBy('product_prices.date', $viewData['filters']['sort_direction'])->paginate(20)->withQueryString();
             
             $viewData['availableDates'] = ProductPrice::when($countryId, fn($q) => $q->whereHas('product', fn($p) => $p->where('country_id', $countryId)))
-                ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
-                ->when($productId, fn($q) => $q->where('product_id', $productId))
                 ->selectRaw('YEAR(date) as year, WEEK(date, 1) as week')->distinct()->orderBy('year', 'desc')->orderBy('week', 'desc')
                 ->get()->groupBy('year')->map(fn($weeks, $year) => ['year' => $year, 'weeks' => $weeks])->values();
         }
 
         if ($currentPage->component === 'Dashboard/Show' || $currentPage->component === 'Dashboard/Demo') {
             if ($productId) {
-                $allPrices = ProductPrice::where('product_id', $productId)
-                    ->when($countryId, fn($q) => $q->whereHas('product', fn($px) => $px->where('country_id', $countryId)))
-                    ->get();
-
-                $viewData['pricesData'] = $allPrices->load('supplier')->sortBy('date')->values();
-                $viewData['metrics'] = $this->calculateMetrics($allPrices);
-                $viewData['chartData'] = $this->calculateChartHistorical($allPrices);
+                // Fetching pricesData like it was originally, but keeping it concise
+                $prices = ProductPrice::where('product_id', $productId)->with('supplier:id,name')->orderBy('date', 'desc')->get();
+                $viewData['pricesData'] = $prices;
+                $viewData['metrics'] = $this->calculateMetrics($prices);
+                $viewData['chartData'] = $this->calculateChartHistorical($prices);
             }
         }
 
-        // Final view data update
         $viewData['countries'] = $countries;
         $viewData['suppliers'] = $suppliers;
         $viewData['products'] = $productsProp;
+        $viewData['filters'] = ['country_id'=>$countryId, 'product_id'=>$productId, 'supplier_id'=>$supplierId, 'date_range'=>$dateRange, 'sort_field'=>$viewData['filters']['sort_field'], 'sort_direction'=>$viewData['filters']['sort_direction']];
         $viewData['settings'] = \App\Models\Setting::all()->pluck('value', 'key');
-        $viewData['filters'] = [
-            'country_id' => $countryId,
-            'product_id' => $productId,
-            'supplier_id' => $supplierId,
-            'date_range' => $dateRange,
-            'sort_field' => $sortField,
-            'sort_direction' => $sortDir
-        ];
     }
 
-    private function calculateMetrics($prices)
-    {
-        $now = Carbon::now();
-        $subWeek = $now->copy()->subWeek();
-        $startOfYear = $now->copy()->startOfYear();
+    private function calculateMetrics($prices) {
+        $now = Carbon::now(); $subWeek = $now->copy()->subWeek(); $startOfYear = $now->copy()->startOfYear();
+        $latest = $prices->filter(fn($p) => $p->date->isAfter($subWeek) || $p->date->isSameDay($subWeek));
+        $yearBest = $prices->filter(fn($p) => $p->date->isAfter($startOfYear) || $p->date->isSameDay($startOfYear))->groupBy(fn($p) => $p->date->format('Y-W'))->map(fn($group) => (float)$group->min('price'));
+        $bestWeekly = $prices->groupBy(fn($p) => $p->date->format('Y-W'))->map(fn($group) => (float)$group->min('price'));
         
-        $latestPricesRaw = $prices->filter(fn($p) => $p->date->isAfter($subWeek) || $p->date->isSameDay($subWeek));
-        $yearBest = $prices->filter(fn($p) => $p->date->isAfter($startOfYear) || $p->date->isSameDay($startOfYear))
-            ->groupBy(fn($p) => $p->date->format('Y-W'))->map(fn($group) => (float)$group->min('price'));
-        $bestWeeklyPrices = $prices->groupBy(fn($p) => $p->date->format('Y-W'))->map(fn($group) => (float)$group->min('price'));
-
         $metrics = [
-            'latest' => ['label' => 'ÚLTIMA SEMANA', 'min' => (float)$latestPricesRaw->min('price'), 'max' => (float)$latestPricesRaw->max('price')],
-            'year' => ['label' => 'ANO: ' . $now->year, 'min' => (float)$yearBest->min(), 'max' => (float)$yearBest->max()],
-            'all' => ['label' => 'DESDE: ' . ($prices->min('date')?->year ?? $now->year), 'min' => (float)$bestWeeklyPrices->min(), 'max' => (float)$bestWeeklyPrices->max()]
+            'latest' => [
+                'label' => 'ÚLTIMA SEMANA',
+                'min' => (float)$latest->min('price'),
+                'max' => (float)$latest->max('price')
+            ],
+            'year' => [
+                'label' => 'ANO: ' . $now->year,
+                'min' => (float)$yearBest->min(),
+                'max' => (float)$yearBest->max()
+            ],
+            'all' => [
+                'label' => 'DESDE: ' . ($prices->min('date')?->year ?? $now->year),
+                'min' => (float)$bestWeekly->min(),
+                'max' => (float)$bestWeekly->max()
+            ]
         ];
-
         foreach ($metrics as $key => $m) {
-            $spread = 0;
-            if ($m['min'] > 0) $spread = (($m['max'] - $m['min']) / $m['min']) * 100;
-            $metrics[$key]['spread'] = $spread;
+            $metrics[$key]['spread'] = ($m['min'] > 0) ? (($m['max'] - $m['min']) / $m['min']) * 100 : 0;
         }
         return $metrics;
     }
 
-    private function calculateChartHistorical($prices)
-    {
+    private function calculateChartHistorical($prices) {
         $chartData = [];
-        $pricesByYearMonth = $prices->groupBy(fn($p) => $p->date->format('Y-n'));
-        $globalFirstYear = $prices->min('date')?->year ?? now()->year;
-        
-        foreach (range($globalFirstYear, now()->year) as $y) {
-            $monthly = [];
+        $pricesByYM = $prices->groupBy(fn($p) => $p->date->format('Y-n'));
+        $firstY = $prices->min('date')?->year ?? now()->year;
+        foreach (range($firstY, now()->year) as $y) {
+            $mData = [];
             for ($m = 1; $m <= 12; $m++) {
-                $val = $pricesByYearMonth->get("$y-$m")?->min('price');
-                $monthly[] = $val ? (float)round($val, 2) : null;
+                $val = $pricesByYM->get("$y-$m")?->min('price');
+                $mData[] = $val ? (float)round($val, 2) : null;
             }
-            $chartData[$y] = $monthly;
+            $chartData[$y] = $mData;
         }
         return $chartData;
     }
 
-    public function sendContactEmail(HttpRequest $request)
-    {
-        $validated = $request->validate(['subject' => 'required|string|max:255', 'message' => 'required|string']);
-        $user = auth()->user();
-        $recipient = \App\Models\Setting::get('contact_email', config('mail.from.address'));
-        \Illuminate\Support\Facades\Mail::to($recipient)->send(new \App\Mail\DirectContact([
-            'name' => $user->name, 'email' => $user->email, 'phone' => $user->phone, 'company' => $user->company_name, 'subject' => $validated['subject'], 'message' => $validated['message']
-        ]));
-        return redirect()->back()->with('success', 'Sua mensagem foi enviada com sucesso!');
+    public function sendContactEmail(HttpRequest $request) {
+        $v = $request->validate(['subject' => 'required', 'message' => 'required']);
+        $u = auth()->user(); $recipient = \App\Models\Setting::get('contact_email', config('mail.from.address'));
+        \Illuminate\Support\Facades\Mail::to($recipient)->send(new \App\Mail\DirectContact(['name'=>$u->name, 'email'=>$u->email, 'phone'=>$u->phone, 'company'=>$u->company_name, 'subject'=>$v['subject'], 'message'=>$v['message']]));
+        return redirect()->back()->with('success', 'Mensagem enviada!');
     }
 
-    public function exportPricesPdf(HttpRequest $request)
-    {
+    public function exportPricesPdf(HttpRequest $request) {
         ini_set('memory_limit', '512M');
-        set_time_limit(300);
         try {
             $countryIds = $request->input('country_ids');
-            $query = Country::orderBy('name');
-            if ($countryIds && $countryIds !== 'all') $query->whereIn('id', is_array($countryIds) ? $countryIds : explode(',', $countryIds));
-            $countries = $query->get();
-            
-            $exportData = [];
-            foreach ($countries as $country) {
-                $products = Product::where('country_id', $country->id)->with(['prices' => fn($q) => $q->orderBy('date', 'desc')->with('supplier')])->orderBy('name')->get()->map(function($p) {
-                    $latest = $p->prices->first();
-                    $prev = $p->prices->first(fn($pr) => $pr->date->format('Y-m-d') !== ($latest ? $latest->date->format('Y-m-d') : null));
-                    $lp = $latest ? (float)$latest->price : null;
-                    $pp = $prev ? (float)$prev->price : $lp;
-                    $variation = ($lp && $pp && $pp > 0) ? (($lp - $pp) / $pp) * 100 : 0;
-                    return (object)['name' => $p->name, 'latestPrice' => $lp, 'previousPrice' => $pp, 'variation' => $variation, 'status' => $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$prev && $latest ? 'new' : 'none')), 'supplier' => $latest ? $latest->supplier?->name : 'N/A'];
-                });
-                
-                $exportData[] = (object)['name' => $country->name, 'products' => $products];
+            $countriesQuery = Country::orderBy('name');
+            if ($countryIds && $countryIds !== 'all') {
+                $ids = is_array($countryIds) ? $countryIds : explode(',', $countryIds);
+                $countriesQuery->whereIn('id', $ids);
             }
-            return \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.price-table', ['exportData' => $exportData, 'date' => now()->format('d/m/Y')])->download('tabela-de-preco-jrspice-' . now()->format('d-m-Y') . '.pdf');
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Falha técnica.', 'message' => $e->getMessage()], 200);
-        }
+            $countries = $countriesQuery->get();
+            $exportData = [];
+            $flagCache = [];
+            $context = stream_context_create(['ssl'=>["verify_peer"=>false,"verify_peer_name"=>false],'http'=>['timeout'=>5]]);
+            
+            foreach ($countries as $country) {
+                $flagBase64 = null;
+                $countryMap = [
+                    'brasil' => 'br', 'china' => 'cn', 'india' => 'in', 'indonesia' => 'id', 'vietna' => 'vn', 'vietnam' => 'vn',
+                    'madagascar' => 'mg', 'egito' => 'eg', 'egypt' => 'eg', 'espanha' => 'es', 'argentina' => 'ar', 'mexico' => 'mx'
+                ];
+                $normalizedName = str_replace(['á','ã','é','í','ó','õ','ú','ç'], ['a','a','e','i','o','o','u','c'], mb_strtolower(trim($country->name), 'UTF-8'));
+                $countryCode = $countryMap[$normalizedName] ?? null;
+                if ($countryCode) {
+                    if (isset($flagCache[$countryCode])) {
+                        $flagBase64 = $flagCache[$countryCode];
+                    } else {
+                        try {
+                            $imgData = @file_get_contents("https://flagcdn.com/w160/{$countryCode}.png", false, $context);
+                            if ($imgData) {
+                                $flagBase64 = 'data:image/png;base64,' . base64_encode($imgData);
+                                $flagCache[$countryCode] = $flagBase64;
+                            }
+                        } catch (\Exception $e) {}
+                    }
+                }
+                $products = Product::where('country_id', $country->id)->with(['prices' => fn($q) => $q->orderBy('date', 'desc')->with('supplier:id,name')])->orderBy('name')->get()->map(function($product) {
+                    $latest = $product->prices->first();
+                    $previous = $product->prices->first(fn($p) => $p->date->format('Y-m-d') !== ($latest ? $latest->date->format('Y-m-d') : null));
+                    $latestPrice = $latest ? (float)$latest->price : null;
+                    $previousPrice = $previous ? (float)$previous->price : $latestPrice;
+                    $variation = ($latestPrice && $previousPrice && $previousPrice > 0) ? (($latestPrice - $previousPrice) / $previousPrice) * 100 : 0;
+                    return (object)[
+                        'name' => $product->name, 'latestPrice' => $latestPrice, 'previousPrice' => $previousPrice, 
+                        'variation' => $variation, 'status' => $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$previous && $latest ? 'new' : 'none')),
+                        'supplier' => $latest ? $latest->supplier->name : 'N/A'
+                    ];
+                });
+                $exportData[] = (object)[ 'name' => $country->name, 'flag' => $flagBase64, 'products' => $products ];
+            }
+            return \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.price-table', ['exportData' => $exportData, 'date' => now()->format('d/m/Y')])->download('precos.pdf');
+        } catch (\Exception $e) { return response()->json(['error' => $e->getMessage()], 200); }
     }
 }

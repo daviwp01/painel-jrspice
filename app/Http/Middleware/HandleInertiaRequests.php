@@ -52,7 +52,13 @@ class HandleInertiaRequests extends Middleware
                         ->get();
                 });
 
-                return $allPages->filter(fn($page) => $user->canAccessPage($page->slug))->values();
+                return $allPages->filter(fn($page) => $user->canAccessPage($page->slug))
+                    ->map(fn($page) => [
+                        'id' => $page->id,
+                        'title' => $page->title,
+                        'slug' => $page->slug,
+                    ])
+                    ->values();
             },
 
         ];
