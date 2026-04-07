@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2 } from 'lucide-vue-next';
+import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2, ArrowUp, ArrowDown } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
@@ -272,25 +272,33 @@ const changePage = (url) => {
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-2">
                                     PRODUTO
-                                    <ArrowUpDown :class="filters.sort_field === 'name' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
                                 <div class="flex items-center gap-2">
                                     PAÍS
-                                    <ArrowUpDown :class="filters.sort_field === 'country' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'country' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'country' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
                                 <div class="flex items-center gap-2">
                                     FORNECEDOR
-                                    <ArrowUpDown :class="filters.sort_field === 'supplier' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'supplier' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'supplier' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
                                 <div class="flex items-center gap-2">
                                     DATA REGISTRO
-                                    <ArrowUpDown :class="filters.sort_field === 'date' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4">ANO / MES</th>
@@ -298,7 +306,9 @@ const changePage = (url) => {
                             <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
                                 <div class="flex items-center justify-end gap-2">
                                     PREÇO
-                                    <ArrowUpDown :class="filters.sort_field === 'price' ? 'text-blue-600' : 'text-slate-300 opacity-0 group-hover:opacity-100'" class="w-3.5 h-3.5 transition-all" />
+                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                         </tr>

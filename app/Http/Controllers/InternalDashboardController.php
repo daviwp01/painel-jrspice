@@ -137,15 +137,25 @@ class InternalDashboardController extends Controller
                 $q->with('supplier:id,name')->orderBy('date', 'desc')->orderBy('price', 'asc');
             }]);
             
-            $sortField = $viewData['filters']['sort_field']; $sortDir = $viewData['filters']['sort_direction'];
+            $sortField = $viewData['filters']['sort_field'] ?? 'name'; 
+            $sortDir = $viewData['filters']['sort_direction'] ?? 'asc';
+            
             if ($sortField === 'latest_price' || $sortField === 'variation') {
-                $lpSub = ProductPrice::select('product_id', 'price as l_price')->whereIn('id', function($q) use ($supplierId, $pStart, $pEnd) {
-                    $q->selectRaw('MIN(id)')->from('product_prices')->whereBetween('date', [$pStart->format('Y-m-d'), $pEnd->format('Y-m-d')])
-                      ->when($supplierId, fn($qx) => $qx->where('supplier_id', $supplierId))->groupBy('product_id');
-                });
-                $productsQuery->leftJoinSub($lpSub, 'lp', 'lp.product_id', '=', 'id')->orderBy('l_price', $sortDir);
-            } else { $productsQuery->orderBy('name', $sortDir === 'desc' ? 'asc' : $sortDir); }
-            $productsProp = $productsQuery->paginate(20)->withQueryString();
+                $lpSub = ProductPrice::select('product_id', 'price as l_price')
+                    ->whereIn('id', function($q) use ($supplierId, $pStart, $pEnd) {
+                        $q->selectRaw('MAX(id)') 
+                          ->from('product_prices')
+                          ->whereBetween('date', [$pStart->format('Y-m-d'), $pEnd->format('Y-m-d')])
+                          ->when($supplierId, fn($qx) => $qx->where('supplier_id', $supplierId))
+                          ->groupBy('product_id');
+                    });
+                $productsQuery->leftJoinSub($lpSub, 'lp', 'lp.product_id', '=', 'products.id')
+                    ->orderBy('l_price', $sortDir);
+            } else { 
+                $productsQuery->orderBy('products.name', $sortDir); 
+            }
+            
+            $productsProp = $productsQuery->select('products.*')->paginate(20)->withQueryString();
         } else {
             $productsProp = $productsSidebar;
         }
@@ -165,7 +175,22 @@ class InternalDashboardController extends Controller
                 else if (count($parts) === 1) $hQuery->whereRaw('YEAR(product_prices.date) = ?', [$parts[0]]);
             }
             
-            $viewData['historicalData'] = $hQuery->orderBy('product_prices.date', 'desc')->orderBy('supplier_name', 'asc')->paginate(50)->withQueryString();
+            $sF = $viewData['filters']['sort_field'] ?? 'date';
+            $sD = $viewData['filters']['sort_direction'] ?? 'desc';
+            
+            $mF = [
+                'name' => 'products.name',
+                'country' => 'countries.name',
+                'supplier' => 'suppliers.name',
+                'date' => 'product_prices.date',
+                'price' => 'product_prices.price'
+            ];
+            $hSort = $mF[$sF] ?? 'product_prices.date';
+            
+            $viewData['historicalData'] = $hQuery->leftJoin('countries', 'countries.id', '=', 'products.country_id')
+                ->orderBy($hSort, $sD)
+                ->orderBy('product_prices.id', 'desc')
+                ->paginate(50)->withQueryString();
         }
 
         $viewData['availableDates'] = ProductPrice::when($countryId, fn($q) => $q->whereHas('product', fn($p) => $p->where('country_id', $countryId)))
