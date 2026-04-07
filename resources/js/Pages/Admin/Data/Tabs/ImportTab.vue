@@ -114,11 +114,9 @@ const pollProgress = (jobId, batchId) => {
                 importSuccess.value = true;
                 activeBatchId.value = null;
                 activeJobId.value = null;
-                setTimeout(() => {
-                    router.reload();
-                    importSuccess.value = false;
-                    importProgress.value = null;
-                }, 3000);
+                router.reload();
+                importSuccess.value = false;
+                importProgress.value = null;
             } else if (response.data.status === 'failed') {
                 clearInterval(progressInterval);
                 isImporting.value = false;

@@ -22,7 +22,8 @@ import {
     UserX,
     Phone,
     Building2,
-    Check
+    Check,
+    CheckCircle
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -265,7 +266,7 @@ const isFormValid = computed(() => {
                                     </div>
                                     <div class="flex items-center pr-2">
                                         <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="form.is_active ? 'bg-emerald-600 border-emerald-600' : 'bg-rose-600 border-rose-600'">
-                                            <CheckCircle2 class="w-3 h-3 text-white" />
+                                            <CheckCircle class="w-3 h-3 text-white" />
                                         </div>
                                     </div>
                                 </div>
@@ -287,7 +288,7 @@ const isFormValid = computed(() => {
                                     </div>
                                     <div class="flex items-center pr-2">
                                         <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" :class="form.is_master ? 'bg-blue-600 border-blue-600' : 'border-slate-300'">
-                                            <CheckCircle2 v-if="form.is_master" class="w-3 h-3 text-white" />
+                                            <CheckCircle v-if="form.is_master" class="w-3 h-3 text-white" />
                                         </div>
                                     </div>
                                 </div>

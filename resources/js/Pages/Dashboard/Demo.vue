@@ -340,9 +340,7 @@ onMounted(() => {
 
     if ((urlCountryId && urlCountryId != demoCountryId.value) || 
         (urlProductId && !demoProductIds.value.includes(parseInt(urlProductId)))) {
-        setTimeout(() => {
-            openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
-        }, 500);
+        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
     }
 });
 </script>

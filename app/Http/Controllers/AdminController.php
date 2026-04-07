@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\DataImport;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -155,7 +156,7 @@ class AdminController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
             'is_master' => ['boolean'],
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
@@ -213,8 +214,9 @@ class AdminController extends Controller
         ];
 
         if ($request->filled('new_password')) {
-            $rules['new_password'] = ['required', 'confirmed', Rules\Password::defaults()];
+            $rules['new_password'] = ['confirmed', \Illuminate\Validation\Rules\Password::min(8)];
         }
+
 
         $request->validate($rules, [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),

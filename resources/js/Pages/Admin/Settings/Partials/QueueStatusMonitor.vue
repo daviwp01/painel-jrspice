@@ -32,10 +32,7 @@ const refresh = async () => {
     loading.value = true;
     // Add a small artificial delay to ensure the user sees the loading state
     try {
-        const [response] = await Promise.all([
-            axios.get(route('admin.settings.queue-status')),
-            new Promise(resolve => setTimeout(resolve, 600))
-        ]);
+        const response = await axios.get(route('admin.settings.queue-status'));
         stats.value = response.data;
     } catch (error) {
         console.error('Failed to fetch queue status', error);
