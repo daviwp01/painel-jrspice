@@ -29,6 +29,15 @@ const selectedSupplier = ref(props.filters.supplier_id || '');
 const selectedProduct = ref(props.filters.product_id || '');
 const filterDateRange = ref(props.filters.date_range || 'Todos');
 const isDatePickerOpen = ref(false);
+const expandedYears = ref([]);
+const toggleYearGroup = (year) => {
+    const sYear = year.toString();
+    if (expandedYears.value.includes(sYear)) {
+        expandedYears.value = expandedYears.value.filter(y => y !== sYear);
+    } else {
+        expandedYears.value.push(sYear);
+    }
+};
 const isLoading = ref(false);
 
 watch(() => props.filters, (newFilters) => {
@@ -110,7 +119,6 @@ const processedHistoricalData = computed(() => {
             productName: price.product?.name || '---',
             countryName: price.product?.country?.name || '',
             supplier: price.supplier?.name || 'Não inf.', 
-            rawDate: price.date,
             displayDate: new Date(price.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
             yearMonth: `${y}/${(d.getUTCMonth()+1).toString().padStart(2, '0')}`,
             week: w,
@@ -195,7 +203,7 @@ const changePage = (url) => {
               <!-- CUSTOM TREE SELECT -->
               <div class="relative group">
                 <button @click="isDatePickerOpen = !isDatePickerOpen" class="w-full bg-[#1e293b]/40 border border-slate-800 rounded-xl text-sm text-slate-300 font-bold px-3 py-3 flex items-center justify-between hover:bg-[#1e293b]/60 transition-colors uppercase">
-                  <span>{{ filterDateRange === 'Todos' ? 'Todos os Registros' : filterDateRange.replace('-', ' - Sem. ') }}</span>
+                  <span>{{ filterDateRange === 'Todos' ? 'Todos os Registros' : (filterDateRange.includes('-') ? filterDateRange.replace('-', ' - Sem. ') : filterDateRange) }}</span>
                   <ChevronDown :class="{ 'rotate-180 text-blue-500': isDatePickerOpen }" class="w-4 h-4 text-slate-500 transition-transform duration-300" />
                 </button>
 
@@ -207,14 +215,23 @@ const changePage = (url) => {
                       TODOS OS REGISTROS
                    </div>
 
-                   <div v-for="group in availableDates" :key="group.year" class="mb-4">
-                      <div class="flex items-center gap-2 p-1 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-l-2 border-slate-800 ml-1">
-                        {{ group.year }}
+                   <div v-for="group in availableDates" :key="group.year" class="mb-2">
+                      <div class="flex items-center gap-1 group/yr">
+                        <button @click.stop="toggleYearGroup(group.year)" class="p-1.5 text-slate-600 hover:text-blue-500 transition-colors">
+                           <ChevronDown :class="{ '-rotate-90': !expandedYears.includes(group.year.toString()) }" class="w-3.5 h-3.5 transition-transform duration-300" />
+                        </button>
+                        <div @click="() => { filterDateRange = group.year.toString(); applyFilters(); isDatePickerOpen = false; }" class="flex-1 flex items-center gap-3 p-1 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-blue-500 transition-all" :class="{ 'text-blue-400': filterDateRange == group.year }">
+                           <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700 transition-colors" :class="{ 'bg-blue-600 border-blue-600': filterDateRange == group.year }">
+                              <Check v-if="filterDateRange == group.year" class="w-3 h-3 text-white stroke-[4]" />
+                           </div>
+                           {{ group.year }}
+                        </div>
                       </div>
-                      <div class="space-y-1">
-                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="() => { filterDateRange = d.year + '-' + d.week; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider text-slate-400" :class="{ 'text-blue-400 bg-blue-600/10': filterDateRange === (d.year + '-' + d.week) }">
-                           <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700 ml-4" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
-                              <Check v-if="filterDateRange === (d.year + '-' + d.week)" class="w-3 h-3 text-white stroke-[4]" />
+                      
+                      <div v-if="expandedYears.includes(group.year.toString())" class="space-y-1 mt-1 ml-6 border-l border-slate-800/50 animate-in slide-in-from-top-2 duration-300">
+                        <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="() => { filterDateRange = d.year + '-' + d.week; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider text-slate-400 group/wk" :class="{ 'text-blue-400 bg-blue-600/10': filterDateRange === (d.year + '-' + d.week) }">
+                           <div class="w-3.5 h-3.5 border-2 rounded flex items-center justify-center border-slate-700 transition-colors group-hover/wk:border-slate-500" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
+                              <Check v-if="filterDateRange === (d.year + '-' + d.week)" class="w-2.5 h-2.5 text-white stroke-[4]" />
                            </div>
                            SEMANA {{ d.week }}
                         </div>

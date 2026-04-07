@@ -62,7 +62,7 @@ const navItems = computed(() => [
 
         <!-- 📱 SIDEBAR (LEFT) -->
         <aside :class="[
-            'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[360px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
+            'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[330px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         ]">
             <!-- Brand Logo -->
