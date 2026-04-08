@@ -156,7 +156,7 @@ class PriceDataService
                 ->orderBy('suppliers.name', 'asc');
         }
 
-        return $query->paginate(200)->withQueryString();
+        return $query->paginate(50)->withQueryString();
     }
 
     /**
