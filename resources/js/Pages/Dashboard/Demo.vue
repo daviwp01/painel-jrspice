@@ -37,12 +37,14 @@ const props = defineProps({
   filters: Object,
   availableDates: Object,
   chartData: Object,
+  chartWeeklyData: Object,
   settings: Object,
 });
 
 const monthsFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 const yearColors = {
+    '2022': '#64748b',
     '2023': '#0f172a',
     '2024': '#2563eb',
     '2025': '#06b6d4',
@@ -90,35 +92,21 @@ const chartDataComputed = computed(() => {
         }
         labels = monthLabels;
         
-        const yearsAvail = Object.keys(props.chartData || {});
-        datasets = yearsAvail.filter(y => visibleYears.value.includes(y)).map(y => {
-            const yearWeeks = Array(52).fill(null);
-            props.pricesData.filter(p => new Date(p.date).getFullYear() == y).forEach(p => {
-                const dateVal = new Date(p.date);
-                const start = new Date(dateVal.getFullYear(), 0, 1);
-                const week = Math.floor((dateVal - start) / (7 * 24 * 60 * 60 * 1000));
-                if (week >= 0 && week < 52) {
-                    if (yearWeeks[week] === null || p.price < yearWeeks[week]) {
-                        yearWeeks[week] = p.price;
-                    }
-                }
-            });
-
-            return {
-                label: y,
-                data: yearWeeks,
-                borderColor: yearColors[y] || '#cbd5e1',
-                borderWidth: 2,
-                tension: 0.4,
-                pointRadius: 3,
-                pointHoverRadius: 8,
-                pointBackgroundColor: yearColors[y],
-                pointBorderColor: '#fff',
-                pointBorderWidth: 1.5,
-                fill: false,
-                spanGaps: true
-            };
-        });
+        const yearsAvail = Object.keys(props.chartWeeklyData || {});
+        datasets = yearsAvail.filter(y => visibleYears.value.includes(y)).map(y => ({
+            label: y,
+            data: props.chartWeeklyData[y],
+            borderColor: yearColors[y] || '#cbd5e1',
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 8,
+            pointBackgroundColor: yearColors[y] || '#cbd5e1',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
+            fill: false,
+            spanGaps: true
+        }));
     } else if (chartMode.value === 'MENSAL') {
         labels = monthsFull.map(m => m.slice(0, 3));
         datasets = Object.entries(props.chartData || {})
