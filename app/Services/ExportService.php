@@ -74,7 +74,7 @@ class ExportService
                 });
 
             $exportData[] = (object) [
-                'country' => $country,
+                'name' => $country->name,
                 'flag' => $this->resolveCountryFlag($country->name),
                 'products' => $products,
             ];
@@ -98,7 +98,7 @@ class ExportService
         }
 
         try {
-            $name = strtolower($countryName);
+            $name = mb_strtolower($countryName, 'UTF-8');
             $url = "https://flagcdn.com/w80/" . $this->getCountryCode($name) . ".png";
             $imageData = @file_get_contents($url);
 
@@ -120,29 +120,62 @@ class ExportService
     private function getCountryCode($name)
     {
         $map = [
-            'brasil' => 'br',
+            'brasil' => 'br', 'brazil' => 'br',
             'china' => 'cn',
-            'índia' => 'in',
-            'canadá' => 'ca',
-            'egito' => 'eg',
+            'índia' => 'in', 'india' => 'in',
+            'canadá' => 'ca', 'canada' => 'ca',
+            'egito' => 'eg', 'egypt' => 'eg',
             'argentina' => 'ar',
             'peru' => 'pe',
-            'vietnã' => 'vn',
-            'indonésia' => 'id',
-            'méxico' => 'mx',
-            'turquia' => 'tr',
-            'paquistão' => 'pk',
+            'vietnã' => 'vn', 'vietna' => 'vn', 'vietnam' => 'vn',
+            'indonésia' => 'id', 'indonesia' => 'id',
+            'méxico' => 'mx', 'mexico' => 'mx',
+            'turquia' => 'tr', 'turkey' => 'tr',
+            'paquistão' => 'pk', 'pakistan' => 'pk',
             'guatemala' => 'gt',
-            'bulgária' => 'bg',
+            'bulgária' => 'bg', 'bulgaria' => 'bg',
             'chile' => 'cl',
-            'malaysia' => 'my',
-            'sri-lanka' => 'lk',
+            'malaysia' => 'my', 'malásia' => 'my',
+            'sri-lanka' => 'lk', 'sri lanka' => 'lk',
+            'estados unidos' => 'us', 'usa' => 'us', 'united states' => 'us',
+            'espanha' => 'es', 'spain' => 'es',
+            'frança' => 'fr', 'france' => 'fr',
+            'itália' => 'it', 'italy' => 'it',
+            'alemanha' => 'de', 'germany' => 'de',
+            'reino unido' => 'gb', 'united kingdom' => 'gb', 'uk' => 'gb',
+            'portugal' => 'pt',
+            'colômbia' => 'co', 'colombia' => 'co',
+            'uruguai' => 'uy', 'uruguay' => 'uy',
+            'paraguai' => 'py', 'paraguay' => 'py',
+            'bolívia' => 'bo', 'bolivia' => 'bo',
+            'equador' => 'ec', 'ecuador' => 'ec',
+            'venezuela' => 've',
+            'tailândia' => 'th', 'thailand' => 'th',
+            'japão' => 'jp', 'japan' => 'jp',
+            'coréia' => 'kr', 'korea' => 'kr',
+            'áfrica do sul' => 'za', 'south africa' => 'za',
+            'nigéria' => 'ng', 'nigeria' => 'ng',
+            'marrocos' => 'ma', 'morocco' => 'ma',
+            'emirados árabes' => 'ae', 'uae' => 'ae',
+            'arábia saudita' => 'sa', 'saudi arabia' => 'sa',
+            'irã' => 'ir', 'iran' => 'ir',
+            'rússia' => 'ru', 'russia' => 'ru',
+            'ucrânia' => 'ua', 'ukraine' => 'ua',
+            'holanda' => 'nl', 'netherlands' => 'nl',
+            'bélgica' => 'be', 'belgium' => 'be',
+            'suíça' => 'ch', 'switzerland' => 'ch',
+            'suécia' => 'se', 'sweden' => 'se',
+            'noruega' => 'no', 'norway' => 'no',
+            'dinamarca' => 'dk', 'denmark' => 'dk',
+            'polônia' => 'pl', 'poland' => 'pl',
+            'austrália' => 'au', 'australia' => 'au',
+            'nova zelândia' => 'nz', 'new zealand' => 'nz',
         ];
 
         foreach ($map as $key => $code) {
             if (str_contains($name, $key)) return $code;
         }
 
-        return 'us';
+        return 'un'; // Unknown flag fallback
     }
 }
