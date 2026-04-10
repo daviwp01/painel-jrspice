@@ -8,6 +8,8 @@ use App\Models\ProductPrice;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+
 
 class ExportService
 {
@@ -16,6 +18,10 @@ class ExportService
      */
     public function exportPricesToPdf($countryIds)
     {
+        $now = now();
+        $startOfWeek = $now->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $endOfWeek = $now->copy()->endOfWeek(Carbon::SUNDAY)->toDateString();
+
         $countriesQuery = Country::query()
             ->orderBy('name');
 
@@ -29,17 +35,22 @@ class ExportService
         foreach ($countries as $country) {
             $products = Product::query()
                 ->where('country_id', $country->id)
+                ->whereHas('prices', function ($q) use ($startOfWeek, $endOfWeek) {
+                    $q->whereBetween('date', [$startOfWeek, $endOfWeek]);
+                })
                 ->addSelect([
                     'latest_price' => ProductPrice::select('price')
                         ->whereColumn('product_id', 'products.id')
+                        ->where('date', '<=', $endOfWeek)
                         ->orderBy('date', 'desc')
                         ->orderBy('price', 'asc')
                         ->limit(1),
                     'previous_price' => ProductPrice::select('price')
                         ->whereColumn('product_id', 'products.id')
-                        ->where('date', '<', function ($q) {
+                        ->where('date', '<', function ($q) use ($endOfWeek) {
                             $q->select('date')->from('product_prices')
                                 ->whereColumn('product_id', 'products.id')
+                                ->where('date', '<=', $endOfWeek)
                                 ->orderBy('date', 'desc')
                                 ->limit(1);
                         })
@@ -49,6 +60,7 @@ class ExportService
                     'latest_supplier' => Supplier::select('name')
                         ->join('product_prices', 'product_prices.supplier_id', '=', 'suppliers.id')
                         ->whereColumn('product_prices.product_id', 'products.id')
+                        ->where('product_prices.date', '<=', $endOfWeek)
                         ->orderBy('product_prices.date', 'desc')
                         ->orderBy('product_prices.price', 'asc')
                         ->limit(1),
@@ -73,11 +85,13 @@ class ExportService
                     ];
                 });
 
-            $exportData[] = (object) [
-                'name' => $country->name,
-                'flag' => $this->resolveCountryFlag($country->name),
-                'products' => $products,
-            ];
+            if ($products->isNotEmpty()) {
+                $exportData[] = (object) [
+                    'name' => $country->name,
+                    'flag' => $this->resolveCountryFlag($country->name),
+                    'products' => $products,
+                ];
+            }
         }
 
         return Pdf::loadView('exports.price-table', [
