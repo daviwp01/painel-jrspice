@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Truck, ChevronDown, ChevronUp, Check, MapPin, Box, Calendar, Search, X, Loader2, Menu, ChartLine, ZoomIn, ZoomOut } from 'lucide-vue-next';
@@ -37,6 +37,7 @@ const props = defineProps({
   availableDates: Object,
   chartData: Object,
   chartWeeklyData: Object,
+  settings: Object,
 });
 
 const monthsFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -192,6 +193,10 @@ const selectedCountry = ref(props.filters.country_id || '');
 const selectedSupplier = ref(props.filters.supplier_id || '');
 const selectedProduct = ref(props.filters.product_id || '');
 const filterDateRange = ref(props.filters.date_range || 'Todos');
+
+const suppliersWithOptions = computed(() => {
+    return [{ id: '', name: 'Todos' }, ...props.suppliers];
+});
 const isDatePickerOpen = ref(false);
 const expandedYears = ref([]);
 const toggleYearGroup = (year) => {
@@ -214,14 +219,82 @@ watch(() => props.filters, (newFilters) => {
     filterDateRange.value = newFilters.date_range || 'Todos';
 }, { deep: true });
 
+const STORAGE_KEY = 'jrspice_filters_show';
+
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasManualFilters = urlParams.has('country_id') || urlParams.has('product_id') || urlParams.has('supplier_id') || urlParams.has('date_range');
+
+    if (!hasManualFilters) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Verifica se o que temos no localStorage é diferente do que o backend mandou como padrão
+            const isDifferent = 
+                (parsed.country_id && parsed.country_id != props.filters.country_id) ||
+                (parsed.product_id && parsed.product_id != props.filters.product_id) ||
+                (parsed.date_range && parsed.date_range !== props.filters.date_range);
+
+            if (isDifferent) {
+                if (parsed.country_id) selectedCountry.value = parsed.country_id;
+                if (parsed.product_id) selectedProduct.value = parsed.product_id;
+                if (parsed.date_range) filterDateRange.value = parsed.date_range;
+                applyFilters();
+            }
+        }
+    }
+});
+
 const handleCountryChange = () => {
     selectedProduct.value = ''; // Limpa para que o backend decida o primeiro produto do novo país
     selectedSupplier.value = '';
     filterDateRange.value = 'Todos';
+    saveFilters();
     applyFilters();
 };
 
+const saveFilters = () => {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    data.country_id = selectedCountry.value;
+    data.supplier_id = selectedSupplier.value;
+    data.product_id = selectedProduct.value;
+    data.date_range = filterDateRange.value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+const clearFilters = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Identifica os padrões
+    const defCountry = props.settings?.default_filter_country_id || (props.countries[0]?.id || '');
+    
+    let defProduct = '';
+    try {
+        const val = props.settings?.default_filter_product_ids;
+        const pids = Array.isArray(val) ? val : JSON.parse(val || '[]');
+        defProduct = pids.length > 0 ? pids[0] : (props.products[0]?.id || '');
+    } catch(e) {
+        defProduct = props.products[0]?.id || '';
+    }
+
+    // Seta as refs locais antes do visit
+    selectedCountry.value = defCountry;
+    selectedProduct.value = defProduct;
+    filterDateRange.value = 'Todos';
+
+    isLoading.value = true;
+    router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+        country_id: defCountry,
+        product_id: defProduct,
+        date_range: 'Todos'
+    }, { 
+        preserveState: false, 
+        onFinish: () => isLoading.value = false 
+    });
+};
+
 const applyFilters = () => {
+  saveFilters();
   isLoading.value = true;
   router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
     country_id: selectedCountry.value,
@@ -280,10 +353,15 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
     <template #sidebar-filters>
       <!-- FILTERS -->
       <div class="border-t border-slate-800/50 pt-4">
-         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center justify-between">
-             <span class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca</span>
-             <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
-         </p>
+         <div class="flex items-center justify-between mb-4 px-3">
+             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                 <span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca
+             </p>
+             <div class="flex items-center gap-3">
+                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
+                 <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
+             </div>
+         </div>
          
           <div class="space-y-5">
             <SearchableSelect 

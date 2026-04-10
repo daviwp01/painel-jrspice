@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next';
@@ -16,10 +16,16 @@ const props = defineProps({
   suppliers: Array,
   products: Object,     // Now paginated
   filters: Object,
+  settings: Object,
 });
 
 const selectedCountry = ref(props.filters.country_id || '');
+const selectedSupplier = ref(props.filters.supplier_id || '');
 const isLoading = ref(false);
+
+const suppliersWithOptions = computed(() => {
+    return [{ id: '', name: 'Todos' }, ...props.suppliers];
+});
 
 // Export PDF Logic
 const isExportModalOpen = ref(false);
@@ -80,18 +86,67 @@ const handleExportPdf = async () => {
 
 watch(() => props.filters, (newFilters) => {
     selectedCountry.value = newFilters.country_id || '';
+    selectedSupplier.value = newFilters.supplier_id || '';
 }, { deep: true });
 
+const STORAGE_KEY = 'jrspice_filters_pricetable';
+
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasManualFilters = urlParams.has('country_id');
+
+    if (!hasManualFilters) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Se o URL não tem filtro mas o localstorage tem, e é diferente do padrão do backend, aplica
+            if (parsed.country_id && parsed.country_id != props.filters.country_id) {
+                selectedCountry.value = parsed.country_id;
+                applyFilters();
+            }
+        }
+    }
+});
+
 const handleCountryChange = () => {
+    saveFilters();
     applyFilters();
 };
 
+const saveFilters = () => {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    data.country_id = selectedCountry.value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+const clearFilters = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Identifica o padrão
+    const defCountry = props.settings?.default_filter_country_id || (props.countries[0]?.id || '');
+    
+    // Seta as refs locais antes do visit
+    selectedCountry.value = defCountry;
+
+    isLoading.value = true;
+    router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+        country_id: defCountry,
+        sort_field: props.filters.sort_field,
+        sort_direction: props.filters.sort_direction
+    }, { 
+        preserveState: false, 
+        onFinish: () => isLoading.value = false 
+    });
+};
+
 const applyFilters = () => {
+    saveFilters();
     isLoading.value = true;
     router.get(
         route('dashboard.page', { slug: props.currentPage.slug }),
         { 
             country_id: selectedCountry.value,
+            supplier_id: selectedSupplier.value,
             sort_field: props.filters.sort_field,
             sort_direction: props.filters.sort_direction
         },
@@ -162,10 +217,15 @@ const changePage = (url) => {
     <template #sidebar-filters>
       <!-- FILTERS -->
       <div class="border-t border-slate-800/50 pt-4">
-         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center justify-between">
-             <span class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca</span>
-             <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
-         </p>
+         <div class="flex items-center justify-between mb-4 px-3">
+             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                 <span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca
+             </p>
+             <div class="flex items-center gap-3">
+                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
+                 <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
+             </div>
+         </div>
          
          <div class="space-y-5">
             <SearchableSelect 

@@ -311,7 +311,6 @@ class DataController extends Controller
             // LISTA OFICIAL JRSPICE (Sem acentos para comparação)
             $requiredMap = [
                 'produto' => 'PRODUTO',
-                'safra' => 'SAFRA',
                 'pais' => 'PAÍS',
                 'fornecedor' => 'FORNECEDOR',
                 'data registro' => 'DATA REGISTRO',
