@@ -138,6 +138,20 @@ const chartDataComputed = computed(() => {
     return { labels, datasets };
 });
 
+const currentHarvest = computed(() => {
+    // 1. Tenta buscar no array de produtos
+    const product = props.products.find(p => p.id == selectedProduct.value);
+    if (product?.harvest_month) return product.harvest_month;
+
+    // 2. Tenta buscar no primeiro registro de preços (muitas vezes o join traz o campo)
+    if (props.pricesData?.[0]?.harvest_month) return props.pricesData[0].harvest_month;
+
+    // 3. Verifica se as métricas trouxeram info extra
+    if (props.metrics?.product_info?.harvest_month) return props.metrics.product_info.harvest_month;
+
+    return null;
+});
+
 const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -454,97 +468,106 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
             <div class="transition-opacity duration-300" :class="{ 'opacity-50 pointer-events-none': isLoading }">
                 
                 <!-- GRID -> Info + Price Metrics -->
-                <div v-if="metrics?.all" class="grid grid-cols-1 lg:grid-cols-4 gap-4 xl:gap-6 mb-8">
+                <div v-if="metrics?.all" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 xl:gap-6 mb-8">
                     
                     <!-- BOX 1: PRODUTO -->
-                    <div class="lg:col-span-1 bg-white p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
-                        <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                           <BoxIcon class="w-3 h-3 text-slate-300" /> Produto
-                        </p>
-                        <h3 class="text-lg font-bold text-slate-900 mb-3 relative z-10 uppercase tracking-tight leading-none">{{ products.find(p => p.id == selectedProduct)?.name || 'Todos os Produtos' }}</h3>
+                    <div class="lg:col-span-1 bg-white py-1.5 px-2.5 rounded-xl shadow-sm border border-slate-200 relative group overflow-hidden flex flex-col">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-slate-50 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-blue-50/50 transition-colors"></div>
                         
-                        <div :class="[products.find(p => p.id == selectedProduct)?.harvest_month ? 'grid-cols-2' : 'grid-cols-1']" class="grid gap-4 border-t border-slate-100 pt-4 relative z-10">
-                            <div>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2 mb-2">
-                                    País
-                                </p>
-                                <div class="flex items-center gap-3">
-                                   <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-11 h-8 rounded-[4px] border border-slate-100" />
-                                   <p class="text-base font-bold text-slate-900 uppercase tracking-tight">{{ countries.find(c => c.id == selectedCountry)?.name || 'GLOBAL' }}</p>
+                        <div class="relative z-10">
+                            <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-2">
+                                <BoxIcon class="w-3" /> PRODUTO
+                            </p>
+                            <h3 class="text-sm xl:text-base font-black text-slate-900 uppercase tracking-tighter xl:tracking-tight leading-tight mb-1 truncate">
+                                {{ products.find(p => p.id == selectedProduct)?.name || 'Todos os Produtos' }}
+                            </h3>
+                            
+                            <div class="flex items-center gap-2 pt-1.5 border-t border-slate-50 overflow-hidden">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-5 h-3.5 xl:w-6 xl:h-4 rounded-sm border border-slate-100 shrink-0" />
+                                    <p class="text-[10px] xl:text-[11px] font-bold text-slate-500 uppercase tracking-wide truncate">
+                                        {{ countries.find(c => c.id == selectedCountry)?.name || 'GLOBAL' }}
+                                    </p>
                                 </div>
-                            </div>
-                            <div v-if="products.find(p => p.id == selectedProduct)?.harvest_month">
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">Safra</p>
-                                <p class="text-sm font-bold text-blue-600 uppercase tracking-tight">{{ products.find(p => p.id == selectedProduct)?.harvest_month }}</p>
+                                <div v-if="currentHarvest" class="ml-auto flex items-center gap-1 shrink-0">
+                                    <span class="text-[8px] xl:text-[9px] font-black text-slate-300 uppercase">SAFRA</span>
+                                    <span class="text-[9px] xl:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 xl:px-2 py-0.5 rounded-full uppercase">
+                                        {{ currentHarvest }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 2: ÚLTIMA SEMANA -->
-                    <div class="bg-blue-600 text-white p-4 lg:p-5 rounded-3xl shadow-xl relative overflow-hidden border border-blue-500 group">
-                        <div class="absolute right-0 top-0 w-32 h-32 bg-blue-500/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-400/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-blue-800 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-lg border border-blue-400/30 z-10 tabular-nums">
-                            {{ formatSpread(metrics.latest.spread) }}%
-                        </div>
-                        <p class="text-[9px] font-bold text-blue-100 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">{{ metrics.latest.label }}</p>
-                        <p class="text-[9px] font-bold text-blue-200/60 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.latest.sub_label }}</p>
-                        <div class="space-y-4 pt-1 z-10 relative">
-                            <div class="pl-2 border-l-[3px] border-white/20">
-                                <p class="text-[11px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-2xl font-bold tabular-nums tracking-tight">{{ formatNumber(metrics.latest.min) }}</p>
+                    <div class="bg-blue-600 text-white py-1.5 px-2.5 rounded-xl shadow-xl relative overflow-hidden border border-blue-500 group flex flex-col">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/50 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-blue-400/50 transition-colors"></div>
+                        
+                        <div class="flex items-start justify-between mb-1 z-10 relative">
+                            <p class="text-[8px] xl:text-[9px] font-bold text-blue-100 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">Menores e maiores preços na semana</p>
+                            <div class="bg-blue-800 text-[9px] xl:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shadow-sm border border-blue-400/30 tabular-nums shrink-0 mt-0.5">
+                                {{ formatSpread(metrics.latest.spread) }}%
                             </div>
-                            <div class="pl-2 border-l-[3px] border-white/60">
-                                <p class="text-[11px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-2xl font-bold tabular-nums tracking-tight">{{ formatNumber(metrics.latest.max) }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
+                            <div class="pl-2 border-l-2 border-white/20">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-lg xl:text-xl font-black tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.latest.min) }}</p>
+                            </div>
+                            <div class="pl-2 border-l-2 border-white/60">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-lg xl:text-xl font-black tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.latest.max) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 3: ANO -->
-                    <div class="bg-white p-4 lg:p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
-                        <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-sm z-10 tabular-nums border border-slate-200">
-                            {{ formatSpread(metrics.year.spread) }}%
-                        </div>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">
-                            <span class="text-slate-500">{{ metrics.year.label?.split(':')[0] }}:</span> 
-                            <span class="text-blue-600 ml-1">{{ metrics.year.label?.split(':')[1] }}</span>
-                        </p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.year.sub_label }}</p>
+                    <div class="bg-white py-1.5 px-2.5 rounded-xl shadow-sm border border-slate-200 relative group overflow-hidden flex flex-col">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-slate-50 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-blue-50/50 transition-colors"></div>
                         
-                        <div class="space-y-4 pt-1 z-10 relative">
-                            <div class="pl-2 border-l-[3px] border-blue-500/20">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-2xl font-bold text-slate-800 tabular-nums tracking-tight">{{ formatNumber(metrics.year.min) }}</p>
+                        <div class="flex items-start justify-between mb-1 z-10 relative">
+                            <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">
+                                Variação total no ano de <span class="text-blue-600 font-black">{{ metrics.year.label?.split(':')?.[1]?.trim() || new Date().getFullYear() }}</span>
+                            </p>
+                            <div class="bg-slate-100 text-[9px] xl:text-[10px] font-bold text-slate-600 uppercase px-1.5 py-0.5 rounded shadow-sm border border-slate-200 tabular-nums shrink-0 mt-0.5">
+                                {{ formatSpread(metrics.year.spread) }}%
                             </div>
-                            <div class="pl-2 border-l-[3px] border-blue-600">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-2xl font-bold text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.year.max) }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
+                            <div class="pl-2 border-l-2 border-blue-500/20">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-lg xl:text-xl font-black text-slate-800 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.year.min) }}</p>
+                            </div>
+                            <div class="pl-2 border-l-2 border-blue-600">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-lg xl:text-xl font-black text-blue-600 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.year.max) }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- BOX 4: DESDE -->
-                    <div class="bg-white p-4 lg:p-5 rounded-3xl shadow-sm border border-slate-200 relative group overflow-hidden">
-                        <div class="absolute right-0 top-0 w-32 h-32 bg-slate-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-50/50 transition-colors"></div>
-                        <div class="absolute right-4 top-4 bg-slate-100 text-rose-600 text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-sm z-10 tabular-nums border border-slate-200">
-                            {{ formatSpread(metrics.all.spread) }}%
-                        </div>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-0.5 truncate pr-20 z-10 relative">
-                            <span class="text-slate-500">{{ metrics.all.label?.split(':')[0] }}:</span> 
-                            <span class="text-blue-600 ml-1">{{ metrics.all.label?.split(':')[1] }}</span>
-                        </p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 z-10 relative">{{ metrics.all.sub_label }}</p>
+                    <div class="bg-white py-1.5 px-2.5 rounded-xl shadow-sm border border-slate-200 relative group overflow-hidden flex flex-col">
+                        <div class="absolute right-0 top-0 w-24 h-24 bg-slate-50 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-blue-50/50 transition-colors"></div>
                         
-                        <div class="space-y-4 pt-1 z-10 relative">
-                            <div class="pl-2 border-l-[3px] border-blue-500/20">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
-                                <p class="text-2xl font-bold text-slate-800 tabular-nums tracking-tight">{{ formatNumber(metrics.all.min) }}</p>
+                        <div class="flex items-start justify-between mb-1 z-10 relative">
+                            <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">
+                                Variação total desde <span class="text-blue-600 font-black">{{ metrics.all.label?.split(':')?.[1]?.trim() }}</span>
+                            </p>
+                            <div class="bg-slate-100 text-[9px] xl:text-[10px] font-bold text-rose-600 uppercase px-1.5 py-0.5 rounded shadow-sm border border-slate-200 tabular-nums shrink-0 mt-0.5">
+                                {{ formatSpread(metrics.all.spread) }}%
                             </div>
-                            <div class="pl-2 border-l-[3px] border-blue-600">
-                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
-                                <p class="text-2xl font-bold text-blue-600 tabular-nums tracking-tight">{{ formatNumber(metrics.all.max) }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
+                            <div class="pl-2 border-l-2 border-blue-500/20">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-lg xl:text-xl font-black text-slate-800 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.all.min) }}</p>
+                            </div>
+                            <div class="pl-2 border-l-2 border-blue-600">
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-lg xl:text-xl font-black text-blue-600 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.all.max) }}</p>
                             </div>
                         </div>
                     </div>

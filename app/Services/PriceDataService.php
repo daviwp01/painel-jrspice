@@ -81,7 +81,7 @@ class PriceDataService
             $query->orderBy('name', 'asc');
         }
 
-        $paginated = $query->paginate(20)->withQueryString();
+        $paginated = $query->paginate(50)->withQueryString();
 
         // Trasformação final para o frontend
         $paginated->getCollection()->transform(function ($product) {
