@@ -3,14 +3,11 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import { toast } from '@/Stores/ToastStore';
 import ToastContainer from '@/Components/ToastContainer.vue';
-import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
 import LegalModal from '@/Components/LegalModal.vue';
 import { 
     LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, 
     Settings as SettingsIcon2, Database as DatabaseIcon, 
-    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, User as UserIcon, LogOut as LogOutIcon, Loader2 
+    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2 
 } from 'lucide-vue-next';
 
 const page = usePage();
@@ -62,7 +59,7 @@ const navItems = computed(() => [
 
         <!-- 📱 SIDEBAR (LEFT) -->
         <aside :class="[
-            'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[330px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
+            'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[350px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         ]">
             <!-- Brand Logo -->
@@ -121,6 +118,24 @@ const navItems = computed(() => [
                     </div>
                 </div>
             </div>
+
+            <!-- PERFIL DO USUÁRIO NA SIDEBAR (NOVA SEÇÃO) -->
+            <div class="p-5 border-t border-slate-800 bg-slate-900/30">
+                <div class="flex items-center justify-between group">
+                    <Link :href="route('profile.edit')" class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="h-10 w-10 shrink-0 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-sm font-black text-blue-500 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            {{ user?.name?.charAt(0) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] leading-none mb-1.5">{{ $t('Meu Perfil') }}</p>
+                            <p class="text-xs font-bold text-white truncate leading-none group-hover:text-blue-400 transition-colors">{{ user?.name }}</p>
+                        </div>
+                    </Link>
+                    <Link :href="route('logout')" method="post" as="button" class="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all" :title="$t('Sair')">
+                        <LogOutIcon class="w-5 h-5" />
+                    </Link>
+                </div>
+            </div>
         </aside>
 
         <!-- BACKDROP MOBILE -->
@@ -129,52 +144,10 @@ const navItems = computed(() => [
         <!-- 🚀 MAIN STAGE -->
         <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f8fafc]">
 
-            <!-- TOP BAR -->
-            <header class="h-16 flex items-center justify-between px-4 sm:px-6 bg-white border-b border-slate-200 z-30 shrink-0 shadow-sm relative">
-                <div class="flex items-center gap-4">
-                    <button class="md:hidden text-slate-500 hover:bg-slate-50 p-2 -ml-2 rounded-lg transition-colors" @click="isMobileMenuOpen = true">
-                        <MenuIcon class="w-6 h-6" />
-                    </button>
-                    <h2 class="hidden sm:block text-xs font-bold text-slate-400 uppercase tracking-widest"></h2>
-                </div>
-
-                <!-- Right Tools -->
-                <div class="flex items-center space-x-4 sm:space-x-6">
-                <!-- <LanguageSwitcher /> -->
-
-                    <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-
-                    <Dropdown align="right" width="48">
-                        <template #trigger>
-                            <button class="flex items-center space-x-2 p-1 rounded-xl hover:bg-slate-50 transition-colors focus:outline-none group">
-                                <div class="h-8 w-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-black text-blue-600 shadow-sm transition-colors group-hover:border-blue-200 group-hover:bg-white">
-                                    {{ user?.name?.charAt(0) }}
-                                </div>
-                                <span class="text-sm font-bold text-slate-700 hidden sm:block">{{ user?.name }}</span>
-                                <svg class="h-4 w-4 text-slate-400 hidden sm:block group-hover:text-slate-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                        </template>
-                        <template #content>
-                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5 leading-none">{{ $t('Conta') }}</p>
-                                <p class="text-xs font-black text-slate-900 truncate leading-none mt-1">{{ user?.name }}</p>
-                            </div>
-                            <div class="block">
-                                <DropdownLink :href="route('profile.edit')" class="flex items-center gap-3">
-                                    <UserIcon class="w-4 h-4 text-slate-400" />
-                                    {{ $t('Meu Perfil') }}
-                                </DropdownLink>
-                            </div>
-                            <div class="border-t border-slate-50">
-                                <DropdownLink :href="route('logout')" method="post" as="button" class="flex items-center gap-3 !text-rose-600 hover:!bg-rose-50"> 
-                                    <LogOutIcon class="w-4 h-4" />
-                                    {{ $t('Sair do Sistema') }} 
-                                </DropdownLink>
-                            </div>
-                        </template>
-                    </Dropdown>
-                </div>
-            </header>
+            <!-- BOTÃO MOBILE (SUBSTITUI A TOPBAR NO CELULAR) -->
+            <button v-if="!isMobileMenuOpen" @click="isMobileMenuOpen = true" class="md:hidden fixed top-4 left-4 z-[40] p-2.5 bg-white border border-slate-200 rounded-xl shadow-lg text-slate-600 active:scale-90 transition-all">
+                <MenuIcon class="w-6 h-6" />
+            </button>
 
             <!-- VIEWPORT CONTENT -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto relative bg-[#f8fafc]">

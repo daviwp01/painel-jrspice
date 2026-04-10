@@ -179,7 +179,7 @@ const chartOptions = computed(() => ({
         y: {
             grid: { color: '#f1f5f9' },
             ticks: { 
-                font: { size: 14, weight: 'bold' },
+                font: { size: 18, weight: 'bold' },
                 color: '#94a3b8',
                 callback: (value) => `$ ${Number(value).toLocaleString('pt-BR')}`
             }
@@ -388,7 +388,7 @@ const getAvgLabel = (min, max) => {
 };
 
 // ZOOM CHART LOGIC
-const chartHeight = ref(650);
+const chartHeight = ref(450);
 const zoomIn = () => { chartHeight.value += 100; };
 const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; };
 
@@ -635,7 +635,7 @@ onMounted(() => {
                     
                     <div class="relative w-full mt-8 flex flex-col pt-4" :style="{ height: chartHeight + 'px' }">
                         <!-- Y-AXIS LABELS -->
-                        <div v-if="metrics" class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-sm font-bold text-slate-400 tabular-nums pb-2">
+                        <div v-if="metrics" class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-lg font-bold text-slate-400 tabular-nums pb-2">
                            <span>{{ formatNumber(metrics.all.max, 0) }}</span>
                            <span>{{ getAvgLabel(metrics.all.min, metrics.all.max) }}</span>
                            <span>{{ formatNumber(metrics.all.min, 0) }}</span>
