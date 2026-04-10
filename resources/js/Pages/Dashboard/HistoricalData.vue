@@ -266,39 +266,39 @@ const changePage = (url) => {
 
             <!-- TABELA HISTÓRICO -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-lg text-left whitespace-nowrap">
-                    <thead class="text-sm text-slate-500 bg-slate-50/80 font-bold uppercase tracking-widest border-b border-slate-200">
+                <table class="w-full text-xl text-left whitespace-nowrap">
+                    <thead class="text-base text-slate-500 bg-slate-50/80 font-bold uppercase tracking-widest border-b border-slate-200">
                         <tr>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-2">
                                     PRODUTO
-                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
                                 <div class="flex items-center gap-2">
                                     PAÍS
-                                    <ArrowUp v-if="filters.sort_field === 'country' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'country' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'country' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'country' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
                                 <div class="flex items-center gap-2">
                                     FORNECEDOR
-                                    <ArrowUp v-if="filters.sort_field === 'supplier' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'supplier' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'supplier' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'supplier' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
                                 <div class="flex items-center gap-2">
                                     DATA REGISTRO
-                                    <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4">ANO / MES</th>
@@ -306,27 +306,27 @@ const changePage = (url) => {
                             <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
                                 <div class="flex items-center justify-end gap-2">
                                     PREÇO
-                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white">
                             <tr v-for="(row, idx) in processedHistoricalData" :key="idx" class="hover:bg-blue-50/30 transition-colors">
-                                <td class="px-5 py-3 text-slate-800 font-bold uppercase tracking-wide text-base">{{ row.productName }}</td>
-                                <td class="px-5 py-3 text-slate-500 uppercase text-sm">
+                                <td class="px-5 py-4 text-slate-800 font-bold uppercase tracking-wide text-lg">{{ row.productName }}</td>
+                                <td class="px-5 py-4 text-slate-500 uppercase text-base">
                                     <div class="flex items-center gap-2">
-                                        <CountryFlag v-if="row.countryName" :name="row.countryName" class-name="w-4 h-3 rounded-[1px]" />
+                                        <CountryFlag v-if="row.countryName" :name="row.countryName" class-name="w-5 h-4 rounded-[1px]" />
                                         {{ row.countryName }}
                                     </div>
                                 </td>
-                                <td class="px-5 py-3 text-slate-500 uppercase text-sm">{{ row.supplier }}</td>
-                                <td class="px-5 py-3 text-slate-500 text-base">{{ row.displayDate }}</td>
-                                <td class="px-5 py-3 text-slate-500 font-mono text-base">{{ row.yearMonth }}</td>
-                                <td class="px-5 py-3 text-slate-700 text-center font-bold text-base">{{ row.week }}</td>
-                                <td class="px-5 py-3 text-right tabular-nums font-bold text-slate-900 pr-4 md:pr-8 text-lg">
+                                <td class="px-5 py-4 text-slate-500 uppercase text-base">{{ row.supplier }}</td>
+                                <td class="px-5 py-4 text-slate-500 text-lg">{{ row.displayDate }}</td>
+                                <td class="px-5 py-4 text-slate-500 font-mono text-lg">{{ row.yearMonth }}</td>
+                                <td class="px-5 py-4 text-slate-700 text-center font-bold text-lg">{{ row.week }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums font-black text-slate-900 pr-4 md:pr-8 text-2xl">
                                     {{ row.priceVal ? Number(row.priceVal).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                             </tr>

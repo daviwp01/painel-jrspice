@@ -248,23 +248,23 @@ const changePage = (url) => {
 
             <!-- TABELA -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-lg text-left whitespace-nowrap">
-                    <thead class="text-sm text-slate-500 bg-white/95 backdrop-blur-sm font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
+                <table class="w-full text-2xl text-left whitespace-nowrap">
+                    <thead class="text-lg text-slate-500 bg-white/95 backdrop-blur-sm font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
                         <tr>
                             <th class="px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-2">
                                     PRODUTO
-                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
                                 <div class="flex items-center justify-end gap-2">
                                     ÚLTIMO MELHOR PREÇO
-                                    <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-5 py-4 text-right cursor-not-allowed text-slate-300">
@@ -273,27 +273,27 @@ const changePage = (url) => {
                             <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
                                 <div class="flex items-center justify-end gap-2">
                                     VARIAÇÃO
-                                    <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-3.5 h-3.5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                                    <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-bold bg-white">
                             <tr v-for="prod in processedProducts" :key="prod.id" class="hover:bg-slate-50/50 transition-colors group">
-                                <td class="px-5 py-3.5 text-slate-900 group-hover:text-blue-600 transition-colors">{{ prod.name }}</td>
-                                <td class="px-5 py-3.5 text-right tabular-nums text-slate-900 pr-6">{{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-3.5 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-3.5 text-right tabular-nums">
+                                <td class="px-5 py-4 text-slate-900 group-hover:text-blue-600 transition-colors">{{ prod.name }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums text-slate-900 pr-6 text-3xl font-black">{{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
+                                <td class="px-5 py-4 text-right tabular-nums">
                                     <div class="flex items-center justify-end gap-2 pr-2">
-                                    <span class="font-bold tracking-tight" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
+                                    <span class="font-black tracking-tighter text-3xl" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
                                         {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
                                     </span>
-                                        <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-5 h-5 stroke-[3]" />
-                                        <ArrowUpIcon v-else-if="prod.status === 'up'" class="text-rose-500 w-5 h-5 stroke-[3]" />
-                                        <StarIcon v-else-if="prod.status === 'new'" class="text-amber-400 fill-amber-400 w-4 h-4 ml-1" />
-                                        <div v-else class="w-3.5 h-3.5 rounded-full bg-slate-300 ml-1"></div>
+                                        <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-8 h-8 stroke-[3]" />
+                                        <ArrowUpIcon v-else-if="prod.status === 'up'" class="text-rose-500 w-8 h-8 stroke-[3]" />
+                                        <StarIcon v-else-if="prod.status === 'new'" class="text-amber-400 fill-amber-400 w-7 h-7 ml-1" />
+                                        <div v-else class="w-5 h-5 rounded-full bg-slate-300 ml-1"></div>
                                     </div>
                                 </td>
                             </tr>
