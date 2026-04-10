@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { UploadCloudIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon, XCircleIcon, InfoIcon, FileTextIcon, DownloadIcon, PlusIcon, HistoryIcon } from 'lucide-vue-next';
 import axios from 'axios';
+import { toast } from '@/Stores/ToastStore';
+
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 
 const props = defineProps({
@@ -114,28 +116,47 @@ const pollProgress = (jobId, batchId) => {
                 importSuccess.value = true;
                 activeBatchId.value = null;
                 activeJobId.value = null;
-                router.reload();
-                importSuccess.value = false;
+                
+                toast.add('Importação concluída com sucesso!', 'success');
+                
+                router.reload({
+                    only: ['backups', 'active_import_batch', 'prices', 'products', 'countries', 'suppliers'],
+                    onFinish: () => {
+                        // Keep success message visible for at least 10 seconds unless a new import starts
+                        setTimeout(() => {
+                            // Only hide if we aren't starting a NEW job (though startImport handles it)
+                            if (!isImporting.value) {
+                                // importSuccess.value = false; 
+                                // We can keep it or hide it, let's keep it until they change file or tab
+                            }
+                        }, 10000);
+                    }
+                });
+                
                 importProgress.value = null;
             } else if (response.data.status === 'failed') {
                 clearInterval(progressInterval);
                 isImporting.value = false;
-                importError.value = response.data.error || 'Erro no processamento.';
+                importError.value = response.data.error || 'Erro no processamento da planilha.';
+                toast.add(importError.value, 'error');
                 activeBatchId.value = null;
                 activeJobId.value = null;
             } else if (response.data.status === 'cancelled') {
                 clearInterval(progressInterval);
                 isImporting.value = false;
                 importCancelled.value = true;
+                toast.add('Importação cancelada.', 'info');
                 activeBatchId.value = null;
                 activeJobId.value = null;
             } else if (response.data.status === 'error') {
                 clearInterval(progressInterval);
                 isImporting.value = false;
                 importError.value = response.data.message || 'Erro interno no monitoramento.';
+                toast.add(importError.value, 'error');
                 activeBatchId.value = null;
                 activeJobId.value = null;
             }
+
         } catch (err) {
             console.error('Error polling:', err);
         }
