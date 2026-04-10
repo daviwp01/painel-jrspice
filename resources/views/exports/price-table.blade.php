@@ -8,7 +8,7 @@
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             color: #1e293b;
-            font-size: 9px;
+            font-size: 13px;
             margin: 0;
             padding: 0;
             background-color: #fff;
@@ -36,7 +36,7 @@
         .box-right { width: 62%; }
 
         .small-label {
-            font-size: 7px;
+            font-size: 10px;
             font-weight: bold;
             color: #94a3b8;
             letter-spacing: 0.8px;
@@ -58,7 +58,7 @@
         .pais-info h1 {
             display: inline-block;
             vertical-align: middle;
-            font-size: 28px;
+            font-size: 36px;
             color: #1e293b;
             margin: 0;
             text-transform: uppercase;
@@ -72,13 +72,13 @@
             width: 42%;
             border-left: 2px solid #f1f5f9;
             padding-left: 12px;
-            font-size: 7px;
+            font-size: 10px;
             color: #64748b;
             font-weight: bold;
             letter-spacing: -0.1px;
         }
         .legenda-item {
-            font-size: 8px;
+            font-size: 11px;
             font-weight: bold;
             padding: 5px 0;
             vertical-align: middle;
@@ -100,7 +100,7 @@
         }
         .data-table th {
             text-align: left;
-            font-size: 8px;
+            font-size: 10px;
             font-weight: bold;
             color: #94a3b8;
             text-transform: uppercase;
@@ -112,10 +112,10 @@
             padding: 9px 0;
             border-bottom: 1px solid #f1f5f9;
         }
-        .product-name { font-weight: bold; color: #1e293b; font-size: 10px; }
-        .price-val { font-weight: bold; text-align: right; color: #1e293b; font-family: 'Courier'; font-size: 11px;}
-        .variation-val { font-weight: bold; text-align: right; font-size: 10px; }
-        .status-cell { text-align: right; width: 25px; padding-right: 5px; }
+        .product-name { font-weight: bold; color: #1e293b; font-size: 16px; line-height: 1.2; }
+        .price-val { font-weight: bold; text-align: right; color: #1e293b; font-family: 'Helvetica', sans-serif; font-size: 18px;}
+        .variation-val { font-weight: bold; text-align: right; font-size: 15px; }
+        .status-cell { text-align: right; width: 30px; padding-right: 5px; }
 
         .up { color: #e11d48; }
         .down { color: #10b981; }
@@ -144,7 +144,7 @@
         header img { height: 20px; display: block; }
         header .brand-text {
             color: #cbd5e1;
-            font-size: 8px;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1.2px;
@@ -228,9 +228,9 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 50%">PRODUTO</th>
-                            <th style="text-align: right; width: 15%">ÚLTIMO MELHOR PREÇO</th>
-                            <th style="text-align: right; width: 15%">MELHOR PREÇO ANTERIOR</th>
+                            <th style="width: 40%">PRODUTO</th>
+                            <th style="text-align: right; width: 23%">ÚLTIMO PREÇO</th>
+                            <th style="text-align: right; width: 17%"> ANTERIOR</th>
                             <th style="text-align: right; width: 20%; padding-right: 5px;" colspan="2">VARIAÇÃO</th>
                         </tr>
                     </thead>
@@ -245,13 +245,13 @@
                                 </td>
                                 <td class="status-cell">
                                     @if($product->status == 'up')
-                                        <img src="{{ $icoUp }}" style="width: 10px; height: 10px;">
+                                        <img src="{{ $icoUp }}" style="width: 15px; height: 15px;">
                                     @elseif($product->status == 'down')
-                                        <img src="{{ $icoDown }}" style="width: 10px; height: 10px;">
+                                        <img src="{{ $icoDown }}" style="width: 15px; height: 15px;">
                                     @elseif($product->status == 'new')
-                                        <img src="{{ $icoStar }}" style="width: 10px; height: 10px;">
+                                        <img src="{{ $icoStar }}" style="width: 15px; height: 15px;">
                                     @else
-                                        <img src="{{ $icoNeutral }}" style="width: 10px; height: 10px;">
+                                        <img src="{{ $icoNeutral }}" style="width: 15px; height: 15px;">
                                     @endif
                                 </td>
                             </tr>
@@ -261,7 +261,7 @@
             </div>
         @endforeach
 
-            <div class="footer">
+            <div class="footer" style="font-size: 11px; margin-top: 50px;">
                 Gerado em {{ $date }}
             </div>
         </div>
