@@ -46,13 +46,10 @@ class HandleInertiaRequests extends Middleware
                 $user = $request->user();
                 if (!$user) return [];
 
-                $allPages = \Illuminate\Support\Facades\Cache::remember('active_dashboard_pages', 3600, function() {
-                    return \App\Models\DashboardPage::where('is_active', true)
-                        ->orderBy('order')
-                        ->get();
-                });
-
-                return $allPages->filter(fn($page) => $user->canAccessPage($page->slug))
+                return \App\Models\DashboardPage::where('is_active', true)
+                    ->orderBy('order')
+                    ->get()
+                    ->filter(fn($page) => $user->canAccessPage($page->slug))
                     ->map(fn($page) => [
                         'id' => $page->id,
                         'title' => $page->title,
