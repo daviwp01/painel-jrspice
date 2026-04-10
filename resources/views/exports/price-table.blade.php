@@ -8,7 +8,7 @@
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             color: #1e293b;
-            font-size: 13px;
+            font-size: 14px;
             margin: 0;
             padding: 0;
             background-color: #fff;
@@ -36,7 +36,7 @@
         .box-right { width: 62%; }
 
         .small-label {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             color: #94a3b8;
             letter-spacing: 0.8px;
@@ -58,7 +58,7 @@
         .pais-info h1 {
             display: inline-block;
             vertical-align: middle;
-            font-size: 36px;
+            font-size: 34px;
             color: #1e293b;
             margin: 0;
             text-transform: uppercase;
@@ -72,13 +72,13 @@
             width: 42%;
             border-left: 2px solid #f1f5f9;
             padding-left: 12px;
-            font-size: 10px;
+            font-size: 9px;
             color: #64748b;
             font-weight: bold;
             letter-spacing: -0.1px;
         }
         .legenda-item {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             padding: 5px 0;
             vertical-align: middle;
@@ -100,7 +100,7 @@
         }
         .data-table th {
             text-align: left;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             color: #94a3b8;
             text-transform: uppercase;
@@ -112,10 +112,10 @@
             padding: 9px 0;
             border-bottom: 1px solid #f1f5f9;
         }
-        .product-name { font-weight: bold; color: #1e293b; font-size: 16px; line-height: 1.2; }
-        .price-val { font-weight: bold; text-align: right; color: #1e293b; font-family: 'Helvetica', sans-serif; font-size: 18px;}
-        .variation-val { font-weight: bold; text-align: right; font-size: 15px; }
-        .status-cell { text-align: right; width: 30px; padding-right: 5px; }
+        .product-name { font-weight: bold; color: #1e293b; font-size: 18px; line-height: 1.2; }
+        .price-val { font-weight: bold; text-align: right; color: #1e293b; font-family: 'Helvetica', sans-serif; font-size: 21px;}
+        .variation-val { font-weight: bold; text-align: right; font-size: 17px; }
+        .status-cell { text-align: right; width: 35px; padding-right: 5px; }
 
         .up { color: #e11d48; }
         .down { color: #10b981; }
@@ -141,10 +141,10 @@
         }
         header table { width: 100%; border-collapse: collapse; margin: 0; padding: 0; }
         header td { padding: 10px 35px; }
-        header img { height: 20px; display: block; }
+        header img { height: 23px; display: block; }
         header .brand-text {
             color: #cbd5e1;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1.2px;
@@ -245,13 +245,13 @@
                                 </td>
                                 <td class="status-cell">
                                     @if($product->status == 'up')
-                                        <img src="{{ $icoUp }}" style="width: 15px; height: 15px;">
+                                        <img src="{{ $icoUp }}" style="width: 18px; height: 18px;">
                                     @elseif($product->status == 'down')
-                                        <img src="{{ $icoDown }}" style="width: 15px; height: 15px;">
+                                        <img src="{{ $icoDown }}" style="width: 18px; height: 18px;">
                                     @elseif($product->status == 'new')
-                                        <img src="{{ $icoStar }}" style="width: 15px; height: 15px;">
+                                        <img src="{{ $icoStar }}" style="width: 18px; height: 18px;">
                                     @else
-                                        <img src="{{ $icoNeutral }}" style="width: 15px; height: 15px;">
+                                        <img src="{{ $icoNeutral }}" style="width: 18px; height: 18px;">
                                     @endif
                                 </td>
                             </tr>
@@ -261,7 +261,7 @@
             </div>
         @endforeach
 
-            <div class="footer" style="font-size: 11px; margin-top: 50px;">
+            <div class="footer" style="font-size: 12px; margin-top: 50px;">
                 Gerado em {{ $date }}
             </div>
         </div>
