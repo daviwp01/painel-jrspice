@@ -233,7 +233,15 @@ class ProcessDataImport implements ShouldQueue
             if (is_numeric($value)) {
                 return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
             }
-            return Carbon::parse($value);
+            
+            $cleanValue = trim($value);
+            
+            // Tenta formato brasileiro dd/mm/YYYY primeiro para evitar troca de mês/dia pelo Carbon
+            if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $cleanValue)) {
+                return Carbon::createFromFormat('d/m/Y', $cleanValue)->startOfDay();
+            }
+
+            return Carbon::parse($cleanValue)->startOfDay();
         } catch (\Exception $e) {
             return null;
         }

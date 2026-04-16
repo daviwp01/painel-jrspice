@@ -202,6 +202,14 @@ class DataController extends Controller
         return redirect()->back()->with('success', 'Preço atualizado.');
     }
 
+    public function truncatePrices()
+    {
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+        ProductPrice::truncate();
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+        return redirect()->back()->with('success', 'Histórico de preços removido com sucesso.');
+    }
+
     public function storeSupplier(Request $request)
     {
         $validated = $request->validate([

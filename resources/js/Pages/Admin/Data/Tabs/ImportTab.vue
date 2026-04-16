@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { UploadCloudIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon, XCircleIcon, InfoIcon, FileTextIcon, DownloadIcon, PlusIcon, HistoryIcon } from 'lucide-vue-next';
+import { UploadCloudIcon, Loader2Icon, CheckCircleIcon, AlertCircleIcon, XCircleIcon, InfoIcon, FileTextIcon, DownloadIcon, PlusIcon, HistoryIcon, Trash2Icon } from 'lucide-vue-next';
 import axios from 'axios';
 import { toast } from '@/Stores/ToastStore';
 
@@ -211,6 +211,21 @@ const cancelImport = async () => {
         }
     });
 };
+
+const truncatePrices = () => {
+    openConfirm({
+        title: 'LIMPAR BASE DE DADOS',
+        message: 'VOCÊ TEM CERTEZA? Esta ação apagará TODOS os registros de preços do sistema permanentemente. Recomendamos criar um backup antes.',
+        confirmText: 'Sim, Apagar Tudo!',
+        onConfirm: () => {
+             router.post(route('admin.data.prices.truncate'), {}, {
+                 onSuccess: () => {
+                     toast.add('Toda a base de preços foi removida.', 'success');
+                 }
+             });
+        }
+    });
+};
 </script>
 
 <template>
@@ -252,6 +267,26 @@ const cancelImport = async () => {
                             <p class="mt-4 text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">Basta preencher e importar para o sistema</p>
                         </div>
                     </div>
+ 
+                    <!-- DANGEROUS ACTIONS (COMMENTED OUT FOR FUTURE USE) -->
+                    <!-- 
+                    <div class="bg-rose-50/30 p-8 rounded-3xl border border-rose-100/50 space-y-4 shadow-sm">
+                        <div class="flex items-center gap-3.5 text-rose-800">
+                             <div class="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
+                                <AlertCircleIcon class="w-5 h-5" />
+                             </div>
+                             <h4 class="font-bold uppercase tracking-widest text-xs">Ações Críticas</h4>
+                        </div>
+                        <p class="text-[10px] text-rose-400 font-bold uppercase tracking-widest leading-relaxed">Cuidado: Estas ações são irreversíveis e apagam dados globais.</p>
+                        <button 
+                            @click="truncatePrices"
+                            class="w-full flex items-center justify-center gap-2.5 py-4 bg-white hover:bg-rose-600 text-rose-600 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all border border-rose-100 hover:border-rose-600 shadow-sm active:scale-95 group/btn"
+                        >
+                            <Trash2Icon class="w-4 h-4 group-hover/btn:animate-bounce" />
+                            Limpar Histórico de Preços
+                        </button>
+                    </div> 
+                    -->
 
 
 

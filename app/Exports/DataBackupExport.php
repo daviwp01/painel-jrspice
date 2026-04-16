@@ -47,7 +47,7 @@ class DataBackupExport implements FromQuery, WithHeadings, WithMapping
             $price->product->country->name,
             $price->supplier ? $price->supplier->name : '',
             $date->format('d/m/Y'),
-            $date->format('m/Y'),
+            $date->format('Y / m'),
             $date->weekOfYear,
             $price->price
         ];
