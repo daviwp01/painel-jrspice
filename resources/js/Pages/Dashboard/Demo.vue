@@ -136,7 +136,10 @@ const chartDataComputed = computed(() => {
             }));
     } else {
         // CONTÍNUO
-        labels = props.pricesData.map(p => new Date(p.date).toLocaleDateString('pt-BR', { month: 'short', year:'2-digit' }));
+        labels = props.pricesData.map(p => {
+           const d = new Date(p.date);
+           return `${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear().toString().slice(-2)}`;
+        });
         datasets = [{
             label: 'Tendência Histórica',
             data: props.pricesData.map(p => p.price),
@@ -209,11 +212,12 @@ const chartOptions = computed(() => ({
         x: {
             grid: { display: false },
             ticks: { 
-                font: { size: isMobile.value ? 8 : 10, weight: 'black' },
+                font: { size: isMobile.value ? (chartMode.value === 'CONTÍNUO' ? 7 : 8) : 10, weight: 'black' },
                 color: '#94a3b8',
-                autoSkip: false,
-                maxRotation: isMobile.value ? 45 : 0,
-                minRotation: isMobile.value ? 45 : 0,
+                autoSkip: chartMode.value === 'CONTÍNUO',
+                maxTicksLimit: chartMode.value === 'CONTÍNUO' ? (isMobile.value ? 6 : 12) : undefined,
+                maxRotation: chartMode.value === 'CONTÍNUO' ? 0 : (isMobile.value ? 45 : 0),
+                minRotation: chartMode.value === 'CONTÍNUO' ? 0 : (isMobile.value ? 45 : 0),
                 padding: 10
             }
         }
