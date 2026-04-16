@@ -24,6 +24,14 @@ const Loader2Icon = Loader2;
 const MenuIcon = Menu;
 const ZoomInIcon = ZoomIn;
 const ZoomOutIcon = ZoomOut;
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200);
+const isMobile = computed(() => windowWidth.value < 768);
+
+onMounted(() => {
+    window.addEventListener('resize', () => {
+        windowWidth.value = window.innerWidth;
+    });
+});
 
 const props = defineProps({
   pages: Array,
@@ -184,7 +192,7 @@ const chartOptions = computed(() => ({
         y: {
             grid: { color: '#f1f5f9' },
             ticks: { 
-                font: { size: 18, weight: 'bold' },
+                font: { size: isMobile.value ? 10 : 18, weight: 'bold' },
                 color: '#94a3b8',
                 callback: (value) => `$ ${Number(value).toLocaleString('pt-BR')}`
             }
@@ -192,11 +200,11 @@ const chartOptions = computed(() => ({
         x: {
             grid: { display: false },
             ticks: { 
-                font: { size: 10, weight: 'black' },
+                font: { size: isMobile.value ? 8 : 10, weight: 'black' },
                 color: '#94a3b8',
-                autoSkip: chartMode.value === 'CONTÍNUO',
-                maxRotation: 0,
-                minRotation: 0,
+                autoSkip: false,
+                maxRotation: isMobile.value ? 45 : 0,
+                minRotation: isMobile.value ? 45 : 0,
                 padding: 10
             }
         }
@@ -596,14 +604,14 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                     
                     <div class="relative w-full mt-8 flex flex-col pt-4" :style="{ height: chartHeight + 'px' }">
                         <!-- Y-AXIS LABELS -->
-                        <div v-if="metrics" class="absolute left-0 top-0 bottom-12 w-20 flex flex-col justify-between text-lg font-bold text-slate-400 tabular-nums pb-2">
+                        <div v-if="metrics" :class="[isMobile ? 'text-[10px] w-12' : 'text-lg w-20']" class="absolute left-0 top-0 bottom-12 flex flex-col justify-between font-bold text-slate-400 tabular-nums pb-2">
                            <span>{{ formatNumber(metrics.all.max, 0) }}</span>
                            <span>{{ getAvgLabel(metrics.all.min, metrics.all.max) }}</span>
                            <span>{{ formatNumber(metrics.all.min, 0) }}</span>
                         </div>
 
                         <!-- CHART AREA -->
-                        <div class="ml-20 flex-1 relative border-l border-b border-slate-100 mb-12 min-h-0">
+                        <div :class="[isMobile ? 'ml-12' : 'ml-20']" class="flex-1 relative border-l border-b border-slate-100 mb-12 min-h-0">
                            <Line 
                               v-if="chartData && Object.keys(chartData).length"
                               :key="chartMode"

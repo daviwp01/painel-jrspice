@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2, ArrowUp, ArrowDown } from 'lucide-vue-next';
+import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 
@@ -10,6 +10,14 @@ const MapPinIcon = MapPin;
 const TruckIcon = Truck;
 const BoxIcon = Box;
 const CalendarIcon = Calendar;
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200);
+const isMobile = computed(() => windowWidth.value < 768);
+
+onMounted(() => {
+    window.addEventListener('resize', () => {
+        windowWidth.value = window.innerWidth;
+    });
+});
 
 const props = defineProps({
   currentPage: Object,
@@ -209,8 +217,8 @@ const processedHistoricalData = computed(() => {
 const formatPaginationLabel = (label) => {
     if (!label) return '';
     const l = label.toLowerCase();
-    if (l.includes('previous')) return '&laquo; Anterior';
-    if (l.includes('next')) return 'Próximo &raquo;';
+    if (l.includes('previous')) return isMobile.value ? 'prev' : '&laquo; Anterior';
+    if (l.includes('next')) return isMobile.value ? 'next' : 'Próximo &raquo;';
     return label;
 };
 
@@ -350,18 +358,18 @@ const changePage = (url) => {
 
             <!-- TABELA HISTÓRICO -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-xl text-left">
-                    <thead class="text-base text-slate-500 bg-slate-50/80 font-bold uppercase tracking-widest border-b border-slate-200 whitespace-nowrap">
+                <table class="w-full text-left border-collapse">
+                    <thead class="text-[10px] md:text-base text-slate-500 bg-slate-50/80 font-bold uppercase tracking-wider md:tracking-widest border-b border-slate-200">
                         <tr>
-                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
-                                <div class="flex items-center gap-2">
-                                    PRODUTO
-                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
+                                <div class="flex items-center gap-1 md:gap-2">
+                                    {{ isMobile ? 'PROD.' : 'PRODUTO' }}
+                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
+                            <th v-if="!isMobile" class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
                                 <div class="flex items-center gap-2">
                                     PAÍS
                                     <ArrowUp v-if="filters.sort_field === 'country' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
@@ -369,7 +377,7 @@ const changePage = (url) => {
                                     <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
+                            <th v-if="!isMobile" class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
                                 <div class="flex items-center gap-2">
                                     FORNECEDOR
                                     <ArrowUp v-if="filters.sort_field === 'supplier' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
@@ -377,40 +385,54 @@ const changePage = (url) => {
                                     <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
-                                <div class="flex items-center gap-2">
-                                    DATA REGISTRO
-                                    <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
+                                <div class="flex items-center gap-1 md:gap-2">
+                                    {{ isMobile ? 'INFO.' : 'DATA REGISTRO' }}
+                                    <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4">ANO / MES</th>
-                            <th class="px-5 py-4 text-center">SEMANA</th>
-                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
-                                <div class="flex items-center justify-end gap-2">
-                                    PREÇO
-                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th v-if="!isMobile" class="px-5 py-4">ANO / MES</th>
+                            <th v-if="!isMobile" class="px-5 py-4 text-center">SEMANA</th>
+                            <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
+                                <div class="flex items-center justify-end gap-1 md:gap-2">
+                                    {{ isMobile ? 'PREÇO' : 'PREÇO' }}
+                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-medium bg-white">
                             <tr v-for="(row, idx) in processedHistoricalData" :key="idx" class="hover:bg-blue-50/30 transition-colors">
-                                <td class="px-5 py-4 text-slate-800 font-bold uppercase tracking-wide text-lg whitespace-normal min-w-[300px] max-w-[500px] leading-snug">{{ row.productName }}</td>
-                                <td class="px-5 py-4 text-slate-500 uppercase text-base whitespace-nowrap">
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-slate-800 font-bold uppercase tracking-tight md:tracking-wide text-[11px] md:text-lg whitespace-normal leading-tight md:leading-snug max-w-[150px] md:max-w-[500px]">
+                                    {{ row.productName }}
+                                    <div v-if="isMobile" class="flex flex-col gap-0.5 mt-1 opacity-60 font-medium text-[10px]">
+                                        <div class="flex items-center gap-1">
+                                            <CountryFlag v-if="row.countryName" :name="row.countryName" class-name="w-3 h-2 rounded-[1px]" />
+                                            {{ row.countryName }}
+                                        </div>
+                                        <span>{{ row.supplier }}</span>
+                                    </div>
+                                </td>
+                                <td v-if="!isMobile" class="px-5 py-4 text-slate-500 uppercase text-base whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <CountryFlag v-if="row.countryName" :name="row.countryName" class-name="w-5 h-4 rounded-[1px]" />
                                         {{ row.countryName }}
                                     </div>
                                 </td>
-                                <td class="px-5 py-4 text-slate-500 uppercase text-base whitespace-nowrap">{{ row.supplier }}</td>
-                                <td class="px-5 py-4 text-slate-500 text-lg whitespace-nowrap">{{ row.displayDate }}</td>
-                                <td class="px-5 py-4 text-slate-500 font-mono text-lg whitespace-nowrap">{{ row.yearMonth }}</td>
-                                <td class="px-5 py-4 text-slate-700 text-center font-bold text-lg whitespace-nowrap">{{ row.week }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums font-black text-slate-900 pr-4 md:pr-8 text-2xl whitespace-nowrap">
+                                <td v-if="!isMobile" class="px-5 py-4 text-slate-500 uppercase text-base whitespace-nowrap">{{ row.supplier }}</td>
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-slate-500 text-[10px] md:text-lg whitespace-normal md:whitespace-nowrap leading-tight">
+                                    {{ row.displayDate }}
+                                    <div v-if="isMobile" class="mt-0.5 text-slate-400 font-mono text-[9px]">
+                                        Mês: {{ row.yearMonth }} | Sem: {{ row.week }}
+                                    </div>
+                                </td>
+                                <td v-if="!isMobile" class="px-5 py-4 text-slate-500 font-mono text-lg whitespace-nowrap">{{ row.yearMonth }}</td>
+                                <td v-if="!isMobile" class="px-5 py-4 text-slate-700 text-center font-bold text-lg whitespace-nowrap">{{ row.week }}</td>
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums font-black text-slate-900 pr-2 md:pr-8 text-sm md:text-2xl whitespace-nowrap">
                                     {{ row.priceVal ? Number(row.priceVal).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                             </tr>
@@ -419,13 +441,24 @@ const changePage = (url) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="historicalData.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div v-if="historicalData.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">
                          Exibindo <span class="text-blue-600">{{ historicalData.from }}</span> até <span class="text-blue-600">{{ historicalData.to }}</span> de <span class="text-slate-900">{{ historicalData.total }}</span> registros
                     </p>
-                    <div class="flex gap-1">
-                        <button v-for="(link, i) in historicalData.links" :key="i" v-html="formatPaginationLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                            :class="['px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                    <div class="flex flex-wrap justify-center gap-1 md:gap-1.5">
+                        <template v-for="(link, i) in historicalData.links" :key="i">
+                            <button v-if="formatPaginationLabel(link.label) === 'prev'" @click="changePage(link.url)" :disabled="!link.url"
+                                :class="['p-2.5 md:px-4 md:py-2.5 rounded-xl border transition-all', !link.url ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']">
+                                <ChevronLeft class="w-4 h-4" />
+                            </button>
+                            <button v-else-if="formatPaginationLabel(link.label) === 'next'" @click="changePage(link.url)" :disabled="!link.url"
+                                :class="['p-2.5 md:px-4 md:py-2.5 rounded-xl border transition-all', !link.url ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']">
+                                <ChevronRight class="w-4 h-4" />
+                            </button>
+                            <button v-else-if="!isMobile || (link.active || (i > 0 && i < historicalData.links.length - 1 && Math.abs(historicalData.current_page - parseInt(link.label)) <= 1))" 
+                                v-html="link.label" @click="changePage(link.url)" :disabled="!link.url || link.label === '...'"
+                                :class="['min-w-[40px] px-2 py-2.5 md:px-4 md:py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                        </template>
                     </div>
                 </div>
 

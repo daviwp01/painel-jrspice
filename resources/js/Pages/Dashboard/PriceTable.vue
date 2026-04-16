@@ -2,13 +2,21 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next';
+import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import axios from 'axios';
 
 const MapPinIcon = MapPin;
 const TruckIcon = Truck;
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200);
+const isMobile = computed(() => windowWidth.value < 768);
+
+onMounted(() => {
+    window.addEventListener('resize', () => {
+        windowWidth.value = window.innerWidth;
+    });
+});
 
 const props = defineProps({
   currentPage: Object,
@@ -194,8 +202,8 @@ const processedProducts = computed(() => {
 const formatPaginationLabel = (label) => {
     if (!label) return '';
     const l = label.toLowerCase();
-    if (l.includes('previous')) return '&laquo; Anterior';
-    if (l.includes('next')) return 'Próximo &raquo;';
+    if (l.includes('previous')) return isMobile.value ? 'prev' : '&laquo; Anterior';
+    if (l.includes('next')) return isMobile.value ? 'next' : 'Próximo &raquo;';
     return label;
 };
 
@@ -272,7 +280,7 @@ const changePage = (url) => {
             
             <div class="flex flex-col lg:flex-row gap-4 mb-4 mt-2 w-full">
                 <!-- PAÍS DE ORIGEM -->
-                <div class="w-full lg:w-[40%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
+                <div class="w-full lg:w-[30%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-100/50 transition-colors"></div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
                         PAÍS DE ORIGEM
@@ -286,21 +294,21 @@ const changePage = (url) => {
                 </div>
 
                 <!-- LEGENDA -->
-                <div class="w-full lg:w-[60%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
+                <div class="w-full lg:w-[70%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
                     <div class="flex flex-col lg:flex-row gap-6 lg:items-center justify-between w-full">
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-8 whitespace-nowrap mt-2 overflow-visible">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 lg:gap-x-10 gap-y-8 mt-2 overflow-visible">
                             <div class="flex items-center gap-4 text-sm font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
-                            <div class="flex items-center gap-4 text-sm font-bold text-rose-600 uppercase tracking-wider pl-4 sm:pl-0"><ArrowUpIcon class="text-rose-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
                             <div class="flex items-center gap-4 text-sm font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-5 h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
-                            <div class="flex items-center gap-4 text-sm font-bold text-amber-500 uppercase tracking-wider pl-4 sm:pl-0"><StarIcon class="text-amber-400 fill-amber-400 w-5 h-5 shrink-0" /> PRODUTO NOVO</div>
+                            <div class="flex items-center gap-4 text-sm font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-5 h-5 shrink-0" /> PRODUTO NOVO</div>
                         </div>
 
                         <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
-                            <p class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Em relação ao preço anterior</p>
-                            <p class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços em Dólar p/ ton 1XFCL 40'</p>
-                            <p class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços à confirmação final</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Em relação ao preço anterior</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços em Dólar p/ ton 1XFCL 40'</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços à confirmação final</p>
                         </div>
                     </div>
                 </div>
@@ -308,52 +316,58 @@ const changePage = (url) => {
 
             <!-- TABELA -->
             <div class="overflow-x-auto bg-white rounded-3xl shadow-sm border border-slate-200">
-                <table class="w-full text-2xl text-left whitespace-nowrap">
-                    <thead class="text-lg text-slate-500 bg-white/95 backdrop-blur-sm font-bold uppercase tracking-widest border-b border-slate-200 sticky top-0 z-20">
+                <table class="w-full text-left border-collapse">
+                    <thead class="text-[10px] md:text-lg text-slate-500 bg-white/95 backdrop-blur-sm font-bold uppercase tracking-wider md:tracking-widest border-b border-slate-200 sticky top-0 z-20">
                         <tr>
-                            <th class="px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
-                                <div class="flex items-center gap-2">
-                                    PRODUTO
-                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
+                                <div class="flex items-center gap-1 md:gap-2">
+                                    {{ isMobile ? 'PROD.' : 'PRODUTO' }}
+                                    <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
-                                <div class="flex items-center justify-end gap-2">
-                                    ÚLTIMO MELHOR PREÇO
-                                    <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
+                                <div class="flex items-center justify-end gap-1 md:gap-2">
+                                    {{ isMobile ? 'ÚLT.' : 'ÚLTIMO MELHOR PREÇO' }}
+                                    <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th class="px-5 py-4 text-right cursor-not-allowed text-slate-300">
-                                MELHOR PREÇO ANTERIOR
+                            <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-not-allowed text-slate-300">
+                                {{ isMobile ? 'ANT.' : 'MELHOR PREÇO ANTERIOR' }}
                             </th>
-                            <th class="px-5 py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
-                                <div class="flex items-center justify-end gap-2">
-                                    VARIAÇÃO
-                                    <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-5 h-5 text-blue-600" />
-                                    <ArrowUpDown v-else class="w-5 h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
+                                <div class="flex items-center justify-end gap-1 md:gap-2">
+                                    {{ isMobile ? 'VAR.' : 'VARIAÇÃO' }}
+                                    <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
+                                    <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-bold bg-white">
                             <tr v-for="prod in processedProducts" :key="prod.id" class="hover:bg-slate-50/50 transition-colors group">
-                                <td class="px-5 py-4 text-slate-900 group-hover:text-blue-600 transition-colors">{{ prod.name }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums text-slate-900 pr-6 text-3xl font-black">{{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums text-slate-400 pr-6">{{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}</td>
-                                <td class="px-5 py-4 text-right tabular-nums">
-                                    <div class="flex items-center justify-end gap-2 pr-2">
-                                    <span class="font-black tracking-tighter text-3xl" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-slate-900 group-hover:text-blue-600 transition-colors text-[11px] md:text-2xl leading-tight whitespace-normal break-words max-w-[120px] md:max-w-none">
+                                    {{ prod.name }}
+                                </td>
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums text-slate-900 pr-1 md:pr-6 text-sm md:text-3xl font-black">
+                                    {{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
+                                </td>
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums text-slate-400 pr-1 md:pr-6 text-sm md:text-2xl font-bold">
+                                    {{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
+                                </td>
+                                <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums">
+                                    <div class="flex items-center justify-end gap-1 md:gap-2 pr-1">
+                                    <span class="font-black tracking-tighter text-[12px] md:text-3xl" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
                                         {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
                                     </span>
-                                        <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-8 h-8 stroke-[3]" />
-                                        <ArrowUpIcon v-else-if="prod.status === 'up'" class="text-rose-500 w-8 h-8 stroke-[3]" />
-                                        <StarIcon v-else-if="prod.status === 'new'" class="text-amber-400 fill-amber-400 w-7 h-7 ml-1" />
-                                        <div v-else class="w-5 h-5 rounded-full bg-slate-300 ml-1"></div>
+                                        <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-3 h-3 md:w-8 md:h-8 stroke-[3]" />
+                                        <ArrowUpIcon v-else-if="prod.status === 'up'" class="text-rose-500 w-3 h-3 md:w-8 md:h-8 stroke-[3]" />
+                                        <StarIcon v-else-if="prod.status === 'new'" class="text-amber-400 fill-amber-400 w-3 h-3 md:w-7 md:h-7 ml-1" />
+                                        <div v-else class="w-2 h-2 md:w-5 md:h-5 rounded-full bg-slate-300 ml-1"></div>
                                     </div>
                                 </td>
                             </tr>
@@ -365,13 +379,24 @@ const changePage = (url) => {
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="products.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div v-if="products.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center md:text-left">
                         Exibindo <span class="text-blue-600">{{ products.from }}</span> até <span class="text-blue-600">{{ products.to }}</span> de <span class="text-slate-900">{{ products.total }}</span> produtos
                     </p>
-                    <div class="flex gap-1">
-                        <button v-for="(link, i) in products.links" :key="i" v-html="formatPaginationLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
-                            :class="['px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                    <div class="flex flex-wrap justify-center gap-1 md:gap-1.5">
+                        <template v-for="(link, i) in products.links" :key="i">
+                            <button v-if="formatPaginationLabel(link.label) === 'prev'" @click="changePage(link.url)" :disabled="!link.url"
+                                :class="['p-2.5 md:px-4 md:py-2.5 rounded-xl border transition-all', !link.url ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']">
+                                <ChevronLeft class="w-4 h-4" />
+                            </button>
+                            <button v-else-if="formatPaginationLabel(link.label) === 'next'" @click="changePage(link.url)" :disabled="!link.url"
+                                :class="['p-2.5 md:px-4 md:py-2.5 rounded-xl border transition-all', !link.url ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']">
+                                <ChevronRight class="w-4 h-4" />
+                            </button>
+                            <button v-else-if="!isMobile || (link.active || (i > 0 && i < products.links.length - 1 && Math.abs(products.current_page - parseInt(link.label)) <= 1))" 
+                                v-html="link.label" @click="changePage(link.url)" :disabled="!link.url || link.label === '...'"
+                                :class="['min-w-[40px] px-2 py-2.5 md:px-4 md:py-2.5 text-[10px] font-bold uppercase tracking-widest rounded-xl border transition-all', link.active ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : link.url ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' : 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed']" />
+                        </template>
                     </div>
                 </div>
 

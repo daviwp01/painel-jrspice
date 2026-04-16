@@ -144,10 +144,15 @@ const navItems = computed(() => [
         <!-- 🚀 MAIN STAGE -->
         <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f8fafc]">
 
-            <!-- BOTÃO MOBILE (SUBSTITUI A TOPBAR NO CELULAR) -->
-            <button v-if="!isMobileMenuOpen" @click="isMobileMenuOpen = true" class="md:hidden fixed top-4 left-4 z-[40] p-2.5 bg-white border border-slate-200 rounded-xl shadow-lg text-slate-600 active:scale-90 transition-all">
-                <MenuIcon class="w-6 h-6" />
-            </button>
+            <!-- 📱 TOPBAR MOBILE -->
+            <header class="md:hidden bg-[#0f172a] h-16 flex items-center justify-between px-4 border-b border-slate-800/50 sticky top-0 z-[45] shadow-lg shrink-0">
+                <button @click="isMobileMenuOpen = true" class="p-2.5 text-slate-400 hover:text-white transition-all active:scale-90">
+                    <MenuIcon class="w-6 h-6" />
+                </button>
+                <Link :href="route('dashboard')" class="flex-1 flex justify-center pr-10">
+                    <img src="/logo-white.png" alt="Jrspice" class="h-7 w-auto object-contain" />
+                </Link>
+            </header>
 
             <!-- VIEWPORT CONTENT -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto relative bg-[#f8fafc]">

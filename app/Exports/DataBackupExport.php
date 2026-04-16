@@ -23,11 +23,14 @@ class DataBackupExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Produto',
-            'País',
-            'Fornecedor',
-            'Data Registro',
-            'Preço'
+            'PRODUTO',
+            'SAFRA',
+            'PAÍS',
+            'FORNECEDOR',
+            'DATA REGISTRO',
+            'ANO / MES',
+            'SEMANA',
+            'PREÇO'
         ];
     }
 
@@ -36,11 +39,16 @@ class DataBackupExport implements FromQuery, WithHeadings, WithMapping
     */
     public function map($price): array
     {
+        $date = \Carbon\Carbon::parse($price->date);
+        
         return [
             $price->product->name,
+            $price->product->harvest_month,
             $price->product->country->name,
             $price->supplier ? $price->supplier->name : '',
-            $price->date,
+            $date->format('d/m/Y'),
+            $date->format('m/Y'),
+            $date->weekOfYear,
             $price->price
         ];
     }
