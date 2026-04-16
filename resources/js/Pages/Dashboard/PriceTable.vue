@@ -299,11 +299,11 @@ const changePage = (url) => {
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
                     <div class="flex flex-col lg:flex-row gap-6 lg:items-center justify-between w-full">
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 lg:gap-x-10 gap-y-8 mt-2 overflow-visible">
-                            <div class="flex items-center gap-4 text-sm font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
-                            <div class="flex items-center gap-4 text-sm font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-5 h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
-                            <div class="flex items-center gap-4 text-sm font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-5 h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
-                            <div class="flex items-center gap-4 text-sm font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-5 h-5 shrink-0" /> PRODUTO NOVO</div>
+                        <div class="grid grid-cols-2 gap-x-2 sm:gap-x-8 lg:gap-x-10 gap-y-4 md:gap-y-8 mt-2 overflow-visible">
+                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-4 h-4 md:w-5 md:h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
+                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-4 h-4 md:w-5 md:h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
+                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-4 h-4 md:w-5 md:h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
+                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-4 h-4 md:w-5 md:h-5 shrink-0" /> PRODUTO NOVO</div>
                         </div>
 
                         <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
