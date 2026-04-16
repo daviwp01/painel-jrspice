@@ -256,21 +256,22 @@ const changePage = (url) => {
 
 
         <!-- Page Title Region -->
-        <div class="hidden md:flex justify-between items-end pb-4 border-b border-slate-200 mb-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-slate-200 mb-8 gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
-                <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest rounded-full border border-slate-200 bg-white inline-block px-3 py-1 shadow-sm flex items-center gap-2">
-                    <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
-                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm flex items-center gap-2">
+                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
+                    </p>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 w-full md:w-auto">
                 <button 
                     @click="isExportModalOpen = true"
-                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
+                    class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3.5 md:py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
                 >
                     <FileDown class="w-4 h-4" /> Exportar PDF
                 </button>
-
             </div>
         </div>
 
@@ -321,7 +322,7 @@ const changePage = (url) => {
                         <tr>
                             <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-1 md:gap-2">
-                                    {{ isMobile ? 'PROD.' : 'PRODUTO' }}
+                                    PRODUTO
                                     <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -329,18 +330,18 @@ const changePage = (url) => {
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    {{ isMobile ? 'ÚLT.' : 'ÚLTIMO MELHOR PREÇO' }}
+                                    ÚLTIMO MELHOR PREÇO
                                     <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-not-allowed text-slate-300">
-                                {{ isMobile ? 'ANT.' : 'MELHOR PREÇO ANTERIOR' }}
+                                MELHOR PREÇO ANTERIOR
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    {{ isMobile ? 'VAR.' : 'VARIAÇÃO' }}
+                                    VARIAÇÃO
                                     <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
