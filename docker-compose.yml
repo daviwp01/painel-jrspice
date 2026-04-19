@@ -2,7 +2,7 @@ services:
   # PHP Application
   dev_app:
     build: ./docker/php
-    container_name: dev_jrspice_app
+    container_name: jrspice_app
     restart: unless-stopped
     user: "1000:1000"
     working_dir: /var/www/html
@@ -19,7 +19,7 @@ services:
   # Queue Worker
   dev_worker:
     build: ./docker/php
-    container_name: dev_jrspice_worker
+    container_name: jrspice_worker
     restart: unless-stopped
     user: "1000:1000"
     working_dir: /var/www/html
@@ -36,7 +36,7 @@ services:
   # Nginx Web Server
   dev_web:
     image: nginx:stable-alpine
-    container_name: dev_jrspice_web
+    container_name: jrspice_web
     restart: unless-stopped
     depends_on:
       - dev_app
@@ -57,7 +57,7 @@ services:
   # MariaDB Database - APONTANDO PARA O BANCO COM DADOS
   dev_db:
     image: mariadb:10.11
-    container_name: dev_jrspice_db
+    container_name: jrspice_db
     restart: unless-stopped
     command: [ "mysqld", "--innodb-buffer-pool-size=256M", "--performance-schema=OFF", "--max-connections=100" ]
     environment:
@@ -67,7 +67,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       # AQUI ESTÁ O SEU BANCO ORIGINAL:
-      - dev-jrspice_dbdata_dev:/var/lib/mysql
+      - dbdata:/var/lib/mysql
     networks:
       - dev_appnet
     mem_limit: 512M
@@ -80,5 +80,5 @@ networks:
 
 volumes:
   # DECLARANDO O VOLUME COMO EXTERNO PARA NÃO RESETAR
-  dev-jrspice_dbdata_dev:
+  dbdata:
     external: true
