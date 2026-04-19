@@ -12,3 +12,6 @@ use Illuminate\Support\Facades\Schedule;
 use App\Jobs\UpdateQueueHeartbeat;
 
 Schedule::job(new UpdateQueueHeartbeat)->everyMinute();
+
+// Backup diário removido em favor do Backup Pré-Importação Ativo
+// Schedule::command('app:daily-backup')->dailyAt('04:00');

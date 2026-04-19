@@ -62,7 +62,7 @@ const sendTestMail = () => {
                     <Mail class="w-6 h-6" />
                 </div>
                 <div>
-                    <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('SMTP Configuration') }}</h3>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">{{ $t('SMTP Configuration') }}</h3>
                     <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-0.5">{{ $t('Manage outgoing email server settings') }}</p>
                 </div>
             </div>
@@ -72,7 +72,7 @@ const sendTestMail = () => {
             <!-- Server Connection -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center">
                         <Server class="w-3 h-3 mr-1" />
                         {{ $t('SMTP Host') }}
                     </label>
@@ -85,7 +85,7 @@ const sendTestMail = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center">
                         <Shield class="w-3 h-3 mr-1" />
                         {{ $t('Port') }}
                     </label>
@@ -98,7 +98,7 @@ const sendTestMail = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
                         {{ $t('Encryption') }}
                     </label>
                     <select
@@ -115,7 +115,7 @@ const sendTestMail = () => {
             <!-- Authentication -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center">
                         <User class="w-3 h-3 mr-1" />
                         {{ $t('SMTP Username') }}
                     </label>
@@ -128,7 +128,7 @@ const sendTestMail = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center">
                         <Lock class="w-3 h-3 mr-1" />
                         {{ $t('SMTP Password') }}
                     </label>
@@ -144,7 +144,7 @@ const sendTestMail = () => {
             <!-- Sender Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center">
                         <AtSign class="w-3 h-3 mr-1" />
                         {{ $t('From Address') }}
                     </label>
@@ -157,7 +157,7 @@ const sendTestMail = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
                         {{ $t('From Name') }}
                     </label>
                     <input
@@ -175,7 +175,7 @@ const sendTestMail = () => {
                     type="button"
                     @click="sendTestMail"
                     :disabled="testing"
-                    class="inline-flex items-center px-6 py-4 border-2 border-slate-200 text-slate-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98] disabled:opacity-50"
+                    class="inline-flex items-center px-6 py-4 border-2 border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                     <Loader2 v-if="testing" class="w-4 h-4 mr-2 animate-spin" />
                     <Send v-else class="w-4 h-4 mr-2" />
@@ -185,7 +185,7 @@ const sendTestMail = () => {
                 <button
                     type="submit"
                     :disabled="form.processing || !form.isDirty"
-                    class="inline-flex items-center px-10 py-4 bg-blue-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-100 disabled:opacity-30 disabled:grayscale"
+                    class="inline-flex items-center px-10 py-4 bg-blue-600 text-white text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-100 disabled:opacity-30 disabled:grayscale"
                 >
                     <Loader2 v-if="form.processing" class="w-4 h-4 mr-2 animate-spin" />
                     <Save v-else class="w-4 h-4 mr-2" />

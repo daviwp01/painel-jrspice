@@ -43,11 +43,6 @@ class RegisteredUserController extends Controller
 
         $requiresActivation = Setting::get('registration_requires_activation', false);
 
-        // Combine Desktop and Mobile pages for the new user's allowed_pages
-        $desktopPages = Setting::get('desktop_user_pages', []);
-        $mobilePages = Setting::get('mobile_user_pages', []);
-        $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -55,7 +50,7 @@ class RegisteredUserController extends Controller
             'phone' => $request->phone,
             'company_name' => $request->company_name,
             'is_active' => !$requiresActivation,
-            'allowed_pages' => array_values($mergedPages),
+            'allowed_pages' => array_values(Setting::get('default_allowed_pages', [])),
         ]);
 
         event(new Registered($user));

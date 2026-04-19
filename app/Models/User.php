@@ -61,4 +61,25 @@ class User extends Authenticatable
             'email_clicked_at' => 'datetime',
         ];
     }
+    /**
+     * Check if the user is allowed to access a specific dashboard page (by slug).
+     *
+     * @param string $slug
+     * @return bool
+     */
+    public function canAccessPage(string $slug): bool
+    {
+        if ($this->is_master) {
+            return true;
+        }
+
+        $allowed = $this->allowed_pages;
+        
+        // Se a lista individual estiver vazia, utiliza os padrões do sistema
+        if (empty($allowed) || !is_array($allowed)) {
+            $allowed = \App\Models\Setting::get('default_allowed_pages', []);
+        }
+        
+        return in_array($slug, $allowed);
+    }
 }

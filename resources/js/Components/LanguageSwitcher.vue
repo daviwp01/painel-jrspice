@@ -3,6 +3,7 @@ import { loadLanguageAsync } from 'laravel-vue-i18n';
 import { computed, ref, onMounted } from 'vue';
 import { getActiveLanguage } from 'laravel-vue-i18n';
 import Dropdown from '@/Components/Dropdown.vue';
+import { ChevronDown, Check } from 'lucide-vue-next';
 
 const getLocaleCookie = () => {
     const value = `; ${document.cookie}`;
@@ -63,18 +64,7 @@ const changeLanguage = (lang) => {
                 >
                     <span class="text-lg leading-none shadow-sm rounded-full overflow-hidden">{{ currentFlag }}</span>
                     <span class="hidden sm:inline-block tracking-wide">{{ currentLabel }}</span>
-                    <svg
-                        class="-me-0.5 h-4 w-4 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            fill-rule="evenodd"
-                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
+                    <ChevronDown class="-me-0.5 h-4 w-4 text-gray-400" />
                 </button>
             </template>
 
@@ -91,9 +81,7 @@ const changeLanguage = (lang) => {
                     <span class="flex-1 text-left">{{ item.label }}</span>
 
                     <span v-if="item.value === currentLang" class="text-indigo-600">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
+                        <Check class="h-4 w-4" stroke-width="3" />
                     </span>
                 </button>
             </template>

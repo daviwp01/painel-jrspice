@@ -1,14 +1,14 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
-import { watch, onMounted } from 'vue';
 import { toast } from '@/Stores/ToastStore';
 import ToastContainer from '@/Components/ToastContainer.vue';
-import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
 import LegalModal from '@/Components/LegalModal.vue';
-import { LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, Settings as SettingsIcon2, BarChart3, User as UserIcon } from 'lucide-vue-next';
+import { 
+    LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, 
+    Settings as SettingsIcon2, Database as DatabaseIcon, 
+    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2 
+} from 'lucide-vue-next';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -16,6 +16,12 @@ const user = computed(() => page.props.auth.user);
 const showLegalModal = ref(false);
 const legalModalType = ref('privacy');
 const legalContent = ref('');
+
+const isMobileMenuOpen = ref(false);
+
+const closeMobileMenu = () => {
+    isMobileMenuOpen.value = false;
+};
 
 const openLegal = (type) => {
     legalModalType.value = type;
@@ -27,129 +33,136 @@ const openLegal = (type) => {
 
 // Watch for flash messages from backend
 watch(() => page.props.flash, (flash) => {
-    if (flash.success) {
-        toast.add(flash.success, 'success');
-    }
-    if (flash.error) {
-        toast.add(flash.error, 'error');
-    }
+    if (flash.success) toast.add(flash.success, 'success');
+    if (flash.error) toast.add(flash.error, 'error');
 }, { deep: true });
 
-// Check for initial flash messages on mount
 onMounted(() => {
-    if (page.props.flash.success) {
-        toast.add(page.props.flash.success, 'success');
-    }
-    if (page.props.flash.error) {
-        toast.add(page.props.flash.error, 'error');
-    }
+    if (page.props.flash.success) toast.add(page.props.flash.success, 'success');
+    if (page.props.flash.error) toast.add(page.props.flash.error, 'error');
 });
 
-// Custom Navigation Items
+onUnmounted(() => {
+});
+
+// Custom Navigation Items (Admin only)
 const navItems = computed(() => [
-    { name: 'Dashboard', route: 'dashboard', active: route().current('dashboard'), icon: LayoutDashboard },
+    { name: 'Gestão de Dados', route: 'admin.data.index', active: route().current('admin.data.*'), masterOnly: true, icon: DatabaseIcon },
     { name: 'Users', route: 'admin.users.index', active: route().current('admin.users.*'), masterOnly: true, icon: UsersIcon },
     { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true, icon: ActivityIcon },
     { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true, icon: SettingsIcon2 },
 ]);
-
-const openReportsNav = () => {
-    if (route().current('dashboard')) {
-        window.dispatchEvent(new CustomEvent('open-reports-nav'));
-    } else {
-        router.visit(route('dashboard'), { data: { open_nav: 1 } });
-    }
-};
 </script>
 
 <template>
-    <div class="h-screen w-full bg-slate-50 font-sans text-slate-900 flex relative selection:bg-blue-100 selection:text-blue-900">
+    <div class="h-screen w-full bg-[#f8fafc] font-sans text-slate-900 flex relative overflow-hidden selection:bg-blue-100 selection:text-blue-900">
 
-        <!-- 🚀 MAIN STAGE (FULL WIDTH) -->
-        <div class="flex-1 flex flex-col h-full relative z-10 bg-slate-50">
+        <!-- 📱 SIDEBAR (LEFT) -->
+        <aside :class="[
+            'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[350px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        ]">
+            <!-- Brand Logo -->
+            <div class="h-16 flex items-center justify-between px-6 bg-[#1e293b]/30 shrink-0 border-b border-slate-800/50">
+                <Link :href="route('dashboard')" class="flex items-center space-x-2 group w-full">
+                    <img src="/logo-white.png" alt="Jrspice" class="h-8 w-auto object-contain transition-opacity duration-300 opacity-90 group-hover:opacity-100" />
+                </Link>
+                <button class="md:hidden text-slate-400 hover:text-white transition-colors" @click="closeMobileMenu">
+                    <XIcon class="w-5 h-5" />
+                </button>
+            </div>
 
-            <!-- MINIMALIST HEADER (DARK THEME) -->
-            <header class="h-16 flex items-center justify-between px-6 bg-[#0f172a] border-b border-slate-800 z-50 shadow-md relative">
-                <div class="flex items-center space-x-8">
-                    <!-- Brand Logo -->
-                    <Link :href="route('dashboard')" class="flex items-center space-x-2 group">
-                        <img src="/logo-white.png" alt="Jrspice" class="h-10 w-auto object-contain transition-opacity duration-300 opacity-90 group-hover:opacity-100" />
-                    </Link>
-                    <slot name="header">
-                        <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Analytics Platform') }}</h2>
-                    </slot>
-
-                    <!-- Navigation Links -->
-
-                </div>
-
-                <!-- Right Side Actions -->
-                <div class="flex items-center space-x-5">
-                    <div class="flex items-center space-x-4 pl-4 border-l border-slate-800 relative z-50">
-                        <LanguageSwitcher />
-
-                        <Dropdown align="right" width="48">
-                            <template #trigger>
-                                <button class="flex items-center space-x-2 p-1 rounded-lg hover:bg-slate-800 transition-colors focus:outline-none">
-                                    <div class="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-blue-400">
-                                        {{ user?.name?.charAt(0) }}
-                                    </div>
-                                    <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </button>
-                            </template>
-                            <template #content>
-                                <div class="px-4 py-3 border-b border-slate-100">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $t('Account') }}</p>
-                                    <p class="text-sm font-medium text-slate-800 truncate">{{ user?.name }}</p>
-                                </div>
-                                    <div v-if="user?.is_master" class="border-b border-slate-100 block">
-                                        <DropdownLink :href="route('admin.users.index')" class="text-sm">
-                                            {{ $t('Users') }}
-                                        </DropdownLink>
-                                        <DropdownLink :href="route('admin.settings.index')" class="text-sm">
-                                            {{ $t('Settings') }}
-                                        </DropdownLink>
-                                    </div>
-                                    <div v-if="!user?.is_master" class="border-b border-slate-100 block">
-                                        <DropdownLink :href="route('profile.edit')" class="text-sm">
-                                            {{ $t('My Profile') }}
-                                        </DropdownLink>
-                                    </div>
-                                <DropdownLink :href="route('logout')" method="post" as="button" class="text-sm text-red-600 hover:bg-red-50"> {{ $t('Log Out') }} </DropdownLink>
-                            </template>
-                        </Dropdown>
+            <div class="flex-1 overflow-y-auto p-5 space-y-4 sidebar-scrollbar">
+                
+                <!-- DASHBOARDS PAGES -->
+                <div v-if="$page.props.dashboardPages?.length > 0">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center gap-2">
+                        <span class="w-1 h-1 rounded-full bg-blue-500"></span>
+                        {{ $t('Dashboards') }}
+                    </p>
+                    <div class="space-y-1">
+                        <Link v-for="pg in $page.props.dashboardPages" :key="pg.id" :href="route('dashboard.page', { slug: pg.slug })"
+                            :class="['flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative group', 
+                                     route().current('dashboard.page', { slug: pg.slug }) 
+                                     ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' 
+                                     : 'text-slate-400 hover:bg-white/5 hover:text-white']">
+                            <ChartLineIcon class="w-4 h-4 transition-colors" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-300'" />
+                            {{ pg.title }}
+                            <div v-if="route().current('dashboard.page', { slug: pg.slug })" class="absolute left-[-20px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-500 rounded-r-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                        </Link>
                     </div>
                 </div>
-            </header>
-            <!-- SUBMENU DESKTOP (ONLY ON INTERNAL PAGES FOR MASTERS) -->
-            <nav v-if="!route().current('dashboard') && user?.is_master" class="hidden md:block bg-white border-b border-slate-200 shadow-sm relative z-40">
-                <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center space-x-1">
-                    <template v-for="item in navItems" :key="item.route">
-                        <Link
-                            :href="route(item.route)"
-                            class="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 flex items-center group"
-                            :class="item.active
-                                ? 'text-blue-600 bg-blue-50/50'
-                                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'"
-                        >
-                            <div class="w-1.5 h-1.5 rounded-full mr-2 transition-all opacity-0 group-hover:opacity-100"
-                                 :class="item.active ? 'bg-blue-500 opacity-100' : 'bg-slate-300'"></div>
-                            {{ $t(item.name) }}
-                        </Link>
-                    </template>
-                </div>
-            </nav>
 
-            <!-- MAIN VIEWPORT -->
-            <main class="flex-1 overflow-hidden relative">
-                <!-- Content gets a wrapper now for consistent padding -->
-                <div class="w-full h-full bg-slate-50 overflow-y-auto relative flex flex-col">
-                    <div class="flex-1" :class="{ 'md:pb-0': true }">
+                <!-- DYNAMIC FILTERS SLOT -->
+                <div class="bg-slate-900/40 rounded-3xl p-1">
+                    <slot name="sidebar-filters"></slot>
+                </div>
+
+                <!-- ADMINISTRATIVO -->
+                <div v-if="user?.is_master" class="mt-8 border-t border-slate-800 pt-8">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center gap-2">
+                         <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+                         {{ $t('Administração') }}
+                    </p>
+                    <div class="space-y-1">
+                        <template v-for="item in navItems" :key="item.route">
+                            <Link :href="route(item.route)" v-if="(!item.masterOnly || user?.is_master)"
+                                :class="['flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all relative group', 
+                                         item.active 
+                                         ? 'bg-white/5 text-blue-400 border border-white/5' 
+                                         : 'text-slate-400 hover:bg-white/5 hover:text-white']">
+                                <component :is="item.icon" class="w-4 h-4 transition-colors" :class="item.active ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-300'" />
+                                {{ $t(item.name) }}
+                            </Link>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERFIL DO USUÁRIO NA SIDEBAR (NOVA SEÇÃO) -->
+            <div class="p-5 border-t border-slate-800 bg-slate-900/30">
+                <div class="flex items-center justify-between group">
+                    <Link :href="route('profile.edit')" class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="h-10 w-10 shrink-0 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-sm font-black text-blue-500 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                            {{ user?.name?.charAt(0) }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] leading-none mb-1.5">{{ $t('Meu Perfil') }}</p>
+                            <p class="text-xs font-bold text-white truncate leading-none group-hover:text-blue-400 transition-colors">{{ user?.name }}</p>
+                        </div>
+                    </Link>
+                    <Link :href="route('logout')" method="post" as="button" class="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all" :title="$t('Sair')">
+                        <LogOutIcon class="w-5 h-5" />
+                    </Link>
+                </div>
+            </div>
+        </aside>
+
+        <!-- BACKDROP MOBILE -->
+        <div v-if="isMobileMenuOpen" class="fixed inset-0 bg-slate-900/70 z-[50] md:hidden" @click="closeMobileMenu"></div>
+
+        <!-- 🚀 MAIN STAGE -->
+        <div class="flex-1 flex flex-col h-full min-w-0 bg-[#f8fafc]">
+
+            <!-- 📱 TOPBAR MOBILE -->
+            <header class="md:hidden bg-[#0f172a] h-16 flex items-center justify-between px-4 border-b border-slate-800/50 sticky top-0 z-[45] shadow-lg shrink-0">
+                <button @click="isMobileMenuOpen = true" class="p-2.5 text-slate-400 hover:text-white transition-all active:scale-90">
+                    <MenuIcon class="w-6 h-6" />
+                </button>
+                <Link :href="route('dashboard')" class="flex-1 flex justify-center pr-10">
+                    <img src="/logo-white.png" alt="Jrspice" class="h-7 w-auto object-contain" />
+                </Link>
+            </header>
+
+            <!-- VIEWPORT CONTENT -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto relative bg-[#f8fafc]">
+                <div class="min-h-full flex flex-col">
+                    <div class="flex-1">
                         <slot />
                     </div>
 
                     <!-- Discrete Footer -->
-                    <footer class="py-6 border-t border-slate-200/50 mt-auto bg-white/30 backdrop-blur-sm">
+                    <footer class="py-6 border-t border-slate-200 mt-auto bg-slate-50">
                         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {{ $t('Copyright • 2026 All rights reserved') }}
@@ -164,81 +177,31 @@ const openReportsNav = () => {
             </main>
         </div>
 
-        <!-- Global Legal Modal -->
-        <LegalModal
-            :show="showLegalModal"
-            :type="legalModalType"
-            :content="legalContent"
-            @close="showLegalModal = false"
-        />
 
-        <!-- Global Toast Container -->
+        <LegalModal :show="showLegalModal" :type="legalModalType" :content="legalContent" @close="showLegalModal = false" />
         <ToastContainer />
-
-        <!-- 📱 MOBILE BOTTOM NAV (App-style) -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 z-[999] bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-            <div class="flex items-stretch justify-around px-2 py-1 safe-area-bottom">
-                <!-- Nav items normais (masters e não-masters) -->
-                <template v-for="item in navItems" :key="'mobile-nav-' + item.route">
-                    <Link
-                        v-if="(!item.masterOnly || user?.is_master)"
-                        :href="route(item.route)"
-                        class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
-                        :class="item.active
-                            ? 'text-blue-600'
-                            : 'text-slate-400 active:text-slate-600'"
-                    >
-                        <div
-                            class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 transition-all duration-200"
-                            :class="item.active
-                                ? 'bg-blue-50 scale-105'
-                                : 'group-active:bg-slate-50'"
-                        >
-                            <component :is="item.icon" class="w-5 h-5 transition-colors" />
-                        </div>
-                        <span
-                            class="text-[9px] font-black uppercase tracking-wider leading-none transition-colors"
-                            :class="item.active ? 'text-blue-600' : 'text-slate-400'"
-                        >
-                            {{ $t(item.name) }}
-                        </span>
-                    </Link>
-                </template>
-
-                <!-- Botões extras apenas para não-masters -->
-                <template v-if="!user?.is_master">
-                    <!-- Relatórios: abre o dropdown de navegação -->
-                    <button
-                        @click="openReportsNav"
-                        class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group text-slate-400 active:text-blue-600"
-                    >
-                        <div class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 group-active:bg-blue-50 transition-all duration-200">
-                            <BarChart3 class="w-5 h-5" />
-                        </div>
-                        <span class="text-[9px] font-black uppercase tracking-wider leading-none">{{ $t('Reports') }}</span>
-                    </button>
-
-                    <!-- Perfil -->
-                    <Link
-                        :href="route('profile.edit')"
-                        class="flex flex-col items-center justify-center flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
-                        :class="route().current('profile.*') ? 'text-blue-600' : 'text-slate-400 active:text-slate-600'"
-                    >
-                        <div
-                            class="flex items-center justify-center w-10 h-10 rounded-xl mb-0.5 transition-all duration-200"
-                            :class="route().current('profile.*') ? 'bg-blue-50 scale-105' : 'group-active:bg-slate-50'"
-                        >
-                            <UserIcon class="w-5 h-5" />
-                        </div>
-                        <span
-                            class="text-[9px] font-black uppercase tracking-wider leading-none"
-                            :class="route().current('profile.*') ? 'text-blue-600' : 'text-slate-400'"
-                        >{{ $t('Profile') }}</span>
-                    </Link>
-                </template>
-            </div>
-        </nav>
     </div>
 </template>
 
+<style>
+/* Sidebar minimalist scrollbar */
+.sidebar-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e293b; /* slate-800 */
+    border-radius: 10px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #334155; /* slate-700 */
+}
 
+/* Firefox support */
+.sidebar-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #1e293b transparent;
+}
+</style>

@@ -39,7 +39,7 @@ const openLegal = (type) => {
             <div class="absolute bottom-0 left-0 -mb-24 -ml-24 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
             <!-- Texture Overlay -->
-            <div class="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0"></div>
+            <div class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-0" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E')"></div>
 
             <!-- Content -->
             <div class="relative z-10 max-w-4xl w-full">
@@ -63,7 +63,7 @@ const openLegal = (type) => {
                 <div class="w-12 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto mb-6 rounded-full"></div>
 
                 <p class="text-slate-400 text-lg font-light leading-relaxed max-w-xl mx-auto">
-                    {{ $t('This report presents price history, information and analysis related to our product portfolio') }}
+                    {{ $t('This system presents price history, information and analysis related to our product portfolio') }}
                 </p>
             </div>
         </div>
@@ -72,9 +72,9 @@ const openLegal = (type) => {
         <div class="flex-1 lg:w-[40%] bg-white h-screen flex flex-col relative overflow-y-auto">
 
             <!-- Language Switcher (Fixed Position) -->
-            <div class="absolute top-8 right-8 z-50">
+            <!-- <div class="absolute top-8 right-8 z-50">
                 <LanguageSwitcher />
-            </div>
+            </div> -->
 
             <!-- 📱 MOBILE LOGO (Visible only on < lg screens) -->
             <div class="flex lg:hidden flex-col items-center pt-10 pb-4 px-6 flex-shrink-0">

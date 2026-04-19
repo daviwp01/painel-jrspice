@@ -46,7 +46,7 @@ const submit = () => {
                     <ShieldCheck class="w-6 h-6" />
                 </div>
                 <div>
-                    <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ $t('Legal & Privacy') }}</h3>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight">{{ $t('Legal & Privacy') }}</h3>
                     <p class="text-xs text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">{{ $t('Manage platform policies and conditions') }}</p>
                 </div>
             </div>
@@ -59,7 +59,7 @@ const submit = () => {
                     <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
                         <ShieldCheck class="w-4 h-4" />
                     </div>
-                    <label class="text-sm font-black text-slate-700 uppercase tracking-widest">
+                    <label class="text-sm font-bold text-slate-700 uppercase tracking-widest">
                         {{ $t('Privacy Policy') }}
                     </label>
                 </div>
@@ -75,7 +75,7 @@ const submit = () => {
                     <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
                         <ScrollText class="w-4 h-4" />
                     </div>
-                    <label class="text-sm font-black text-slate-700 uppercase tracking-widest">
+                    <label class="text-sm font-bold text-slate-700 uppercase tracking-widest">
                         {{ $t('Terms of Use') }}
                     </label>
                 </div>
@@ -90,7 +90,7 @@ const submit = () => {
                 <button
                     type="submit"
                     :disabled="form.processing || !form.isDirty"
-                    class="inline-flex items-center px-10 py-4 bg-indigo-600 text-white text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-indigo-100 disabled:opacity-30 disabled:grayscale"
+                    class="inline-flex items-center px-10 py-4 bg-indigo-600 text-white text-xs font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-indigo-100 disabled:opacity-30 disabled:grayscale"
                 >
                     <Loader2 v-if="form.processing" class="w-4 h-4 mr-2 animate-spin" />
                     <Save v-else class="w-4 h-4 mr-2" />

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReportUpdatedNotification;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\DataImport;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -98,14 +103,11 @@ class AdminController extends Controller
      */
     public function usersCreate()
     {
-        $desktopPages = \App\Models\Setting::get('desktop_user_pages', []);
-        $mobilePages = \App\Models\Setting::get('mobile_user_pages', []);
-        $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
+        $allPages = \App\Models\DashboardPage::where('is_active', true)->orderBy('order')->get();
 
         return \Inertia\Inertia::render('Admin/Users/Create', [
-            'default_pages' => array_values($mergedPages),
-            'desktop_pages' => array_values($desktopPages),
-            'mobile_pages' => array_values($mobilePages)
+            'available_pages' => $allPages,
+            'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', [])
         ]);
     }
 
@@ -121,6 +123,7 @@ class AdminController extends Controller
         return \Inertia\Inertia::render('Admin/Settings/Index', [
             'settings' => $settings,
             'users' => User::where('is_active', true)->select('id', 'name', 'email', 'is_master')->get(),
+            'available_pages' => \App\Models\DashboardPage::where('is_active', true)->orderBy('order')->get(),
             'queue_stats' => [
                 'pending' => \DB::table('jobs')->count(),
                 'failed' => \DB::table('failed_jobs')->count(),
@@ -153,7 +156,7 @@ class AdminController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
             'is_master' => ['boolean'],
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
@@ -186,15 +189,12 @@ class AdminController extends Controller
      */
     public function usersEdit(User $user)
     {
-        $desktopPages = \App\Models\Setting::get('desktop_user_pages', []);
-        $mobilePages = \App\Models\Setting::get('mobile_user_pages', []);
-        $mergedPages = array_unique(array_merge($desktopPages, $mobilePages));
+        $allPages = \App\Models\DashboardPage::where('is_active', true)->orderBy('order')->get();
 
         return \Inertia\Inertia::render('Admin/Users/Edit', [
             'user' => $user,
-            'default_pages' => array_values($mergedPages),
-            'desktop_pages' => array_values($desktopPages),
-            'mobile_pages' => array_values($mobilePages)
+            'available_pages' => $allPages,
+            'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', [])
         ]);
     }
 
@@ -214,8 +214,9 @@ class AdminController extends Controller
         ];
 
         if ($request->filled('new_password')) {
-            $rules['new_password'] = ['required', 'confirmed', Rules\Password::defaults()];
+            $rules['new_password'] = ['confirmed', \Illuminate\Validation\Rules\Password::min(8)];
         }
+
 
         $request->validate($rules, [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
@@ -254,17 +255,7 @@ class AdminController extends Controller
         return redirect()->route('admin.users.index')->with('success', __('User updated successfully.'));
     }
 
-    /**
-     * Get Power BI Pages (API)
-     */
-    public function getPowerBiPages(\App\Services\PowerBiService $powerBiService)
-    {
-        try {
-            return response()->json($powerBiService->getReportPages());
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
+
     /**
      * Toggle user active status.
      */

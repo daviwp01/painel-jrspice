@@ -3,18 +3,19 @@ import { ref } from 'vue';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import UserActivationSetting from './Partials/UserActivationSetting.vue';
-import DesktopLinksSetting from './Partials/DesktopLinksSetting.vue';
-import MobileLinksSetting from './Partials/MobileLinksSetting.vue';
+import DefaultReportAccessSetting from './Partials/DefaultReportAccessSetting.vue';
 import NotifyUpdateSetting from './Partials/NotifyUpdateSetting.vue';
 import SMTPSettings from './Partials/SMTPSettings.vue';
 import EmailTemplateSettings from './Partials/EmailTemplateSettings.vue';
 import LegalSettings from './Partials/LegalSettings.vue';
+import ContactSettings from './Partials/ContactSettings.vue';
 import QueueStatusMonitor from './Partials/QueueStatusMonitor.vue';
 import { Settings as SettingsIcon, Bell, Server, Shield } from 'lucide-vue-next';
 
 const props = defineProps({
     settings: Object,
     users: Array,
+    available_pages: Array,
     queue_stats: Object
 });
 
@@ -31,18 +32,12 @@ const tabs = [
     <Head :title="$t('Settings')" />
 
     <DashboardLayout>
-        <div class="py-12 bg-[#f8fafc] min-h-screen">
-            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-                <!-- Header -->
-                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-                    <div>
-                        <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center">
-                            <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
-                            {{ $t('Settings') }}
-                        </h1>
-                        <p class="mt-3 text-slate-500 font-medium text-lg">{{ $t('Configure and manage system parameters') }}</p>
-                    </div>
-                </div>
+        <template #header>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Settings') }}</h2>
+        </template>
+
+        <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
+
 
                 <!-- Tabs Navigation -->
                 <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar mb-10">
@@ -53,11 +48,11 @@ const tabs = [
                             @click="activeTab = tab.id"
                             class="flex-1 sm:flex-none flex items-center justify-center space-x-1.5 sm:space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-300 group whitespace-nowrap"
                             :class="activeTab === tab.id
-                                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100'
+                                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-100'
                                 : 'text-slate-500 hover:text-slate-800'"
                         >
                             <component :is="tab.icon" class="w-4 h-4" />
-                            <span class="text-xs sm:text-sm font-black uppercase tracking-wider sm:tracking-widest">{{ $t(tab.name) }}</span>
+                            <span class="text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest">{{ $t(tab.name) }}</span>
                         </button>
                     </div>
                 </div>
@@ -68,7 +63,7 @@ const tabs = [
                     <div v-if="activeTab === 'general'" class="space-y-12">
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Security & Approval') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Security & Approval') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <UserActivationSetting
@@ -78,21 +73,12 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Desktop Links') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Relatórios Permitidos (Padrão)</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
-                            <DesktopLinksSetting
-                                :initial-desktop-pages="settings.desktop_user_pages || []"
-                            />
-                        </div>
-
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Mobile Links') }}</span>
-                                <div class="h-px flex-1 bg-slate-200"></div>
-                            </div>
-                            <MobileLinksSetting
-                                :initial-mobile-pages="settings.mobile_user_pages || []"
+                            <DefaultReportAccessSetting
+                                :initial-pages="settings.default_allowed_pages || []"
+                                :available-pages="available_pages"
                             />
                         </div>
                     </div>
@@ -101,7 +87,7 @@ const tabs = [
                     <div v-if="activeTab === 'communication'" class="space-y-12">
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Update Alerts') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Update Alerts') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <NotifyUpdateSetting :users="users" />
@@ -109,7 +95,15 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Email Template Customization') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Dados de Atendimento & Redes</span>
+                                <div class="h-px flex-1 bg-slate-200"></div>
+                            </div>
+                            <ContactSettings :settings="settings" />
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-2 px-1">
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Email Template Customization') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <EmailTemplateSettings :settings="settings" />
@@ -117,7 +111,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('Legal & Privacy') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Legal & Privacy') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <LegalSettings :settings="settings" />
@@ -130,14 +124,13 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $t('SMTP Server') }}</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('SMTP Server') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <SMTPSettings :settings="settings" />
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </DashboardLayout>
 </template>

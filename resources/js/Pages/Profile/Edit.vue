@@ -19,16 +19,19 @@ defineProps({
     <Head :title="$t('My Profile')" />
 
     <DashboardLayout>
-        <div class="py-12 bg-[#f8fafc] min-h-screen">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <template #header>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('My Profile') }}</h2>
+        </template>
+
+        <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
 
                 <!-- Page Header -->
-                <div class="mb-10">
-                    <h1 class="text-4xl font-black text-slate-900 tracking-tight flex items-center">
-                        <span class="bg-indigo-600 w-2 h-10 rounded-full mr-4"></span>
+                <div class="mb-8">
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center uppercase">
+                        <span class="bg-blue-600 w-1.5 h-7 rounded-full mr-3"></span>
                         {{ $t('My Profile') }}
                     </h1>
-                    <p class="mt-3 text-slate-500 font-medium text-lg">
+                    <p class="mt-1 text-slate-500 font-medium text-sm">
                         {{ $t('Manage your personal settings and security preferences.') }}
                     </p>
                 </div>
@@ -53,7 +56,6 @@ defineProps({
                     </div>
                     <UpdatePasswordForm />
                 </div>
-            </div>
         </div>
     </DashboardLayout>
 </template>

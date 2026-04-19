@@ -1,7 +1,8 @@
 services:
-  app:
+  # PHP Application
+  dev_app:
     build: ./docker/php
-    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_app
+    container_name: dev_jrspice_app
     restart: unless-stopped
     user: "1000:1000"
     working_dir: /var/www/html
@@ -9,69 +10,75 @@ services:
       - ./:/var/www/html
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     depends_on:
-      - db
+      - dev_db
     networks:
-      - appnet
+      - dev_appnet
       - nginx-proxy
-    mem_limit: 256M
+    mem_limit: 1G
 
-  worker:
+  # Queue Worker
+  dev_worker:
     build: ./docker/php
-    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_worker
+    container_name: dev_jrspice_worker
     restart: unless-stopped
     user: "1000:1000"
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    command: [ "sh", "-c", "(while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done) & php artisan queue:work --timeout=60 --tries=3 --max-jobs=100 --max-time=3600 --memory=128" ]
+    command: [ "sh", "-c", "php artisan queue:work --timeout=3600 --tries=3 & php artisan schedule:work" ]
     depends_on:
-      - app
-      - db
+      - dev_app
+      - dev_db
     networks:
-      - appnet
-    mem_limit: 256M
+      - dev_appnet
+    mem_limit: 512M
 
-  web:
+  # Nginx Web Server
+  dev_web:
     image: nginx:stable-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_web
+    container_name: dev_jrspice_web
     restart: unless-stopped
     depends_on:
-      - app
+      - dev_app
     volumes:
       - ./:/var/www/html:delegated
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     environment:
-      - VIRTUAL_HOST=painel.jrspice.com
-      - LETSENCRYPT_HOST=painel.jrspice.com
+      - VIRTUAL_HOST=dev.jrspice.com
+      - LETSENCRYPT_HOST=dev.jrspice.com
       - LETSENCRYPT_EMAIL=davi.wordpress@gmail.com
     expose:
       - "80"
     networks:
-      - appnet
+      - dev_appnet
       - nginx-proxy
-    mem_limit: 64M
+    mem_limit: 128M
 
-  db:
+  # MariaDB Database - APONTANDO PARA O BANCO COM DADOS
+  dev_db:
     image: mariadb:10.11
-    container_name: ${COMPOSE_PROJECT_NAME:-laravel}_db
+    container_name: dev_jrspice_db
     restart: unless-stopped
-    command: [ "mysqld", "--innodb-buffer-pool-size=128M", "--performance-schema=OFF", "--max-connections=50" ]
+    command: [ "mysqld", "--innodb-buffer-pool-size=256M", "--performance-schema=OFF", "--max-connections=100" ]
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_USER: ${DB_USERNAME:-user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_DATABASE: dev-jrspice-power-bi
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - dbdata:/var/lib/mysql
+      # AQUI ESTÁ O SEU BANCO ORIGINAL:
+      - dev-jrspice_dbdata_dev:/var/lib/mysql
     networks:
-      - appnet
-    mem_limit: 384M
+      - dev_appnet
+    mem_limit: 512M
 
 networks:
-  appnet:
+  dev_appnet:
     external: true
   nginx-proxy:
     external: true
 
 volumes:
-  dbdata:
+  # DECLARANDO O VOLUME COMO EXTERNO PARA NÃO RESETAR
+  dev-jrspice_dbdata_dev:
+    external: true
