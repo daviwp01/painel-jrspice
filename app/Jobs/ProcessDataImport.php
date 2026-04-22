@@ -83,21 +83,24 @@ class ProcessDataImport implements ShouldQueue
             $headers = array_map(function($h) { return trim(mb_strtolower($h)); }, $rawHeaders);
             
             $colMap = [
-                'product'  => array_search('produto', $headers),
-                'safra'    => array_search('safra', $headers) ?: array_search('harvest', $headers),
-                'country'  => array_search('país', $headers) ?: array_search('pais', $headers),
-                'supplier' => array_search('fornecedor', $headers),
-                'price'    => array_search('preço', $headers) ?: (array_search('preco', $headers) ?: array_search('valor', $headers)),
+                'product'  => null,
+                'safra'    => null,
+                'country'  => null,
+                'supplier' => null,
+                'price'    => null,
                 'date'     => null
             ];
 
-            // Busca flexível pela coluna de Data
             foreach ($headers as $key => $val) {
-                if (str_contains($val, 'data')) {
-                    $colMap['date'] = $key;
-                    break;
-                }
+                if (str_contains($val, 'produto') || str_contains($val, 'product')) $colMap['product'] = $key;
+                if (str_contains($val, 'safra') || str_contains($val, 'harvest') || str_contains($val, 'mes')) $colMap['safra'] = $key;
+                if (str_contains($val, 'pais') || str_contains($val, 'país') || str_contains($val, 'country') || str_contains($val, 'origem')) $colMap['country'] = $key;
+                if (str_contains($val, 'fornecedor') || str_contains($val, 'supplier')) $colMap['supplier'] = $key;
+                if (str_contains($val, 'preco') || str_contains($val, 'preço') || str_contains($val, 'price') || str_contains($val, 'valor')) $colMap['price'] = $key;
+                if (str_contains($val, 'data') || str_contains($val, 'date')) $colMap['date'] = $key;
             }
+            
+            Log::info('Mapeamento de colunas detectado:', $colMap);
 
             $spreadsheetHeader->disconnectWorksheets();
             unset($spreadsheetHeader, $sheet, $rawHeaders, $headers);
@@ -143,16 +146,16 @@ class ProcessDataImport implements ShouldQueue
 
                     if (!$productName || !$countryName) continue;
 
-                    if (is_string($rawPrice)) {
-                        $rawPrice = preg_replace('/[^0-9,.]/', '', $rawPrice);
-                        if (str_contains($rawPrice, ',') && str_contains($rawPrice, '.')) {
-                            $rawPrice = str_replace('.', '', $rawPrice);
-                            $rawPrice = str_replace(',', '.', $rawPrice);
-                        } elseif (str_contains($rawPrice, ',')) {
-                            $rawPrice = str_replace(',', '.', $rawPrice);
-                        }
+                    $rawPrice = $row[$colMap['price'] ?? ''] ?? null;
+                    // Remove todos os tipos de espaços invisíveis (incluindo non-breaking space do Excel)
+                    $cleanPrice = preg_replace('/[\p{Z}\s]/u', '', (string)$rawPrice);
+                    $priceValue = ($cleanPrice !== '') ? floatval(str_replace(',', '.', str_replace('.', '', $cleanPrice))) : 0;
+                    
+                    // Validação Absoluta: Ignora se for nulo, vazio (mesmo com espaços invisíveis), zero ou negativo
+                    if ($rawPrice === null || $cleanPrice === '' || $priceValue <= 0) {
+                        Log::warning("IMPORT_BLOCKER_V4: Linha {$rowIndex} descartada. Motivo: Preço ausente ou zero. Produto: '{$productName}'");
+                        continue; 
                     }
-                    $priceValue = floatval($rawPrice);
 
                     // 1. País (Turbo)
                     if (!isset($countryCache[$countryName])) {

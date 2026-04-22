@@ -91,9 +91,16 @@ class DataImport implements OnEachRow, WithHeadingRow
                 $priceValue = str_replace(',', '.', $priceValue);
             }
         }
-        $priceValue = (float) $priceValue;
-
-        if (!$countryName || !$productName) return;
+        $rawPrice = $priceValue;
+        // Remove todos os tipos de espaços invisíveis (incluindo non-breaking space do Excel)
+        $cleanPrice = preg_replace('/[\p{Z}\s]/u', '', (string)$rawPrice);
+        $priceValue = ($cleanPrice !== '') ? floatval(str_replace(',', '.', str_replace('.', '', $cleanPrice))) : 0;
+        
+        // Validação Absoluta: Ignora se for nulo, vazio (mesmo com espaços invisíveis), zero ou negativo
+        if ($rawPrice === null || $cleanPrice === '' || $priceValue <= 0) {
+            \Illuminate\Support\Facades\Log::warning("Linha ignorada no DataImport síncrono: Produto '{$productName}' está sem preço ou com valor zero.");
+            return;
+        }
 
         // 1. Pais
         $country = Country::firstOrCreate(['name' => trim($countryName)]);

@@ -17,7 +17,20 @@ const props = defineProps({
 const priceForm = useForm({ id: null, product_id: '', supplier_id: '', date: '', price: '' });
 const editingPrice = ref(false);
 const isConfirmModalOpen = ref(false);
+const isBulkConfirmModalOpen = ref(false);
 const priceToDelete = ref(null);
+
+const clearEmptyPrices = () => {
+    isBulkConfirmModalOpen.value = true;
+};
+
+const confirmClearEmptyPrices = () => {
+    router.post(route('admin.data.prices.clear-empty'), {}, {
+        onSuccess: () => {
+            isBulkConfirmModalOpen.value = false;
+        }
+    });
+};
 
 const submitPrice = () => {
     if (editingPrice.value) {
@@ -151,9 +164,18 @@ const changePage = (url) => {
                     <!-- Header Tool Bar -->
                     <div class="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Histórico de Preços</p>
-                        <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                            {{ prices.total }} registros encontrados
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <button 
+                                @click="clearEmptyPrices"
+                                class="text-[9px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors flex items-center gap-1.5 px-3 py-1 bg-red-50/50 hover:bg-red-50 rounded-full border border-red-100/50"
+                                title="Limpar registros com preço zero"
+                            >
+                                <TrashIcon class="w-2.5 h-2.5" /> Limpar Sem Preço
+                            </button>
+                            <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                                {{ prices.total }} registros encontrados
+                            </span>
+                        </div>
                     </div>
                     <div class="relative">
                          <table class="w-full text-sm text-left text-slate-600">
@@ -215,6 +237,16 @@ const changePage = (url) => {
             confirm-text="Excluir Registro"
             @close="isConfirmModalOpen = false"
             @confirm="confirmDeletePrice"
+        />
+
+        <ConfirmationModal
+            :show="isBulkConfirmModalOpen"
+            title="Limpar Registros Sem Preço"
+            message="Tem certeza que deseja remover TODOS os registros que possuem preço igual a zero ou nulo? Esta ação limpará o banco de dados de registros incompletos e não pode ser desfeita."
+            confirm-text="Limpar Registros"
+            variant="danger"
+            @close="isBulkConfirmModalOpen = false"
+            @confirm="confirmClearEmptyPrices"
         />
     </div>
 </template>

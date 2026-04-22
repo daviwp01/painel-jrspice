@@ -71,6 +71,7 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
 
     Route::post('/data/prices', [DataController::class, 'storePrice'])->name('admin.data.prices.store');
     Route::post('/data/prices/truncate', [DataController::class, 'truncatePrices'])->name('admin.data.prices.truncate');
+    Route::post('/data/prices/clear-empty', [DataController::class, 'deleteEmptyPrices'])->name('admin.data.prices.clear-empty');
     Route::put('/data/prices/{price}', [DataController::class, 'updatePrice'])->name('admin.data.prices.update');
     Route::delete('/data/prices/{price}', [DataController::class, 'destroyPrice'])->name('admin.data.prices.destroy');
 

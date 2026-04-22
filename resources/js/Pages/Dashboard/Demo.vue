@@ -418,17 +418,10 @@ const chartHeight = ref(450);
 const zoomIn = () => { chartHeight.value += 100; };
 const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; };
 
+// O modal agora só será aberto através de interações manuais (filtros, cliques no gráfico, etc)
 onMounted(() => {
-    // Se o usuário tentar acessar via URL algo que não é o padrão, o servidor já forçou os dados corretos.
-    // Apenas mostramos o modal para avisar que ele não tem essa permissão.
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlCountryId = urlParams.get('country_id');
-    const urlProductId = urlParams.get('product_id');
-
-    if ((urlCountryId && urlCountryId != demoCountryId.value) || 
-        (urlProductId && !demoProductIds.value.includes(parseInt(urlProductId)))) {
-        openUpgradeModal({ is_locked: true, lock_message: 'Para visualizar detalhes por produto completo, fale conosco.' });
-    }
+    // Apenas mantemos a observação de redimensionamento aqui se necessário, 
+    // ou deixamos vazio se o comportamento de URL não deve disparar o modal.
 });
 </script>
 

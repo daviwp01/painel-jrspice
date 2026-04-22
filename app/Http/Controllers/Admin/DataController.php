@@ -210,6 +210,12 @@ class DataController extends Controller
         return redirect()->back()->with('success', 'Histórico de preços removido com sucesso.');
     }
 
+    public function deleteEmptyPrices()
+    {
+        $deletedCount = ProductPrice::where('price', '<=', 0)->delete();
+        return redirect()->back()->with('success', "{$deletedCount} registros sem preço foram removidos.");
+    }
+
     public function storeSupplier(Request $request)
     {
         $validated = $request->validate([
