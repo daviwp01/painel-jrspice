@@ -99,7 +99,8 @@ const openLegal = (type) => {
             <div class="py-8 px-12 flex-shrink-0 border-t border-slate-50 bg-white">
                 <div class="flex flex-col sm:flex-row justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest gap-4">
                     <span class="hover:text-slate-600 transition-colors cursor-default">{{ $t('Copyright • 2026 All rights reserved') }}</span>
-                    <div class="flex space-x-8">
+                    <a href="https://daviwp.dev" target="_blank" rel="noopener" title="Visite daviwp.dev - Web Designer & Developer" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase;">by daviwp._</a>
+                    <!-- <div class="flex space-x-8">
                         <button
                             @click="openLegal('privacy')"
                             class="hover:text-blue-600 transition-colors uppercase"
@@ -112,7 +113,7 @@ const openLegal = (type) => {
                         >
                             {{ $t('TERMS') }}
                         </button>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

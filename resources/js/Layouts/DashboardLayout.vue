@@ -167,10 +167,11 @@ const navItems = computed(() => [
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {{ $t('Copyright • 2026 All rights reserved') }}
                             </p>
-                            <div class="flex items-center space-x-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <a href="https://daviwp.dev" target="_blank" rel="noopener" title="Visite daviwp.dev - Web Designer & Developer" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase; font-weight: 900; letter-spacing: 0.1em;">by daviwp._</a>
+                            <!-- <div class="flex items-center space-x-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 <button @click="openLegal('privacy')" class="hover:text-blue-600 transition-colors uppercase">{{ $t('PRIVACY') }}</button>
                                 <button @click="openLegal('terms')" class="hover:text-blue-600 transition-colors uppercase">{{ $t('TERMS') }}</button>
-                            </div>
+                            </div> -->
                         </div>
                     </footer>
                 </div>
