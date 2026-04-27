@@ -483,10 +483,9 @@ class DataController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Modelo de Importação');
 
-        // Cabeçalhos Oficiais JRSPICE
+        // Cabeçalhos Oficiais JRSPICE (Apenas Obrigatórios)
         $headers = [
             'PRODUTO',
-            'SAFRA',
             'PAÍS',
             'FORNECEDOR',
             'DATA REGISTRO',
@@ -505,9 +504,6 @@ class DataController extends Controller
             $sheet->getStyle($column . '1')->getFont()->setBold(true);
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
-
-        // Criando uma linha de exemplo invisível/fictícia (opcional)
-        // $sheet->setCellValue('A2', 'Exemplo de Produto');
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         

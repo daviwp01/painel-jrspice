@@ -41,14 +41,21 @@ class DataBackupExport implements FromQuery, WithHeadings, WithMapping
     {
         $date = \Carbon\Carbon::parse($price->date);
         
+        $monthsMap = [
+            1 => 'JANEIRO', 2 => 'FEVEREIRO', 3 => 'MARÇO', 4 => 'ABRIL',
+            5 => 'MAIO', 6 => 'JUNHO', 7 => 'JULHO', 8 => 'AGOSTO',
+            9 => 'SETEMBRO', 10 => 'OUTUBRO', 11 => 'NOVEMBRO', 12 => 'DEZEMBRO'
+        ];
+
         $harvest = $price->product->harvest_month;
+        
+        // Se a safra estiver em formato YYYY / MM, converte o mês para nome
         if ($harvest) {
-            // Normaliza a saída para o formato "YYYY / MM" no backup
             $clean = preg_replace('/\s+/', '', $harvest);
             if (preg_match('/^(\d{1,2})[\/-](\d{4})$/', $clean, $matches)) {
-                $harvest = $matches[2] . ' / ' . str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+                $harvest = $monthsMap[(int)$matches[1]] ?? $harvest;
             } elseif (preg_match('/^(\d{4})[\/-](\d{1,2})$/', $clean, $matches)) {
-                $harvest = $matches[1] . ' / ' . str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+                $harvest = $monthsMap[(int)$matches[2]] ?? $harvest;
             }
         }
         

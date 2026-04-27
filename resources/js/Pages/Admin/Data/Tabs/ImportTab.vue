@@ -253,7 +253,14 @@ const truncatePrices = () => {
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 shrink-0"></span> 
-                                <span class="text-slate-600 leading-relaxed">O sistema aceita a coluna <b class="text-slate-900 font-bold">Safra</b> como opcional. Se estiver presente, os dados serão importados; se não, serão ignorados.</span>
+                                <span class="text-slate-600 leading-relaxed text-xs">O sistema aceita a coluna <b class="text-slate-900 font-bold uppercase">Safra</b> como opcional. Se estiver presente, os dados serão importados; se não, serão mantidos os dados atuais.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span> 
+                                <div class="space-y-1">
+                                    <span class="text-slate-900 font-bold uppercase text-[10px] tracking-widest block">Dica de Formato:</span>
+                                    <span class="text-slate-600 leading-relaxed text-xs">Na coluna <b class="text-slate-800">Safra</b>, você pode usar o nome do mês por extenso (ex: <b class="text-blue-600">JULHO</b>).</span>
+                                </div>
                             </li>
                         </ul>
                         <div class="px-8 pb-8 pt-4">
