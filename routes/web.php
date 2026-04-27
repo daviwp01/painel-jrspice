@@ -68,6 +68,7 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::post('/data/products', [DataController::class, 'storeProduct'])->name('admin.data.products.store');
     Route::put('/data/products/{product}', [DataController::class, 'updateProduct'])->name('admin.data.products.update');
     Route::delete('/data/products/{product}', [DataController::class, 'destroyProduct'])->name('admin.data.products.destroy');
+    Route::post('/data/products/clear-harvests', [DataController::class, 'clearAllHarvests'])->name('admin.data.products.clear-harvests');
 
     Route::post('/data/prices', [DataController::class, 'storePrice'])->name('admin.data.prices.store');
     Route::post('/data/prices/truncate', [DataController::class, 'truncatePrices'])->name('admin.data.prices.truncate');

@@ -38,10 +38,14 @@ const props = defineProps({
     variant: {
         type: String,
         default: 'light' // 'light' or 'dark'
+    },
+    clearable: {
+        type: Boolean,
+        default: false
     }
 });
 
-const emit = defineEmits(['update:modelValue', 'change', 'locked-click']);
+const emit = defineEmits(['update:modelValue', 'change', 'locked-click', 'clear']);
 
 const isOpen = ref(false);
 const searchQuery = ref('');
@@ -137,22 +141,39 @@ const resolveFlagName = (option) => {
     }
     return val;
 };
+const clearOption = (e) => {
+    e.stopPropagation();
+    emit('update:modelValue', null);
+    emit('change', null);
+    emit('clear');
+    closeDropdown();
+};
 </script>
 
 <template>
     <div class="relative w-full" ref="dropdownRef">
         <!-- Label -->
-        <label 
-            v-if="label" 
-            @click="toggleDropdown"
-            class="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5 transition-colors cursor-pointer" 
-            :class="[
-                isOpen ? 'text-blue-500' : (variant === 'dark' ? 'text-slate-500' : 'text-slate-500')
-            ]"
-        >
-            <component :is="icon" class="w-3.5 h-3.5" v-if="icon" />
-            {{ label }}
-        </label>
+        <div v-if="label" class="flex items-center justify-between mb-1.5">
+            <label 
+                @click="toggleDropdown"
+                class="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer" 
+                :class="[
+                    isOpen ? 'text-blue-500' : (variant === 'dark' ? 'text-slate-500' : 'text-slate-500')
+                ]"
+            >
+                <component :is="icon" class="w-3.5 h-3.5" v-if="icon" />
+                {{ label }}
+            </label>
+            
+            <button 
+                v-if="clearable && modelValue" 
+                @click="clearOption"
+                type="button"
+                class="text-[9px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-tighter transition-colors"
+            >
+                Limpar
+            </button>
+        </div>
 
         <!-- Trigger -->
         <div 

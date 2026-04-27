@@ -254,24 +254,36 @@ class ProcessDataImport implements ShouldQueue
         $value = trim($value);
         
         $monthsMap = [
-            'janeiro' => '01', 'fevereiro' => '02', 'marco' => '03', 'março' => '03',
-            'abril' => '04', 'maio' => '05', 'junho' => '06', 'julho' => '07',
-            'agosto' => '08', 'setembro' => '09', 'outubro' => '10', 'novembro' => '11', 'dezembro' => '12'
+            '01' => 'JANEIRO', '02' => 'FEVEREIRO', '03' => 'MARÇO', '04' => 'ABRIL',
+            '05' => 'MAIO', '06' => 'JUNHO', '07' => 'JULHO', '08' => 'AGOSTO',
+            '09' => 'SETEMBRO', '10' => 'OUTUBRO', '11' => 'NOVEMBRO', '12' => 'DEZEMBRO',
+            'janeiro' => 'JANEIRO', 'fevereiro' => 'FEVEREIRO', 'marco' => 'MARÇO', 'março' => 'MARÇO',
+            'abril' => 'ABRIL', 'maio' => 'MAIO', 'junho' => 'JUNHO', 'julho' => 'JULHO',
+            'agosto' => 'AGOSTO', 'setembro' => 'SETEMBRO', 'outubro' => 'OUTUBRO', 'novembro' => 'NOVEMBRO', 'dezembro' => 'DEZEMBRO'
         ];
         
         $lowerValue = mb_strtolower($value);
+        
+        // Se já for o nome do mês, retorna ele em maiúsculo
         if (isset($monthsMap[$lowerValue])) {
-            return $monthsMap[$lowerValue] . '/' . date('Y');
+            return $monthsMap[$lowerValue];
         }
 
         $clean = preg_replace('/\s+/', '', $value);
+        
+        // Caso YYYY/MM ou YYYY-MM
         if (preg_match('/^(\d{4})[\/-](\d{1,2})$/', $clean, $matches)) {
-            return str_pad($matches[2], 2, '0', STR_PAD_LEFT) . '/' . $matches[1];
+            $m = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
+            return $monthsMap[$m] ?? $value;
         }
+        
+        // Caso MM/YYYY ou MM-YYYY
         if (preg_match('/^(\d{1,2})[\/-](\d{4})$/', $clean, $matches)) {
-            return str_pad($matches[1], 2, '0', STR_PAD_LEFT) . '/' . $matches[2];
+            $m = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
+            return $monthsMap[$m] ?? $value;
         }
-        return $value;
+
+        return mb_strtoupper($value);
     }
 
     private function transformDate($value)

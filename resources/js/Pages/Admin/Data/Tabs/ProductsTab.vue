@@ -1,7 +1,7 @@
 <script setup>
 import { useForm, router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
-import { PencilIcon, TrashIcon, XIcon, GlobeIcon, SearchIcon, Calendar, SlidersHorizontal, Check, Star, Info } from 'lucide-vue-next';
+import { PencilIcon, TrashIcon, XIcon, GlobeIcon, SearchIcon, Calendar, SlidersHorizontal, Check, Star, Info, Eraser } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -17,30 +17,20 @@ const props = defineProps({
 
 const CalendarIcon = Calendar;
 
-const generateHarvestOptions = () => {
-    const options = [
-        { id: '', name: 'Nenhuma Safra' }
-    ];
-    const monthNames = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-    
-    const currentYear = new Date().getFullYear();
-    // Gera opções para os últimos 5 anos e os próximos 2
-    for (let year = currentYear + 2; year >= currentYear - 5; year--) {
-        monthNames.forEach((month, index) => {
-            const monthVal = String(index + 1).padStart(2, '0');
-            options.push({
-                id: `${monthVal}/${year}`,
-                name: `${month} / ${year}`
-            });
-        });
-    }
-    return options;
-};
-
-const months = generateHarvestOptions();
+const months = [
+    { id: 'JANEIRO', name: 'JANEIRO' },
+    { id: 'FEVEREIRO', name: 'FEVEREIRO' },
+    { id: 'MARÇO', name: 'MARÇO' },
+    { id: 'ABRIL', name: 'ABRIL' },
+    { id: 'MAIO', name: 'MAIO' },
+    { id: 'JUNHO', name: 'JUNHO' },
+    { id: 'JULHO', name: 'JULHO' },
+    { id: 'AGOSTO', name: 'AGOSTO' },
+    { id: 'SETEMBRO', name: 'SETEMBRO' },
+    { id: 'OUTUBRO', name: 'OUTUBRO' },
+    { id: 'NOVEMBRO', name: 'NOVEMBRO' },
+    { id: 'DEZEMBRO', name: 'DEZEMBRO' },
+];
 
 // --- Product Form ---
 const productForm = useForm({ id: null, name: '', country_id: '', harvest_month: '' });
@@ -157,11 +147,30 @@ const clearDefaultFilters = () => {
 const defaultCountryData = computed(() =>
     props.all_countries?.find(c => c.id == defaultFilterForm.country_id)
 );
+import { toast } from '@/Stores/ToastStore';
+
+const showClearHarvestModal = ref(false);
+const clearingHarvests = ref(false);
+
+const clearAllHarvests = () => {
+    clearingHarvests.value = true;
+    router.post(route('admin.data.products.clear-harvests'), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showClearHarvestModal.value = false;
+            clearingHarvests.value = false;
+            toast.add('Todas as safras foram limpas com sucesso!', 'success');
+        },
+        onError: () => {
+            clearingHarvests.value = false;
+            toast.add('Erro ao limpar safras.', 'error');
+        }
+    });
+};
 </script>
 
 <template>
     <div class="animate-in fade-in zoom-in-95 duration-200">
-        
         <div class="flex flex-col xl:flex-row gap-8">
             
             <!-- LEFT COLUMN: FORMS & CONFIGS (STICKY) -->
@@ -195,6 +204,7 @@ const defaultCountryData = computed(() =>
                                 placeholder="Selecione a Safra"
                                 :icon="CalendarIcon"
                                 :searchable="true"
+                                :clearable="true"
                             />
                         </div>
                         <div class="pt-4 flex items-center gap-2">
@@ -309,8 +319,17 @@ const defaultCountryData = computed(() =>
                         @input="$emit('updateSearch', 'products_search', $event.target.value)"
                         type="text" 
                         placeholder="BUSCAR PRODUTO..." 
-                        class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
+                        class="w-full pl-12 pr-32 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
+                    <button 
+                        @click="showClearHarvestModal = true"
+                        type="button"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border border-transparent hover:border-red-100 shadow-xs"
+                        title="Limpar todas as safras do sistema"
+                    >
+                        <Eraser class="w-3 h-3" />
+                        Limpar Safras
+                    </button>
                 </div>
 
                 <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
@@ -391,6 +410,18 @@ const defaultCountryData = computed(() =>
             confirm-text="Confirmar Exclusão"
             @close="isConfirmModalOpen = false"
             @confirm="confirmDeleteProduct"
+        />
+
+        <!-- Modal de Confirmação para Limpar Safras -->
+        <ConfirmationModal
+            :show="showClearHarvestModal"
+            title="Limpar Todas as Safras?"
+            message="ATENÇÃO: Isso irá zerar a SAFRA de TODOS os produtos cadastrados no sistema. Esta ação não pode ser desfeita. Deseja continuar?"
+            confirm-text="Sim, Limpar Tudo"
+            cancel-text="Cancelar"
+            :loading="clearingHarvests"
+            @close="showClearHarvestModal = false"
+            @confirm="clearAllHarvests"
         />
     </div>
 </template>

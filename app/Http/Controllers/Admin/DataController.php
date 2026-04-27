@@ -593,4 +593,14 @@ class DataController extends Controller
 
         return redirect()->back()->with('success', 'Filtro padrão salvo com sucesso.');
     }
+
+    public function clearAllHarvests()
+    {
+        try {
+            \App\Models\Product::query()->update(['harvest_month' => null]);
+            return redirect()->back()->with('success', 'Todas as safras foram limpas com sucesso.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Erro ao limpar safras: ' . $e->getMessage());
+        }
+    }
 }

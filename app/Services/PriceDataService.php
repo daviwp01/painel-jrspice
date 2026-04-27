@@ -249,6 +249,10 @@ class PriceDataService
                 }, 'weekly_sub')
                 ->first();
 
+            $productInfo = Product::select('id', 'name', 'harvest_month')
+                ->where('id', $productId)
+                ->first();
+
             $metrics = [
                 'latest' => [
                     'label' => 'ÚLTIMA DATA: ' . $currentDate->format('d/m/Y'),
@@ -265,9 +269,11 @@ class PriceDataService
                     'min' => (float) ($allTimeStats->min_p ?? 0),
                     'max' => (float) ($allTimeStats->max_p ?? 0),
                 ],
+                'product_info' => $productInfo,
             ];
 
             foreach ($metrics as $key => $value) {
+                if ($key === 'product_info') continue;
                 $metrics[$key]['spread'] = ($value['min'] > 0)
                     ? (($value['max'] - $value['min']) / $value['min']) * 100
                     : 0;
