@@ -17,20 +17,30 @@ const props = defineProps({
 
 const CalendarIcon = Calendar;
 
-const months = [
-    { id: 'Janeiro', name: 'Janeiro' },
-    { id: 'Fevereiro', name: 'Fevereiro' },
-    { id: 'Março', name: 'Março' },
-    { id: 'Abril', name: 'Abril' },
-    { id: 'Maio', name: 'Maio' },
-    { id: 'Junho', name: 'Junho' },
-    { id: 'Julho', name: 'Julho' },
-    { id: 'Agosto', name: 'Agosto' },
-    { id: 'Setembro', name: 'Setembro' },
-    { id: 'Outubro', name: 'Outubro' },
-    { id: 'Novembro', name: 'Novembro' },
-    { id: 'Dezembro', name: 'Dezembro' },
-];
+const generateHarvestOptions = () => {
+    const options = [
+        { id: '', name: 'Nenhuma Safra' }
+    ];
+    const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    
+    const currentYear = new Date().getFullYear();
+    // Gera opções para os últimos 5 anos e os próximos 2
+    for (let year = currentYear + 2; year >= currentYear - 5; year--) {
+        monthNames.forEach((month, index) => {
+            const monthVal = String(index + 1).padStart(2, '0');
+            options.push({
+                id: `${monthVal}/${year}`,
+                name: `${month} / ${year}`
+            });
+        });
+    }
+    return options;
+};
+
+const months = generateHarvestOptions();
 
 // --- Product Form ---
 const productForm = useForm({ id: null, name: '', country_id: '', harvest_month: '' });
@@ -184,7 +194,7 @@ const defaultCountryData = computed(() =>
                                 label="Safra (Opcional)"
                                 placeholder="Selecione a Safra"
                                 :icon="CalendarIcon"
-                                :searchable="false"
+                                :searchable="true"
                             />
                         </div>
                         <div class="pt-4 flex items-center gap-2">

@@ -61,8 +61,13 @@ class ProcessDataImport implements ShouldQueue
 
         try {
             $tmpPath = '/tmp/import_final_' . uniqid() . '.xlsx';
-            if (!file_exists($this->filePath)) throw new \Exception("Erro: Arquivo original não acessível.");
-            copy($this->filePath, $tmpPath);
+            
+            if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($this->filePath)) {
+                throw new \Exception("Erro: Arquivo não encontrado no Storage.");
+            }
+            
+            $fileContent = \Illuminate\Support\Facades\Storage::disk('local')->get($this->filePath);
+            file_put_contents($tmpPath, $fileContent);
 
             $reader = new Xlsx();
             $reader->setReadDataOnly(true);
@@ -93,7 +98,15 @@ class ProcessDataImport implements ShouldQueue
 
             foreach ($headers as $key => $val) {
                 if (str_contains($val, 'produto') || str_contains($val, 'product')) $colMap['product'] = $key;
-                if (str_contains($val, 'safra') || str_contains($val, 'harvest') || str_contains($val, 'mes')) $colMap['safra'] = $key;
+                
+                // Prioridade absoluta para "safra" ou "harvest". 
+                // Ignora "mes" se a coluna também contiver "ano" (para não pegar 'ANO / ME')
+                if (str_contains($val, 'safra') || str_contains($val, 'harvest')) {
+                    $colMap['safra'] = $key;
+                } elseif (str_contains($val, 'mes') && empty($colMap['safra']) && !str_contains($val, 'ano')) {
+                    $colMap['safra'] = $key;
+                }
+
                 if (str_contains($val, 'pais') || str_contains($val, 'país') || str_contains($val, 'country') || str_contains($val, 'origem')) $colMap['country'] = $key;
                 if (str_contains($val, 'fornecedor') || str_contains($val, 'supplier')) $colMap['supplier'] = $key;
                 if (str_contains($val, 'preco') || str_contains($val, 'preço') || str_contains($val, 'price') || str_contains($val, 'valor')) $colMap['price'] = $key;
@@ -146,6 +159,9 @@ class ProcessDataImport implements ShouldQueue
 
                     if (!$productName || !$countryName) continue;
 
+                    // Normaliza a safra antes de salvar
+                    $harvestMonth = $this->normalizeHarvest($harvestMonth);
+
                     $rawPrice = $row[$colMap['price'] ?? ''] ?? null;
                     // Remove todos os tipos de espaços invisíveis (incluindo non-breaking space do Excel)
                     $cleanPrice = preg_replace('/[\p{Z}\s]/u', '', (string)$rawPrice);
@@ -163,14 +179,18 @@ class ProcessDataImport implements ShouldQueue
                     }
                     $countryId = $countryCache[$countryName];
 
-                    // 2. Produto (Turbo - Agora atualiza a Safra)
-                    $productKey = $countryId . '_' . $productName;
-                    
+                    // 2. Produto (Atualiza a Safra APENAS se houver valor na planilha)
+                    $productData = [];
+                    if (!empty($harvestMonth)) {
+                        $productData['harvest_month'] = $harvestMonth;
+                    }
+
                     $product = Product::updateOrCreate(
                         ['name' => $productName, 'country_id' => $countryId],
-                        ['harvest_month' => $harvestMonth ?: null]
+                        $productData
                     );
                     $productId = $product->id;
+                    $productKey = $countryId . '_' . $productName;
                     $productCache[$productKey] = $productId;
 
                     // 3. Fornecedor (Turbo)
@@ -216,7 +236,7 @@ class ProcessDataImport implements ShouldQueue
                 Cache::put("import_progress_{$this->jobId}", ['current' => $totalRows, 'total' => $totalRows, 'status' => 'completed', 'percentage' => 100], 600);
             }
             @unlink($tmpPath);
-            @unlink($this->filePath); // AUTO-LIMPEZA: Remove o arquivo original após sucesso
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($this->filePath); // Limpa original
 
         } catch (\Throwable $e) {
             Log::error('ERRO NA IMPORTAÇÃO: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
@@ -224,9 +244,34 @@ class ProcessDataImport implements ShouldQueue
                 Cache::put("import_progress_{$this->jobId}", ['current' => 0, 'total' => 0, 'status' => 'failed', 'message' => $e->getMessage(), 'percentage' => 0], 600);
             }
             if (isset($tmpPath) && file_exists($tmpPath)) @unlink($tmpPath);
-            if (isset($this->filePath) && file_exists($this->filePath)) @unlink($this->filePath); // AUTO-LIMPEZA: Remove o arquivo mesmo em falha
+            if (isset($this->filePath)) \Illuminate\Support\Facades\Storage::disk('local')->delete($this->filePath); // Limpa em caso de erro
             throw $e;
         }
+    }
+
+    private function normalizeHarvest($value) {
+        if (!$value) return null;
+        $value = trim($value);
+        
+        $monthsMap = [
+            'janeiro' => '01', 'fevereiro' => '02', 'marco' => '03', 'março' => '03',
+            'abril' => '04', 'maio' => '05', 'junho' => '06', 'julho' => '07',
+            'agosto' => '08', 'setembro' => '09', 'outubro' => '10', 'novembro' => '11', 'dezembro' => '12'
+        ];
+        
+        $lowerValue = mb_strtolower($value);
+        if (isset($monthsMap[$lowerValue])) {
+            return $monthsMap[$lowerValue] . '/' . date('Y');
+        }
+
+        $clean = preg_replace('/\s+/', '', $value);
+        if (preg_match('/^(\d{4})[\/-](\d{1,2})$/', $clean, $matches)) {
+            return str_pad($matches[2], 2, '0', STR_PAD_LEFT) . '/' . $matches[1];
+        }
+        if (preg_match('/^(\d{1,2})[\/-](\d{4})$/', $clean, $matches)) {
+            return str_pad($matches[1], 2, '0', STR_PAD_LEFT) . '/' . $matches[2];
+        }
+        return $value;
     }
 
     private function transformDate($value)

@@ -364,10 +364,9 @@ class DataController extends Controller
 
         $jobId = Str::uuid()->toString();
         $path = $file->store('imports');
-        $fullPath = Storage::disk('local')->path($path);
 
         $batch = Bus::batch([
-            new \App\Jobs\ProcessDataImport($fullPath, $jobId)
+            new \App\Jobs\ProcessDataImport($path, $jobId)
         ])->name("Importação de Dados - {$jobId}")->dispatch();
 
         // Persiste esse ID para que possamos recuperar no refresh da página

@@ -41,7 +41,9 @@ class DataImport implements OnEachRow, WithHeadingRow
             $key = mb_strtolower(trim($key));
             
             // Lógica de Safra (Fuzzy match)
-            if (str_contains($key, 'safra') || str_contains($key, 'harvest') || $key === 'mes') {
+            if (str_contains($key, 'safra') || str_contains($key, 'harvest')) {
+                $harvestMonth = $val;
+            } elseif (str_contains($key, 'mes') && $harvestMonth === null && !str_contains($key, 'ano')) {
                 $harvestMonth = $val;
             }
             
@@ -112,7 +114,7 @@ class DataImport implements OnEachRow, WithHeadingRow
         ]);
         
         if ($harvestMonth) {
-            $product->harvest_month = trim($harvestMonth);
+            $product->harvest_month = $this->normalizeHarvest($harvestMonth);
             $product->save();
         }
 
@@ -147,6 +149,31 @@ class DataImport implements OnEachRow, WithHeadingRow
                 'percentage' => 0
             ], 600);
         }
+    }
+
+    private function normalizeHarvest($value) {
+        if (!$value) return null;
+        $value = trim($value);
+        
+        $monthsMap = [
+            'janeiro' => '01', 'fevereiro' => '02', 'marco' => '03', 'março' => '03',
+            'abril' => '04', 'maio' => '05', 'junho' => '06', 'julho' => '07',
+            'agosto' => '08', 'setembro' => '09', 'outubro' => '10', 'novembro' => '11', 'dezembro' => '12'
+        ];
+        
+        $lowerValue = mb_strtolower($value);
+        if (isset($monthsMap[$lowerValue])) {
+            return $monthsMap[$lowerValue] . '/' . date('Y');
+        }
+
+        $clean = preg_replace('/\s+/', '', $value);
+        if (preg_match('/^(\d{4})[\/-](\d{1,2})$/', $clean, $matches)) {
+            return str_pad($matches[2], 2, '0', STR_PAD_LEFT) . '/' . $matches[1];
+        }
+        if (preg_match('/^(\d{1,2})[\/-](\d{4})$/', $clean, $matches)) {
+            return str_pad($matches[1], 2, '0', STR_PAD_LEFT) . '/' . $matches[2];
+        }
+        return $value;
     }
 
     private function transformDate($value)
