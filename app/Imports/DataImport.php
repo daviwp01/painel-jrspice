@@ -43,8 +43,6 @@ class DataImport implements OnEachRow, WithHeadingRow
             // Lógica de Safra (Fuzzy match)
             if (str_contains($key, 'safra') || str_contains($key, 'harvest')) {
                 $harvestMonth = $val;
-            } elseif (str_contains($key, 'mes') && $harvestMonth === null && !str_contains($key, 'ano')) {
-                $harvestMonth = $val;
             }
             
             // Lógica de Produto
@@ -114,8 +112,13 @@ class DataImport implements OnEachRow, WithHeadingRow
         ]);
         
         if ($harvestMonth) {
-            $product->harvest_month = $this->normalizeHarvest($harvestMonth);
-            $product->save();
+            $normalized = $this->normalizeHarvest($harvestMonth);
+            // Atualiza apenas se o valor for diferente (case-insensitive) do que já existe no banco
+            $currentHarvest = $product->harvest_month;
+            if ($normalized && mb_strtolower($currentHarvest) !== mb_strtolower($normalized)) {
+                $product->harvest_month = $normalized;
+                $product->save();
+            }
         }
 
         // 3. Fornecedor
@@ -153,39 +156,7 @@ class DataImport implements OnEachRow, WithHeadingRow
 
     private function normalizeHarvest($value) {
         if (!$value) return null;
-        $value = trim($value);
-        
-        $monthsMap = [
-            '01' => 'JANEIRO', '02' => 'FEVEREIRO', '03' => 'MARÇO', '04' => 'ABRIL',
-            '05' => 'MAIO', '06' => 'JUNHO', '07' => 'JULHO', '08' => 'AGOSTO',
-            '09' => 'SETEMBRO', '10' => 'OUTUBRO', '11' => 'NOVEMBRO', '12' => 'DEZEMBRO',
-            'janeiro' => 'JANEIRO', 'fevereiro' => 'FEVEREIRO', 'marco' => 'MARÇO', 'março' => 'MARÇO',
-            'abril' => 'ABRIL', 'maio' => 'MAIO', 'junho' => 'JUNHO', 'julho' => 'JULHO',
-            'agosto' => 'AGOSTO', 'setembro' => 'SETEMBRO', 'outubro' => 'OUTUBRO', 'novembro' => 'NOVEMBRO', 'dezembro' => 'DEZEMBRO'
-        ];
-        
-        $lowerValue = mb_strtolower($value);
-        
-        // Se já for o nome do mês, retorna ele em maiúsculo
-        if (isset($monthsMap[$lowerValue])) {
-            return $monthsMap[$lowerValue];
-        }
-
-        $clean = preg_replace('/\s+/', '', $value);
-        
-        // Caso YYYY/MM ou YYYY-MM
-        if (preg_match('/^(\d{4})[\/-](\d{1,2})$/', $clean, $matches)) {
-            $m = str_pad($matches[2], 2, '0', STR_PAD_LEFT);
-            return $monthsMap[$m] ?? $value;
-        }
-        
-        // Caso MM/YYYY ou MM-YYYY
-        if (preg_match('/^(\d{1,2})[\/-](\d{4})$/', $clean, $matches)) {
-            $m = str_pad($matches[1], 2, '0', STR_PAD_LEFT);
-            return $monthsMap[$m] ?? $value;
-        }
-
-        return mb_strtoupper($value);
+        return trim($value);
     }
 
     private function transformDate($value)
