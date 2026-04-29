@@ -398,7 +398,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="handleCountryChange"
             />
 
@@ -411,7 +411,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                :icon="BoxIcon"
                :disabled="!selectedCountry"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="applyFilters"
             />
 

@@ -450,7 +450,7 @@ onMounted(() => {
                placeholder="Selecione o País"
                :icon="MapPinIcon"
                :with-flag="true"
-               direction="up"
+               direction="down"
                variant="dark"
                @click.stop
                @locked-click="openUpgradeModal"
@@ -467,7 +467,7 @@ onMounted(() => {
                :disabled="!selectedCountry"
                variant="dark"
                @locked-click="openUpgradeModal"
-               direction="up"
+               direction="down"
                @change="applyFilters"
             />
 

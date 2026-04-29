@@ -244,7 +244,7 @@ const changePage = (url) => {
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="handleCountryChange"
             />
           </div>

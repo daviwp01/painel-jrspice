@@ -260,7 +260,7 @@ const changePage = (url) => {
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="handleCountryChange"
             />
 
@@ -271,7 +271,7 @@ const changePage = (url) => {
                placeholder="Todos os Fornecedores"
                :icon="TruckIcon"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="applyFilters"
             />
 
@@ -283,7 +283,7 @@ const changePage = (url) => {
                :icon="BoxIcon"
                :disabled="!selectedCountry"
                variant="dark"
-               direction="up"
+               direction="down"
                @change="applyFilters"
             />
 
