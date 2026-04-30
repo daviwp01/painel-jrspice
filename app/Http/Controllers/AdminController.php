@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\UserActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
+    public function __construct(
+        private readonly UserActivityService $activityService
+    ) {}
+
     /**
      * Display the users management page.
      */
@@ -53,42 +58,51 @@ class AdminController extends Controller
      */
     public function activityIndex()
     {
-        $usersPaginated = User::orderByRaw('last_activity_at IS NULL, last_activity_at DESC')
-            ->paginate(12)
-            ->through(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_master' => $user->is_master,
-                    'is_online' => $user->last_activity_at && $user->last_activity_at->gt(now()->subMinutes(5)),
-                    'last_login' => $user->last_login_at ? $user->last_login_at->diffForHumans() : __('Never'),
-                    'last_activity' => $user->last_activity_at ? $user->last_activity_at->diffForHumans() : __('None'),
-                    'notified_at' => $user->email_notified_at ? $user->email_notified_at->diffForHumans() : null,
-                    'clicked_at' => $user->email_clicked_at ? $user->email_clicked_at->diffForHumans() : null,
-                ];
-            });
-
         return \Inertia\Inertia::render('Admin/Activity/Index', [
-            'users' => $usersPaginated,
-            'total_users' => User::count(),
-            'online_users' => User::where('last_activity_at', '>', now()->subMinutes(5))->count()
+            'users'        => $this->activityService->getActivityOverview(),
+            'total_users'  => User::count(),
+            'online_users' => $this->activityService->countOnlineUsers(),
         ]);
     }
 
     /**
-     * Clear all user activity metadata.
+     * Get detailed session logs for a specific user (JSON endpoint for modal).
+     */
+    public function userSessionLogs(User $user)
+    {
+        return response()->json(
+            $this->activityService->getUserSessionLogs($user->id)
+        );
+    }
+
+    /**
+     * Get aggregated search behaviour stats for a user (JSON endpoint for modal tab).
+     */
+    public function userSearchStats(User $user)
+    {
+        return response()->json(
+            $this->activityService->getUserSearchStats($user->id)
+        );
+    }
+
+    /**
+     * Clear all user activity metadata + session history.
      */
     public function bulkClearActivity()
     {
-        User::query()->update([
-            'last_login_at' => null,
-            'last_activity_at' => null,
-            'email_notified_at' => null,
-            'email_clicked_at' => null,
-        ]);
+        $this->activityService->clearAllActivity();
 
         return back()->with('success', __('Activities cleared successfully.'));
+    }
+
+    /**
+     * Clear activity data for a single user (called from modal).
+     */
+    public function clearUserActivity(User $user)
+    {
+        $this->activityService->clearUserActivity($user);
+
+        return response()->json(['success' => true]);
     }
 
 

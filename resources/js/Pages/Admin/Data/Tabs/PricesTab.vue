@@ -14,7 +14,7 @@ const props = defineProps({
     filters: Object,
 });
 
-const priceForm = useForm({ id: null, product_id: '', supplier_id: '', date: '', price: '' });
+const priceForm = useForm({ id: null, product_id: '', supplier_id: '', date: new Date().toISOString().split('T')[0], price: '' });
 const editingPrice = ref(false);
 const isConfirmModalOpen = ref(false);
 const isBulkConfirmModalOpen = ref(false);

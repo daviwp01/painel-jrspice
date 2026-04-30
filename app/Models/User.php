@@ -82,4 +82,12 @@ class User extends Authenticatable
         
         return in_array($slug, $allowed);
     }
+
+    /**
+     * Get the user's tracked sessions.
+     */
+    public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\UserSession::class);
+    }
 }

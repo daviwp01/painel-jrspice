@@ -6,6 +6,7 @@ use App\Services\DashboardService;
 use App\Services\PriceDataService;
 use App\Services\ExportService;
 use App\Services\ContactService;
+use App\Services\UserActivityService;
 use App\Models\DashboardPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request as HttpRequest;
@@ -25,7 +26,8 @@ class InternalDashboardController extends Controller
         protected DashboardService $dashboardService,
         protected PriceDataService $priceDataService,
         protected ExportService $exportService,
-        protected ContactService $contactService
+        protected ContactService $contactService,
+        protected UserActivityService $activityService
     ) {}
 
     public function index()
@@ -76,6 +78,11 @@ class InternalDashboardController extends Controller
 
         if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {
             $this->loadDashboardData($request, $currentPage, $viewData);
+        }
+
+        // Log filter interactions for activity tracking (only when user is actively filtering via explicit click)
+        if ($request->has('_track')) {
+            $this->logFilters($request, $currentPage->component);
         }
 
         return Inertia::render($currentPage->component, $viewData);
@@ -187,6 +194,43 @@ class InternalDashboardController extends Controller
         $viewData['products'] = $productsProp;
         $viewData['filters']['country_id'] = $countryId;
         $viewData['filters']['product_id'] = $productId;
+    }
+
+    /**
+     * Log filter selections as search behaviour events.
+     * Uses the resolved model names via DB for readable values.
+     */
+    private function logFilters(HttpRequest $request, string $pageContext): void
+    {
+        $user = auth()->user();
+        if (!$user) return;
+
+        $filterMap = [
+            'country_id'  => ['type' => 'country',  'model' => \App\Models\Country::class,  'field' => 'name'],
+            'product_id'  => ['type' => 'product',  'model' => \App\Models\Product::class,  'field' => 'name'],
+            'supplier_id' => ['type' => 'supplier', 'model' => \App\Models\Supplier::class, 'field' => 'name'],
+        ];
+
+        foreach ($filterMap as $param => $config) {
+            $id = $request->query($param);
+            if (!$id) continue;
+
+            $record = $config['model']::find($id);
+            if (!$record) continue;
+
+            $this->activityService->logSearch(
+                $user,
+                $config['type'],
+                $record->{$config['field']},
+                $pageContext
+            );
+        }
+
+        // Log date range as-is (it's already a human-readable string)
+        $dateRange = $request->query('date_range');
+        if ($dateRange && $dateRange !== 'Todos') {
+            $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext);
+        }
     }
 
     public function sendContactEmail(HttpRequest $request)

@@ -29,20 +29,28 @@ class AppServiceProvider extends ServiceProvider
             $this->loadDynamicSmtpSettings();
         });
 
-        // Track Last Login
+        // Track Last Login + Start Session
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Auth\Events\Login::class,
             function ($event) {
                 $event->user->update([
                     'last_login_at' => now(),
                 ]);
+
+                // Start a tracked session
+                app(\App\Services\UserActivityService::class)
+                    ->startSession($event->user, request());
             }
         );
-        // Track Logout (Mark as offline immediately)
+        // Track Logout (Mark as offline + close session)
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Auth\Events\Logout::class,
             function ($event) {
                 if ($event->user) {
+                    // End the tracked session before clearing activity
+                    app(\App\Services\UserActivityService::class)
+                        ->endSession($event->user);
+
                     $event->user->update([
                         'last_activity_at' => null,
                     ]);

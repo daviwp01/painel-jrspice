@@ -62,6 +62,34 @@ watch(() => props.filters, (newFilters) => {
 
 const STORAGE_KEY = 'jrspice_filters_historical';
 
+const applyFilters = (track = true) => {
+    saveFilters();
+    isLoading.value = true;
+    
+    const query = { 
+        country_id: selectedCountry.value,
+        supplier_id: selectedSupplier.value,
+        product_id: selectedProduct.value,
+        date_range: filterDateRange.value,
+        sort_field: props.filters.sort_field,
+        sort_direction: props.filters.sort_direction
+    };
+
+    if (track) {
+        query._track = 1;
+    }
+
+    router.get(
+        route('dashboard.page', { slug: props.currentPage.slug }),
+        query,
+        { 
+            preserveState: true, 
+            replace: true,
+            onFinish: () => { isLoading.value = false; }
+        }
+    );
+};
+
 onMounted(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const hasManualFilters = urlParams.has('country_id') || urlParams.has('product_id') || urlParams.has('supplier_id') || urlParams.has('date_range');
@@ -82,7 +110,7 @@ onMounted(() => {
                 if (parsed.supplier_id) selectedSupplier.value = parsed.supplier_id;
                 if (parsed.product_id) selectedProduct.value = parsed.product_id;
                 if (parsed.date_range) filterDateRange.value = parsed.date_range;
-                applyFilters();
+                applyFilters(false);
             }
         }
     }
@@ -138,27 +166,6 @@ const clearFilters = () => {
         preserveState: false, 
         onFinish: () => isLoading.value = false 
     });
-};
-
-const applyFilters = () => {
-    saveFilters();
-    isLoading.value = true;
-    router.get(
-        route('dashboard.page', { slug: props.currentPage.slug }),
-        { 
-            country_id: selectedCountry.value,
-            supplier_id: selectedSupplier.value,
-            product_id: selectedProduct.value,
-            date_range: filterDateRange.value,
-            sort_field: props.filters.sort_field,
-            sort_direction: props.filters.sort_direction
-        },
-        { 
-            preserveState: true, 
-            replace: true,
-            onFinish: () => { isLoading.value = false; }
-        }
-    );
 };
 
 const handleSort = (field) => {

@@ -125,5 +125,15 @@
   "Desktop Links": "Desktop Links",
   "Define which reports will be visible on Desktop computers.": "Define which reports will be visible on Desktop computers.",
   "Reports": "Reports",
-  "Profile": "Profile"
+  "Profile": "Profile",
+  "Time on Platform": "Time on Platform",
+  "Session History": "Session History",
+  "Avg": "Avg",
+  "No sessions recorded": "No sessions recorded",
+  "Start": "Start",
+  "End": "End",
+  "Duration": "Duration",
+  "Browser": "Browser",
+  "None": "None",
+  "No activity found": "No activity found"
 }

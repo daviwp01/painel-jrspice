@@ -262,5 +262,15 @@
   "Desktop Links": "Links Desktop",
   "Define which reports will be visible on Desktop. This configuration also sets the default access for new users.": "Defina quais relatórios serão exibidos em computadores Desktop. Estes relatórios também serão atribuídos automaticamente como acesso padrão para todos os novos usuários cadastrados.",
   "Reports": "Relatórios",
-  "Profile": "Perfil"
+  "Profile": "Perfil",
+  "Time on Platform": "Tempo na Plataforma",
+  "Session History": "Histórico de Sessões",
+  "Avg": "Média",
+  "No sessions recorded": "Nenhuma sessão registrada",
+  "Start": "Início",
+  "End": "Fim",
+  "Duration": "Duração",
+  "Browser": "Navegador",
+  "None": "Nenhum",
+  "No activity found": "Nenhuma atividade encontrada"
 }

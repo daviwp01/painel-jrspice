@@ -266,7 +266,7 @@ onMounted(() => {
                 if (parsed.country_id) selectedCountry.value = parsed.country_id;
                 if (parsed.product_id) selectedProduct.value = parsed.product_id;
                 if (parsed.date_range) filterDateRange.value = parsed.date_range;
-                applyFilters();
+                applyFilters(false);
             }
         }
     }
@@ -320,15 +320,22 @@ const clearFilters = () => {
     });
 };
 
-const applyFilters = () => {
+const applyFilters = (track = true) => {
   saveFilters();
   isLoading.value = true;
-  router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+  
+  const query = {
     country_id: selectedCountry.value,
     supplier_id: selectedSupplier.value,
     product_id: selectedProduct.value,
     date_range: filterDateRange.value
-  }, { 
+  };
+
+  if (track) {
+    query._track = 1;
+  }
+
+  router.get(route('dashboard.page', { slug: props.currentPage.slug }), query, { 
     preserveState: true, 
     onFinish: () => isLoading.value = false 
   });

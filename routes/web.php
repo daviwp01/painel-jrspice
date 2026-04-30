@@ -35,6 +35,9 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::get('/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
     Route::get('/activity', [AdminController::class, 'activityIndex'])->name('admin.activity.index');
     Route::post('/activity/clear', [AdminController::class, 'bulkClearActivity'])->name('admin.activity.clear');
+    Route::get('/activity/{user}/sessions', [AdminController::class, 'userSessionLogs'])->name('admin.activity.sessions');
+    Route::get('/activity/{user}/search-stats', [AdminController::class, 'userSearchStats'])->name('admin.activity.search-stats');
+    Route::delete('/activity/{user}/clear', [AdminController::class, 'clearUserActivity'])->name('admin.activity.user.clear');
 
     Route::get('/users/create', [AdminController::class, 'usersCreate'])->name('admin.users.create');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
