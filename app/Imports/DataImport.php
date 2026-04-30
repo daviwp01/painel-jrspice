@@ -156,7 +156,7 @@ class DataImport implements OnEachRow, WithHeadingRow
 
     private function normalizeHarvest($value) {
         if (!$value) return null;
-        return trim($value);
+        return mb_strtoupper(trim($value));
     }
 
     private function transformDate($value)

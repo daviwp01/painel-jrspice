@@ -163,8 +163,9 @@ const currentHarvest = computed(() => {
     const product = props.products.find(p => p.id == selectedProduct.value);
     if (product?.harvest_month) return product.harvest_month;
 
-    // 2. Tenta buscar no primeiro registro de preços
-    if (props.pricesData?.[0]?.harvest_month) return props.pricesData[0].harvest_month;
+    // 2. Tenta buscar no último registro de preços (mais recente, já que agora pricesData vem ASC)
+    const latestWithHarvest = [...props.pricesData].reverse().find(p => p.harvest_month);
+    if (latestWithHarvest?.harvest_month) return latestWithHarvest.harvest_month;
 
     // 3. Verifica se as métricas trouxeram info extra
     if (props.metrics?.product_info?.harvest_month) return props.metrics.product_info.harvest_month;

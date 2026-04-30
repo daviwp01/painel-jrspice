@@ -77,7 +77,6 @@ class DashboardService
                         $join->on('countries.id', '=', 'latest_updates.country_id');
                     })
                     ->select('countries.id', 'countries.name', 'latest_updates.latest_weekly_update')
-                    ->orderByRaw('latest_updates.latest_weekly_update IS NULL, latest_updates.latest_weekly_update DESC')
                     ->orderBy('countries.name')
                     ->get();
             }

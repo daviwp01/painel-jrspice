@@ -17,20 +17,7 @@ const props = defineProps({
 
 const CalendarIcon = Calendar;
 
-const months = [
-    { id: 'JANEIRO', name: 'JANEIRO' },
-    { id: 'FEVEREIRO', name: 'FEVEREIRO' },
-    { id: 'MARÇO', name: 'MARÇO' },
-    { id: 'ABRIL', name: 'ABRIL' },
-    { id: 'MAIO', name: 'MAIO' },
-    { id: 'JUNHO', name: 'JUNHO' },
-    { id: 'JULHO', name: 'JULHO' },
-    { id: 'AGOSTO', name: 'AGOSTO' },
-    { id: 'SETEMBRO', name: 'SETEMBRO' },
-    { id: 'OUTUBRO', name: 'OUTUBRO' },
-    { id: 'NOVEMBRO', name: 'NOVEMBRO' },
-    { id: 'DEZEMBRO', name: 'DEZEMBRO' },
-];
+
 
 // --- Product Form ---
 const productForm = useForm({ id: null, name: '', country_id: '', harvest_month: '' });
@@ -197,15 +184,21 @@ const clearAllHarvests = () => {
                                 with-flag
                             />
                             
-                            <SearchableSelect 
-                                v-model="productForm.harvest_month"
-                                :options="months"
-                                label="Safra (Opcional)"
-                                placeholder="Selecione a Safra"
-                                :icon="CalendarIcon"
-                                :searchable="true"
-                                :clearable="true"
-                            />
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Safra (Opcional)</label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <CalendarIcon class="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                    </div>
+                                    <input 
+                                        v-model="productForm.harvest_month"
+                                        @input="productForm.harvest_month = $event.target.value.toUpperCase()"
+                                        type="text"
+                                        placeholder="Ex: JULHO"
+                                        class="w-full pl-11 bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm uppercase font-bold text-slate-700"
+                                    >
+                                </div>
+                            </div>
                         </div>
                         <div class="pt-4 flex items-center gap-2">
                             <button type="submit" :disabled="productForm.processing || !productForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">

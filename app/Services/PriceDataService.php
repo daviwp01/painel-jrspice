@@ -346,4 +346,29 @@ class PriceDataService
                 ->get();
         });
     }
+    /**
+     * Get all raw prices for continuous chart mode.
+     */
+    public function getContinuousData($countryId, $productId, $supplierId, ?array $range = null)
+    {
+        $query = ProductPrice::query()
+            ->join('products', 'products.id', '=', 'product_prices.product_id')
+            ->where('product_prices.product_id', $productId);
+
+        if ($countryId) {
+            $query->where('products.country_id', $countryId);
+        }
+
+        if ($supplierId) {
+            $query->where('product_prices.supplier_id', $supplierId);
+        }
+
+        if ($range) {
+            $query->whereBetween('product_prices.date', [$range['start'], $range['end']]);
+        }
+
+        return $query->select('product_prices.date', 'product_prices.price', 'products.harvest_month')
+            ->orderBy('product_prices.date', 'asc')
+            ->get();
+    }
 }

@@ -136,6 +136,10 @@ class DataController extends Controller
             'harvest_month' => 'nullable|string',
         ]);
 
+        if (isset($validated['harvest_month'])) {
+            $validated['harvest_month'] = mb_strtoupper($validated['harvest_month']);
+        }
+
         Product::create($validated);
         return redirect()->back();
     }
@@ -188,6 +192,11 @@ class DataController extends Controller
             'country_id' => 'required|exists:countries,id',
             'harvest_month' => 'nullable|string',
         ]);
+
+        if (isset($validated['harvest_month'])) {
+            $validated['harvest_month'] = mb_strtoupper($validated['harvest_month']);
+        }
+
         $product->update($validated);
         return redirect()->back()->with('success', 'Produto atualizado.');
     }

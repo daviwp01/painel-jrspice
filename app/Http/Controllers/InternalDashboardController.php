@@ -177,9 +177,9 @@ class InternalDashboardController extends Controller
             $viewData['metrics'] = $this->priceDataService->calculateMetrics($productId, $range);
             $viewData['chartData'] = $this->priceDataService->calculateChartHistorical($productId, $range);
             $viewData['chartWeeklyData'] = $this->priceDataService->calculateChartWeekly($productId, $range);
-            $viewData['pricesData'] = $this->priceDataService->getHistoricalData(
-                $countryId, $productId, $supplierId, $dateRange, 'date', 'desc', $range
-            )->items();
+            $viewData['pricesData'] = $this->priceDataService->getContinuousData(
+                $countryId, $productId, $supplierId, $range
+            );
         }
 
         $viewData['countries'] = $countries;
