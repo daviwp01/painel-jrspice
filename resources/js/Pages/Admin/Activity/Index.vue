@@ -170,12 +170,12 @@ const interestTooltip = (rank, groupType, count) => {
                     <div class="flex items-center px-4 py-2 border-r border-slate-100">
                         <Users class="w-4 h-4 text-indigo-500 mr-2" />
                         <span class="text-sm font-bold text-slate-800">{{ total_users }}</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
                     </div>
                     <div class="flex items-center px-4 py-2">
                         <UserCheck class="w-4 h-4 text-emerald-500 mr-2" />
                         <span class="text-sm font-bold text-slate-800">{{ online_users }}</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Online</span>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Online</span>
                     </div>
                 </div>
                 <button @click="showConfirmClear = true" :disabled="isClearing"
@@ -212,7 +212,7 @@ const interestTooltip = (rank, groupType, count) => {
                                                 <span class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{ user.name }}</span>
                                                 <ShieldCheck v-if="user.is_master" class="w-3.5 h-3.5 text-indigo-500" />
                                             </div>
-                                            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{{ user.email }}</div>
+                                            <div class="text-[11px] text-slate-400 font-bold uppercase tracking-tight">{{ user.email }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -240,8 +240,8 @@ const interestTooltip = (rank, groupType, count) => {
                                         class="inline-flex items-center space-x-2 bg-violet-50 text-violet-700 px-4 py-1.5 rounded-xl border border-violet-100 shadow-sm hover:bg-violet-100 hover:border-violet-200 transition-all group/btn">
                                         <Timer class="w-3.5 h-3.5" />
                                         <div class="flex flex-col items-center">
-                                            <span class="text-[10px] font-bold uppercase tracking-wider">{{ user.total_time || '0min' }}</span>
-                                            <span class="text-[8px] font-bold opacity-60 leading-none mt-0.5">{{ user.total_sessions }} {{ user.total_sessions === 1 ? 'sessão' : 'sessões' }}</span>
+                                            <span class="text-[11px] font-bold uppercase tracking-wider">{{ user.total_time || '0min' }}</span>
+                                            <span class="text-[9px] font-bold opacity-60 leading-none mt-0.5">{{ user.total_sessions }} {{ user.total_sessions === 1 ? 'sessão' : 'sessões' }}</span>
                                         </div>
                                         <Eye class="w-3 h-3 opacity-0 group-hover/btn:opacity-70 transition-opacity" />
                                     </button>
@@ -424,8 +424,8 @@ const interestTooltip = (rank, groupType, count) => {
                                 <div v-for="(group, gi) in searchStats.by_type" :key="group.type">
                                     <!-- Section label -->
                                     <div class="flex items-center justify-between mb-4">
-                                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{{ group.label }}</span>
-                                        <span class="text-[10px] text-slate-300 tabular-nums">{{ group.total_hits }} interaç{{ group.total_hits === 1 ? 'ão' : 'ões' }}</span>
+                                        <span class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{{ group.label }}</span>
+                                        <span class="text-[11px] text-slate-300 tabular-nums">{{ group.total_hits }} interaç{{ group.total_hits === 1 ? 'ão' : 'ões' }}</span>
                                     </div>
                                     <!-- Items -->
                                     <div class="space-y-4">
@@ -440,7 +440,7 @@ const interestTooltip = (rank, groupType, count) => {
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-baseline justify-between mb-2">
                                                     <span class="text-[13px] truncate" :class="interestLevel(idx + 1, item.count).nameWt">{{ item.value }}</span>
-                                                    <span class="flex-shrink-0 ml-4 text-[10px] tabular-nums text-slate-400">{{ item.count }}×</span>
+                                                    <span class="flex-shrink-0 ml-4 text-[11px] tabular-nums text-slate-400">{{ item.count }}×</span>
                                                 </div>
                                                 <div class="h-[3px] bg-slate-100 rounded-full overflow-hidden">
                                                     <div class="h-full rounded-full transition-all duration-700"
@@ -452,7 +452,7 @@ const interestTooltip = (rank, groupType, count) => {
 
                                             <!-- Interest label + tooltip (LEFT-side to avoid overflow clip) -->
                                             <div class="flex-shrink-0 flex items-center gap-1 w-24 justify-end group/tip relative">
-                                                <span class="text-[10px] uppercase tracking-wider"
+                                                <span class="text-[11px] uppercase tracking-wider"
                                                       :class="[interestLevel(idx + 1, item.count).weight, interestLevel(idx + 1, item.count).text]">
                                                     {{ interestLevel(idx + 1, item.count).label }}
                                                 </span>
