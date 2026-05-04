@@ -196,8 +196,8 @@ const interestTooltip = (rank, groupType, count) => {
                                 <!-- <th class="px-8 py-6 text-left text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Last Login') }}</th> -->
                                 <!-- <th class="px-8 py-6 text-left text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Last Activity') }}</th> -->
                                 <th class="px-8 py-6 text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Time on Platform') }}</th>
-                                <!-- <th class="px-8 py-6 text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email Notification') }}</th> -->
-                                <!-- <th class="px-8 py-6 text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email Interaction') }}</th> -->
+                                <th class="px-8 py-6 text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email Notification') }}</th>
+                                <th class="px-8 py-6 text-center text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{{ $t('Email Interaction') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -246,7 +246,7 @@ const interestTooltip = (rank, groupType, count) => {
                                         <Eye class="w-3 h-3 opacity-0 group-hover/btn:opacity-70 transition-opacity" />
                                     </button>
                                 </td>
-                                <!-- <td class="px-8 py-5 whitespace-nowrap text-center">
+                                <td class="px-8 py-5 whitespace-nowrap text-center">
                                     <div v-if="user.notified_at" class="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl border border-indigo-100 shadow-sm">
                                         <Mail class="w-3.5 h-3.5" /><span class="text-[10px] font-bold uppercase tracking-wider">{{ user.notified_at }}</span>
                                     </div>
@@ -261,10 +261,10 @@ const interestTooltip = (rank, groupType, count) => {
                                         </div>
                                     </div>
                                     <div v-else class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] italic">---</div>
-                                </td> -->
+                                </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
-                                <td colspan="3" class="px-8 py-20 text-center">
+                                <td colspan="5" class="px-8 py-20 text-center">
                                     <Activity class="w-8 h-8 text-slate-300 mx-auto mb-3" />
                                     <h3 class="text-lg font-bold text-slate-800">{{ $t('No activity found') }}</h3>
                                 </td>
