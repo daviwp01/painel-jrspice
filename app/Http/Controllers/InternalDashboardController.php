@@ -80,9 +80,17 @@ class InternalDashboardController extends Controller
             $this->loadDashboardData($request, $currentPage, $viewData);
         }
 
-        // Log filter interactions for activity tracking (only when user is actively filtering via explicit click)
-        if ($request->has('_track')) {
-            $this->logFilters($request, $currentPage->component);
+        // Always log page view explicitly (throttled internally by UserActivityService)
+        $this->activityService->logSearch(
+            $user,
+            'page',
+            $currentPage->title,
+            $currentPage->component
+        );
+
+        // Sempre registrar os filtros que o usuário está visualizando (incluindo defaults)
+        if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {
+            $this->logFilters($viewData['filters'], $currentPage->component);
         }
 
         return Inertia::render($currentPage->component, $viewData);
@@ -200,19 +208,24 @@ class InternalDashboardController extends Controller
      * Log filter selections as search behaviour events.
      * Uses the resolved model names via DB for readable values.
      */
-    private function logFilters(HttpRequest $request, string $pageContext): void
+    private function logFilters(array $filters, string $pageContext): void
     {
         $user = auth()->user();
         if (!$user) return;
 
         $filterMap = [
             'country_id'  => ['type' => 'country',  'model' => \App\Models\Country::class,  'field' => 'name'],
-            'product_id'  => ['type' => 'product',  'model' => \App\Models\Product::class,  'field' => 'name'],
             'supplier_id' => ['type' => 'supplier', 'model' => \App\Models\Supplier::class, 'field' => 'name'],
         ];
 
+        // Apenas páginas de "Detalhes por Produto" usam e exibem o filtro de produto.
+        // A Tabela de Preços mostra todos os produtos do país, então não deve registrar o produto como "pesquisado".
+        if (in_array($pageContext, ['Dashboard/Show', 'Dashboard/Demo'], true)) {
+            $filterMap['product_id'] = ['type' => 'product',  'model' => \App\Models\Product::class,  'field' => 'name'];
+        }
+
         foreach ($filterMap as $param => $config) {
-            $id = $request->query($param);
+            $id = $filters[$param] ?? null;
             if (!$id) continue;
 
             $record = $config['model']::find($id);
@@ -227,7 +240,7 @@ class InternalDashboardController extends Controller
         }
 
         // Log date range as-is (it's already a human-readable string)
-        $dateRange = $request->query('date_range');
+        $dateRange = $filters['date_range'] ?? null;
         if ($dateRange && $dateRange !== 'Todos') {
             $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext);
         }
@@ -268,6 +281,22 @@ class InternalDashboardController extends Controller
             }
 
             $pdf = $this->exportService->exportPricesToPdf($countryIds);
+
+            // Log de engajamento (Exportação de Dados)
+            if (auth()->check()) {
+                $exportLabel = 'Todos os Países';
+                if ($countryIds) {
+                    $names = \App\Models\Country::whereIn('id', $countryIds)->pluck('name')->implode(', ');
+                    if ($names) $exportLabel = $names;
+                }
+
+                $this->activityService->logSearch(
+                    auth()->user(),
+                    'export',
+                    'PDF: ' . $exportLabel,
+                    'Tabela de Preços'
+                );
+            }
 
             return $pdf->download('tabela-de-precos-jrspice-' . now()->format('d-m-Y') . '.pdf');
         } catch (\Exception $e) {

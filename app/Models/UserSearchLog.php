@@ -31,6 +31,7 @@ class UserSearchLog extends Model
         'supplier'   => 'Fornecedor',
         'date_range' => 'Período',
         'page'       => 'Página',
+        'export'     => 'Exportação',
     ];
 
     // ─── Relationships ──────────────────────────────────────────

@@ -209,7 +209,7 @@ class UserActivityService
         string $filterValue,
         ?string $pageContext = null
     ): void {
-        // Deduplicate: skip if the same filter was logged in the last 30s
+        // Deduplicate: skip if the same filter was logged in the last 2s (prevents double-clicks/double-API-calls)
         $cacheKey = "search_log_{$user->id}_{$filterType}_{$filterValue}";
         if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
             return;
@@ -223,7 +223,7 @@ class UserActivityService
             'searched_at'  => now(),
         ]);
 
-        \Illuminate\Support\Facades\Cache::put($cacheKey, true, 30);
+        \Illuminate\Support\Facades\Cache::put($cacheKey, true, 2);
     }
 
     /**
@@ -257,6 +257,7 @@ class UserActivityService
 
         // Group into types (pure collection, no extra queries)
         $byType = $rows
+            ->where('filter_type', '!=', 'export')
             ->groupBy('filter_type')
             ->map(function ($group, string $type) {
                 return [
@@ -277,39 +278,74 @@ class UserActivityService
         return [
             'total_searches'   => $total,
             'by_type'          => $byType,
-            'country_products' => $this->getCountryProductCorrelations($userId),
+            'engagement'       => $this->getEngagementStats($userId),
         ];
     }
 
     /**
-     * Correlate country searches with product searches that occurred within
-     * a 120-second window (same "search event").
-     *
-     * Uses a single self-JOIN query — no schema changes required.
-     * Returns: [ 'Canada' => ['Alho', 'Pimenta'], 'Brazil' => ['Mostarda'] ]
+     * Calcula as métricas de engajamento do usuário.
      */
-    private function getCountryProductCorrelations(int $userId): array
+    private function getEngagementStats(int $userId): array
     {
-        $rows = DB::table('user_search_logs AS c')
-            ->join('user_search_logs AS p', function ($join) use ($userId) {
-                $join->where('p.user_id', $userId)
-                     ->where('p.filter_type', 'product')
-                     ->whereRaw('ABS(TIMESTAMPDIFF(SECOND, c.searched_at, p.searched_at)) <= 120');
-            })
-            ->where('c.user_id', $userId)
-            ->where('c.filter_type', 'country')
-            ->selectRaw('c.filter_value AS country, p.filter_value AS product, COUNT(*) AS hits')
-            ->groupBy('c.filter_value', 'p.filter_value')
-            ->orderBy('c.filter_value')
-            ->orderByDesc('hits')
-            ->get();
+        $last30Days = now()->subDays(30);
 
-        // Group by country → ordered product list
-        return $rows
-            ->groupBy('country')
-            ->map(fn ($group) => $group->pluck('product')->unique()->values())
+        // Fetch session starts for the last 30 days to calculate metrics in memory
+        // This is database-agnostic and very fast for a single user's last 30 days
+        $recentSessions = DB::table('user_sessions')
+            ->where('user_id', $userId)
+            ->where('started_at', '>=', $last30Days)
+            ->pluck('started_at')
+            ->map(fn($date) => \Carbon\Carbon::parse($date));
+
+        // 1. Dias Ativos nos últimos 30 dias
+        $activeDays = $recentSessions->map->toDateString()->unique()->count();
+
+        // 2. Horário de Pico
+        $hourCounts = $recentSessions->countBy(fn($d) => $d->hour);
+        $peakHour = $hourCounts->isEmpty() ? null : $hourCounts->sortDesc()->keys()->first();
+        
+        $peakHourLabel = 'N/A';
+        if ($peakHour !== null) {
+            $nextHour = ($peakHour + 1) % 24;
+            $peakHourLabel = str_pad($peakHour, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($nextHour, 2, '0', STR_PAD_LEFT) . ':00';
+        }
+
+        // 3. Dia da Semana Favorito
+        $dayNames = [
+            0 => 'Domingo', 1 => 'Segunda-feira', 2 => 'Terça-feira',
+            3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado'
+        ];
+        $dayCounts = $recentSessions->countBy(fn($d) => $d->dayOfWeek);
+        $favDayId = $dayCounts->isEmpty() ? null : $dayCounts->sortDesc()->keys()->first();
+        $favDayLabel = $favDayId !== null ? $dayNames[$favDayId] : 'N/A';
+
+        // 4. Total de Exportações
+        $exportLogs = UserSearchLog::forUser($userId)->where('filter_type', 'export')->get();
+        $exportsCount = $exportLogs->count();
+        
+        // Pega os últimos itens baixados, remove "PDF: " para mostrar os nomes de forma limpa
+        $exportedItems = $exportLogs->sortByDesc('searched_at')
+            ->pluck('filter_value')
+            ->map(fn($val) => str_replace('PDF: ', '', $val))
+            ->unique()
+            ->values()
+            ->take(5) // Mostra os 5 itens mais recentes
             ->toArray();
+
+        // 5. Health Score (0 - 100)
+        // Fórmula simples: cada dia ativo vale 4 pontos (max 120, mas capado em 100), e cada export vale 5 pontos extras
+        $healthScore = min(100, ($activeDays * 4) + ($exportsCount * 5));
+
+        return [
+            'active_days_last_30' => $activeDays,
+            'peak_hour'           => $peakHourLabel,
+            'favorite_day'        => $favDayLabel,
+            'total_exports'       => $exportsCount,
+            'exported_items'      => $exportedItems,
+            'health_score'        => $healthScore,
+        ];
     }
+
 
     /**
      * Clear all search history for every user.

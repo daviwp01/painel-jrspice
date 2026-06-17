@@ -1,7 +1,7 @@
 <script setup>
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { Users, Clock, Mail, MousePointer2, Circle, ShieldCheck, Activity, UserCheck, Trash2, Timer, Eye, X, BarChart2, History, AlertTriangle, HelpCircle } from 'lucide-vue-next';
+import { Users, Clock, Mail, MousePointer2, Circle, ShieldCheck, Activity, UserCheck, Trash2, Timer, Eye, X, BarChart2, History, AlertTriangle, HelpCircle, TrendingUp, Download, CalendarDays, HeartPulse, Network } from 'lucide-vue-next';
 import Pagination from '@/Components/Pagination.vue';
 import { ref } from 'vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
@@ -72,7 +72,7 @@ const fetchSearchStats = async () => {
 
 const switchTab = (tab) => {
     activeTab.value = tab;
-    if (tab === 'searches' && searchStats.value === null) {
+    if ((tab === 'searches' || tab === 'navigation' || tab === 'engagement') && searchStats.value === null) {
         fetchSearchStats();
     }
 };
@@ -374,6 +374,16 @@ const interestTooltip = (rank, groupType, count) => {
                                 :class="activeTab === 'searches' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
                                 <BarChart2 class="w-3.5 h-3.5" /> Comportamento de Busca
                             </button>
+                            <button @click="switchTab('engagement')"
+                                class="flex items-center gap-2 py-4 pr-8 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2"
+                                :class="activeTab === 'engagement' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
+                                <TrendingUp class="w-3.5 h-3.5" /> Engajamento
+                            </button>
+                            <button @click="switchTab('navigation')"
+                                class="flex items-center gap-2 py-4 pr-8 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2"
+                                :class="activeTab === 'navigation' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
+                                <MousePointer2 class="w-3.5 h-3.5" /> Páginas Navegadas
+                            </button>
                         </div>
 
                         <!-- Tab: SESSIONS -->
@@ -410,63 +420,202 @@ const interestTooltip = (rank, groupType, count) => {
                             </table>
                         </div>
 
-                        <!-- Tab: SEARCH BEHAVIOUR -->
-                        <div v-show="activeTab === 'searches'" class="overflow-y-auto flex-1 px-8 py-6 space-y-6">
+                        <!-- Tab: ENGAGEMENT -->
+                        <div v-show="activeTab === 'engagement'" class="overflow-y-auto flex-1 px-8 py-6 space-y-6">
                             <div v-if="loadingSearch" class="flex items-center justify-center py-16">
                                 <div class="animate-spin w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full"></div>
                             </div>
                             <div v-else-if="!searchStats || searchStats.total_searches === 0" class="py-16 text-center">
-                                <BarChart2 class="w-7 h-7 text-slate-300 mx-auto mb-3" />
-                                <p class="text-sm text-slate-400">Nenhuma busca registrada</p>
-                                <p class="text-[11px] text-slate-300 mt-1">Os filtros aplicados no dashboard aparecerão aqui.</p>
+                                <TrendingUp class="w-7 h-7 text-slate-300 mx-auto mb-3" />
+                                <p class="text-sm text-slate-400">Nenhum engajamento registrado</p>
                             </div>
-                            <template v-else>
-                                <div v-for="(group, gi) in searchStats.by_type" :key="group.type">
-                                    <!-- Section label -->
-                                    <div class="flex items-center justify-between mb-4">
-                                        <span class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{{ group.label }}</span>
-                                        <span class="text-[11px] text-slate-300 tabular-nums">{{ group.total_hits }} interaç{{ group.total_hits === 1 ? 'ão' : 'ões' }}</span>
-                                    </div>
-                                    <!-- Items -->
-                                    <div class="space-y-4">
-                                        <div v-for="(item, idx) in group.items" :key="item.value" class="flex items-center gap-5">
-                                            <!-- Rank -->
-                                            <span class="flex-shrink-0 w-4 text-[11px] tabular-nums text-right"
-                                                  :class="idx === 0 ? 'font-black text-slate-700' : 'font-medium text-slate-300'">
-                                                {{ idx + 1 }}
-                                            </span>
-
-                                            <!-- Name + bar -->
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-baseline justify-between mb-2">
-                                                    <span class="text-[13px] truncate" :class="interestLevel(idx + 1, item.count).nameWt">{{ item.value }}</span>
-                                                    <span class="flex-shrink-0 ml-4 text-[11px] tabular-nums text-slate-400">{{ item.count }}×</span>
-                                                </div>
-                                                <div class="h-[3px] bg-slate-100 rounded-full overflow-hidden">
-                                                    <div class="h-full rounded-full transition-all duration-700"
-                                                         :class="interestLevel(idx + 1, item.count).bar"
-                                                         :style="{ width: relativeBar(item.count, group.items[0].count) + '%' }">
-                                                    </div>
-                                                </div>
+                            <div v-else-if="searchStats && searchStats.engagement" class="space-y-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <!-- Health Score -->
+                                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest">Health Score</span>
+                                            <HeartPulse class="w-4 h-4 text-indigo-400" />
+                                        </div>
+                                        <div>
+                                            <div class="flex items-end gap-1">
+                                                <span class="text-3xl font-black text-indigo-700 tracking-tight leading-none">{{ searchStats.engagement.health_score }}</span>
+                                                <span class="text-xs font-bold text-indigo-400 leading-tight mb-0.5">/100</span>
                                             </div>
+                                            <p class="text-[10px] text-indigo-500 font-medium mt-2">Índice de retenção</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Dias Ativos -->
+                                    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">Dias Ativos</span>
+                                            <CalendarDays class="w-4 h-4 text-emerald-400" />
+                                        </div>
+                                        <div>
+                                            <div class="flex items-end gap-1">
+                                                <span class="text-3xl font-black text-emerald-700 tracking-tight leading-none">{{ searchStats.engagement.active_days_last_30 }}</span>
+                                                <span class="text-xs font-bold text-emerald-500 leading-tight mb-0.5">dias</span>
+                                            </div>
+                                            <p class="text-[10px] text-emerald-600 font-medium mt-2">Nos últimos 30 dias</p>
+                                        </div>
+                                    </div>
 
-                                            <!-- Interest label + tooltip (LEFT-side to avoid overflow clip) -->
-                                            <div class="flex-shrink-0 flex items-center gap-1 w-24 justify-end group/tip relative">
-                                                <span class="text-[11px] uppercase tracking-wider"
-                                                      :class="[interestLevel(idx + 1, item.count).weight, interestLevel(idx + 1, item.count).text]">
-                                                    {{ interestLevel(idx + 1, item.count).label }}
+                                    <!-- Exportações -->
+                                    <div class="bg-violet-50 border border-violet-100 rounded-2xl p-5 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-[11px] font-bold text-violet-400 uppercase tracking-widest">Extrações</span>
+                                            <Download class="w-4 h-4 text-violet-400" />
+                                        </div>
+                                        <div>
+                                            <div class="flex items-end gap-1">
+                                                <span class="text-3xl font-black text-violet-700 tracking-tight leading-none">{{ searchStats.engagement.total_exports }}</span>
+                                                <span class="text-xs font-bold text-violet-400 leading-tight mb-0.5">vezes</span>
+                                            </div>
+                                            <p class="text-[10px] text-violet-500 font-medium mt-2">Downloads de dados</p>
+                                            
+                                            <!-- Lista de exportações recentes -->
+                                            <div v-if="searchStats.engagement.exported_items && searchStats.engagement.exported_items.length > 0" class="mt-3 flex flex-wrap gap-1">
+                                                <span v-for="item in searchStats.engagement.exported_items" :key="item" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-100 text-violet-600 border border-violet-200">
+                                                    {{ item }}
                                                 </span>
-                                                <HelpCircle class="w-3 h-3 text-slate-300 hover:text-slate-500 cursor-help flex-shrink-0 transition-colors" />
-                                                <!-- Tooltip: appears to the LEFT, escapes scroll container -->
-                                                <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-52 bg-slate-900 text-white text-[10px] leading-relaxed px-3 py-2.5 rounded-lg shadow-xl opacity-0 group-hover/tip:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-normal">
-                                                    {{ interestTooltip(idx + 1, group.type, item.count) }}
-                                                    <!-- Arrow pointing RIGHT -->
-                                                    <div class="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-slate-900"></div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div v-if="gi < searchStats.by_type.length - 1" class="mt-6 border-t border-slate-100"></div>
+
+                                    <!-- Pico -->
+                                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Rotina</span>
+                                            <Clock class="w-4 h-4 text-slate-300" />
+                                        </div>
+                                        <div>
+                                            <div class="flex flex-col gap-0.5">
+                                                <span class="text-[13px] font-black text-slate-700 tracking-tight">{{ searchStats.engagement.peak_hour }}</span>
+                                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ searchStats.engagement.favorite_day }}</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 font-medium mt-2">Maior engajamento</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Tab: NAVIGATION -->
+                        <div v-show="activeTab === 'navigation'" class="overflow-y-auto flex-1 px-8 py-6 space-y-6">
+                            <div v-if="loadingSearch" class="flex items-center justify-center py-16">
+                                <div class="animate-spin w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full"></div>
+                            </div>
+                            <div v-else-if="!searchStats || !searchStats.by_type.some(g => g.type === 'page')" class="py-16 text-center">
+                                <MousePointer2 class="w-7 h-7 text-slate-300 mx-auto mb-3" />
+                                <p class="text-sm text-slate-400">Nenhuma página registrada</p>
+                                <p class="text-[11px] text-slate-300 mt-1">O histórico de navegação aparecerá aqui.</p>
+                            </div>
+                            <template v-else>
+                                <!-- Páginas Navegadas -->
+                                <div class="mb-8">
+                                    <div class="space-y-4">
+                                        <template v-for="group in searchStats.by_type.filter(g => g.type === 'page')" :key="group.type">
+                                            <div v-for="(item, idx) in group.items" :key="item.value" class="flex items-center gap-5">
+                                                <!-- Rank -->
+                                                <span class="flex-shrink-0 w-4 text-[11px] tabular-nums text-right"
+                                                      :class="idx === 0 ? 'font-black text-slate-700' : 'font-medium text-slate-300'">
+                                                    {{ idx + 1 }}
+                                                </span>
+
+                                                <!-- Name + bar -->
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-baseline justify-between mb-2">
+                                                        <span class="text-[13px] truncate" :class="interestLevel(idx + 1, item.count).nameWt">{{ item.value }}</span>
+                                                        <span class="flex-shrink-0 ml-4 text-[11px] tabular-nums text-slate-400">{{ item.count }}×</span>
+                                                    </div>
+                                                    <div class="h-[3px] bg-slate-100 rounded-full overflow-hidden">
+                                                        <div class="h-full rounded-full transition-all duration-700"
+                                                             :class="interestLevel(idx + 1, item.count).bar"
+                                                             :style="{ width: relativeBar(item.count, group.items[0].count) + '%' }">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Interest label -->
+                                                <div class="flex-shrink-0 flex items-center gap-1 w-24 justify-end group/tip relative">
+                                                    <span class="text-[11px] uppercase tracking-wider"
+                                                          :class="[interestLevel(idx + 1, item.count).weight, interestLevel(idx + 1, item.count).text]">
+                                                        {{ interestLevel(idx + 1, item.count).label }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Tab: SEARCH BEHAVIOUR & NAVIGATION -->
+                        <div v-show="activeTab === 'searches'" class="overflow-y-auto flex-1 px-8 py-6 space-y-6">
+                            <div v-if="loadingSearch" class="flex items-center justify-center py-16">
+                                <div class="animate-spin w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full"></div>
+                            </div>
+                            <div v-else-if="!searchStats || !searchStats.by_type.some(g => g.type !== 'page')" class="py-16 text-center">
+                                <BarChart2 class="w-7 h-7 text-slate-300 mx-auto mb-3" />
+                                <p class="text-sm text-slate-400">Nenhum filtro registrado</p>
+                                <p class="text-[11px] text-slate-300 mt-1">Os filtros aplicados no dashboard aparecerão aqui.</p>
+                            </div>
+                            <template v-else>
+                                <!-- Filtros Aplicados -->
+
+
+                                <div class="space-y-6">
+
+                                    <div v-for="(group, gi) in searchStats.by_type.filter(g => g.type !== 'page')" :key="group.type">
+                                        <!-- Section label -->
+                                        <div class="flex items-center justify-between mb-4">
+                                            <span class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">{{ group.label }}</span>
+                                            <span class="text-[11px] text-slate-300 tabular-nums">{{ group.total_hits }} interaç{{ group.total_hits === 1 ? 'ão' : 'ões' }}</span>
+                                        </div>
+                                        <!-- Items -->
+                                        <div class="space-y-4">
+                                            <div v-for="(item, idx) in group.items" :key="item.value" class="flex items-center gap-5">
+                                                <!-- Rank -->
+                                                <span class="flex-shrink-0 w-4 text-[11px] tabular-nums text-right"
+                                                      :class="idx === 0 ? 'font-black text-slate-700' : 'font-medium text-slate-300'">
+                                                    {{ idx + 1 }}
+                                                </span>
+
+                                                <!-- Name + bar -->
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-baseline justify-between mb-2">
+                                                        <span class="text-[13px] truncate" :class="interestLevel(idx + 1, item.count).nameWt">{{ item.value }}</span>
+                                                        <span class="flex-shrink-0 ml-4 text-[11px] tabular-nums text-slate-400">{{ item.count }}×</span>
+                                                    </div>
+                                                    <div class="h-[3px] bg-slate-100 rounded-full overflow-hidden">
+                                                        <div class="h-full rounded-full transition-all duration-700"
+                                                             :class="interestLevel(idx + 1, item.count).bar"
+                                                             :style="{ width: relativeBar(item.count, group.items[0].count) + '%' }">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Interest label + tooltip (LEFT-side to avoid overflow clip) -->
+                                                <div class="flex-shrink-0 flex items-center gap-1 w-24 justify-end group/tip relative">
+                                                    <span class="text-[11px] uppercase tracking-wider"
+                                                          :class="[interestLevel(idx + 1, item.count).weight, interestLevel(idx + 1, item.count).text]">
+                                                        {{ interestLevel(idx + 1, item.count).label }}
+                                                    </span>
+                                                    <HelpCircle class="w-3 h-3 text-slate-300 hover:text-slate-500 cursor-help flex-shrink-0 transition-colors" />
+                                                    <!-- Tooltip: appears to the LEFT, escapes scroll container -->
+                                                    <div class="absolute right-full top-1/2 -translate-y-1/2 mr-3 w-52 bg-slate-900 text-white text-[10px] leading-relaxed px-3 py-2.5 rounded-lg shadow-xl opacity-0 group-hover/tip:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-normal">
+                                                        {{ interestTooltip(idx + 1, group.type, item.count) }}
+                                                        <!-- Arrow pointing RIGHT -->
+                                                        <div class="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-slate-900"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-if="gi < searchStats.by_type.filter(g => g.type !== 'page').length - 1" class="mt-6 border-t border-slate-100"></div>
+                                    </div>
                                 </div>
                             </template>
                         </div>

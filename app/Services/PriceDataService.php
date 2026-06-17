@@ -20,17 +20,38 @@ class PriceDataService
             ->select('products.*')
             ->where('country_id', $countryId);
 
-        // Garante que só mostramos produtos que tiveram preços no período selecionado
-        $query->whereHas('prices', function ($q) use ($supplierId, $rangeStart, $rangeEnd) {
-            $q->whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
-                ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
-        });
+        // Descobre qual foi a última data que teve importação até o período selecionado
+        $latestImportDate = ProductPrice::whereHas('product', function ($q) use ($countryId) {
+            $q->where('country_id', $countryId);
+        })
+        ->where('date', '<=', $rangeEnd->toDateString())
+        ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+        ->max('date');
+
+        if ($latestImportDate) {
+            // Se achou uma data, pega a semana dessa data para exibir 100% apenas o que é dessa semana
+            $actualRangeStart = Carbon::parse($latestImportDate)->startOfWeek(Carbon::MONDAY);
+            $actualRangeEnd = Carbon::parse($latestImportDate)->endOfWeek(Carbon::SUNDAY);
+
+            $query->whereHas('prices', function ($q) use ($supplierId, $actualRangeStart, $actualRangeEnd) {
+                $q->whereBetween('date', [$actualRangeStart->toDateString(), $actualRangeEnd->toDateString()])
+                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+            });
+            $referenceEnd = $actualRangeEnd;
+        } else {
+            // Fallback caso não tenha nada
+            $query->whereHas('prices', function ($q) use ($supplierId, $rangeEnd) {
+                $q->where('date', '<=', $rangeEnd->toDateString())
+                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+            });
+            $referenceEnd = $rangeEnd;
+        }
 
         // Subqueries (Lógica d0117d79 - Estabilização)
         $query->addSelect([
             'latest_price' => ProductPrice::select('price')
                 ->whereColumn('product_id', 'products.id')
-                ->where('date', '<=', $rangeEnd->toDateString())
+                ->where('date', '<=', $referenceEnd->toDateString())
                 ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
                 ->orderBy('date', 'desc')
                 ->orderBy('price', 'asc')
@@ -38,11 +59,11 @@ class PriceDataService
 
             'previous_price' => ProductPrice::select('price')
                 ->whereColumn('product_id', 'products.id')
-                ->where('date', '<', function ($q) use ($supplierId, $rangeEnd) {
+                ->where('date', '<', function ($q) use ($supplierId, $referenceEnd) {
                     $q->select('date')
                         ->from('product_prices')
                         ->whereColumn('product_id', 'products.id')
-                        ->where('date', '<=', $rangeEnd->toDateString())
+                        ->where('date', '<=', $referenceEnd->toDateString())
                         ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId))
                         ->orderBy('date', 'desc')
                         ->limit(1);
@@ -55,7 +76,7 @@ class PriceDataService
             'latest_supplier' => Supplier::select('name')
                 ->join('product_prices', 'product_prices.supplier_id', '=', 'suppliers.id')
                 ->whereColumn('product_prices.product_id', 'products.id')
-                ->where('product_prices.date', '<=', $rangeEnd->toDateString())
+                ->where('product_prices.date', '<=', $referenceEnd->toDateString())
                 ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
                 ->orderBy('product_prices.date', 'desc')
                 ->orderBy('product_prices.price', 'asc')

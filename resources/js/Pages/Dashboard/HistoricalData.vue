@@ -224,8 +224,8 @@ const processedHistoricalData = computed(() => {
 const formatPaginationLabel = (label) => {
     if (!label) return '';
     const l = label.toLowerCase();
-    if (l.includes('previous')) return isMobile.value ? 'prev' : '&laquo; Anterior';
-    if (l.includes('next')) return isMobile.value ? 'next' : 'Próximo &raquo;';
+    if (l.includes('previous')) return 'prev';
+    if (l.includes('next')) return 'next';
     return label;
 };
 
