@@ -111,12 +111,12 @@ class InternalDashboardController extends Controller
         $countries = $this->dashboardService->getCountriesWithLatestUpdate($currentWeekStart, $currentWeekEnd);
         $isFirstVisit = !$request->hasAny(['country_id', 'product_id', 'supplier_id', 'date_range']);
 
-        $countryId = $viewData['filters']['country_id'];
-        $productId = $viewData['filters']['product_id'];
-        $supplierId = $viewData['filters']['supplier_id'];
-        $dateRange = $viewData['filters']['date_range'];
+        $countryId = $viewData['filters']['country_id'] ?: session('current_filter_country_id');
+        $productId = $viewData['filters']['product_id'] ?: session('current_filter_product_id');
+        $supplierId = $viewData['filters']['supplier_id'] ?: session('current_filter_supplier_id');
+        $dateRange = $viewData['filters']['date_range'] ?: session('current_filter_date_range');
 
-        if ($isFirstVisit && $defaultCountryId) {
+        if ($isFirstVisit && $defaultCountryId && !$countryId) {
             $countryId = $defaultCountryId;
         }
 
@@ -228,6 +228,8 @@ class InternalDashboardController extends Controller
             $id = $filters[$param] ?? null;
             if (!$id) continue;
 
+            session()->put("current_filter_{$param}", $id);
+
             $record = $config['model']::find($id);
             if (!$record) continue;
 
@@ -242,6 +244,7 @@ class InternalDashboardController extends Controller
         // Log date range as-is (it's already a human-readable string)
         $dateRange = $filters['date_range'] ?? null;
         if ($dateRange && $dateRange !== 'Todos') {
+            session()->put("current_filter_date_range", $dateRange);
             $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext);
         }
     }

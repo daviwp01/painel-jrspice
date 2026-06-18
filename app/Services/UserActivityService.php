@@ -209,10 +209,20 @@ class UserActivityService
         string $filterValue,
         ?string $pageContext = null
     ): void {
-        // Deduplicate: skip if the same filter was logged in the last 2s (prevents double-clicks/double-API-calls)
+        // 1. Evita requisições concorrentes e cliques duplos (trava atômica de 2 segundos)
         $cacheKey = "search_log_{$user->id}_{$filterType}_{$filterValue}";
-        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
-            return;
+        if (!\Illuminate\Support\Facades\Cache::add($cacheKey, true, 2)) {
+            return; // Se já existir no cache (adicionado por outra requisição simultânea), bloqueia.
+        }
+
+        // 2. Evita spam de F5/Recarregamento de página ou troca de abas
+        // Só registra se o usuário realmente MUDOU o filtro globalmente
+        if ($filterType !== 'export') {
+            $sessionKey = "last_search_{$filterType}";
+            if (session()->get($sessionKey) === (string) $filterValue) {
+                return;
+            }
+            session()->put($sessionKey, (string) $filterValue);
         }
 
         UserSearchLog::create([
@@ -222,8 +232,6 @@ class UserActivityService
             'page_context' => $pageContext,
             'searched_at'  => now(),
         ]);
-
-        \Illuminate\Support\Facades\Cache::put($cacheKey, true, 2);
     }
 
     /**
