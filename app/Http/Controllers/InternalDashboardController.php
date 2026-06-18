@@ -90,7 +90,7 @@ class InternalDashboardController extends Controller
 
         // Sempre registrar os filtros que o usuário está visualizando (incluindo defaults)
         if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {
-            $this->logFilters($viewData['filters'], $currentPage->component);
+            $this->logFilters($viewData['filters'], $currentPage->component, $request->has('_rehydrating'));
         }
 
         return Inertia::render($currentPage->component, $viewData);
@@ -208,7 +208,7 @@ class InternalDashboardController extends Controller
      * Log filter selections as search behaviour events.
      * Uses the resolved model names via DB for readable values.
      */
-    private function logFilters(array $filters, string $pageContext): void
+    private function logFilters(array $filters, string $pageContext, bool $isRehydrating = false): void
     {
         $user = auth()->user();
         if (!$user) return;
@@ -237,7 +237,8 @@ class InternalDashboardController extends Controller
                 $user,
                 $config['type'],
                 $record->{$config['field']},
-                $pageContext
+                $pageContext,
+                $isRehydrating
             );
         }
 
@@ -245,7 +246,7 @@ class InternalDashboardController extends Controller
         $dateRange = $filters['date_range'] ?? null;
         if ($dateRange && $dateRange !== 'Todos') {
             session()->put("current_filter_date_range", $dateRange);
-            $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext);
+            $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext, $isRehydrating);
         }
     }
 

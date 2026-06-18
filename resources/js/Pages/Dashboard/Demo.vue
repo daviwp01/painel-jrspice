@@ -310,7 +310,7 @@ onMounted(() => {
                 if (parsed.country_id) selectedCountry.value = parsed.country_id;
                 if (parsed.product_id) selectedProduct.value = parsed.product_id;
                 if (parsed.date_range) filterDateRange.value = parsed.date_range;
-                applyFilters();
+                applyFilters(true); // isRehydrating = true
             }
         }
     }
@@ -358,7 +358,7 @@ const clearFilters = () => {
     });
 };
 
-const applyFilters = () => {
+const applyFilters = (isRehydrating = false) => {
   // Se for um produto bloqueado, barramos aqui no front também
   const product = props.products.find(p => p.id == selectedProduct.value);
   const isLocked = product?.country_id != demoCountryId.value || (demoProductIds.value.length > 0 && !demoProductIds.value.includes(selectedProduct.value));
@@ -370,12 +370,19 @@ const applyFilters = () => {
 
   saveFilters();
   isLoading.value = true;
-  router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+  
+  const query = {
     country_id: selectedCountry.value,
     supplier_id: selectedSupplier.value,
     product_id: selectedProduct.value,
     date_range: filterDateRange.value
-  }, { 
+  };
+
+  if (isRehydrating) {
+      query._rehydrating = 1;
+  }
+
+  router.get(route('dashboard.page', { slug: props.currentPage.slug }), query, { 
     preserveState: true, 
     onFinish: () => isLoading.value = false 
   });

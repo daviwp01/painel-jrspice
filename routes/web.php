@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(function () {
+    Route::get('/clients', [AdminController::class, 'clientsIndex'])->name('admin.clients.index');
     Route::get('/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
     Route::get('/activity', [AdminController::class, 'activityIndex'])->name('admin.activity.index');
     Route::post('/activity/clear', [AdminController::class, 'bulkClearActivity'])->name('admin.activity.clear');

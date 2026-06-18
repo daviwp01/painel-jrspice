@@ -62,7 +62,7 @@ watch(() => props.filters, (newFilters) => {
 
 const STORAGE_KEY = 'jrspice_filters_historical';
 
-const applyFilters = (track = true) => {
+const applyFilters = (track = true, isRehydrating = false) => {
     saveFilters();
     isLoading.value = true;
     
@@ -74,6 +74,10 @@ const applyFilters = (track = true) => {
         sort_field: props.filters.sort_field,
         sort_direction: props.filters.sort_direction
     };
+
+    if (isRehydrating) {
+        query._rehydrating = 1;
+    }
 
     if (track) {
         query._track = 1;
@@ -110,7 +114,7 @@ onMounted(() => {
                 if (parsed.supplier_id) selectedSupplier.value = parsed.supplier_id;
                 if (parsed.product_id) selectedProduct.value = parsed.product_id;
                 if (parsed.date_range) filterDateRange.value = parsed.date_range;
-                applyFilters(false);
+                applyFilters(false, true); // isRehydrating = true
             }
         }
     }

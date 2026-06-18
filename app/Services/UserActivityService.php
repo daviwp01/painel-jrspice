@@ -207,8 +207,22 @@ class UserActivityService
         User $user,
         string $filterType,
         string $filterValue,
-        ?string $pageContext = null
+        ?string $pageContext = null,
+        bool $isRehydrating = false
     ): void {
+        if ($isRehydrating) {
+            // Se o frontend está reidratando a memória (ex: Chile), removemos o log "padrão" (ex: China) 
+            // que o Backend acabou de criar acidentalmente há poucos segundos atrás.
+            UserSearchLog::where('user_id', $user->id)
+                ->where('filter_type', $filterType)
+                ->where('created_at', '>=', now()->subSeconds(10))
+                ->delete();
+                
+            // Limpamos o cache e a sessão para não impedir a gravação do valor real da memória
+            \Illuminate\Support\Facades\Cache::forget("search_log_{$user->id}_{$filterType}_{$filterValue}");
+            session()->forget("last_search_{$filterType}");
+        }
+
         // 1. Evita requisições concorrentes e cliques duplos (trava atômica de 2 segundos)
         $cacheKey = "search_log_{$user->id}_{$filterType}_{$filterValue}";
         if (!\Illuminate\Support\Facades\Cache::add($cacheKey, true, 2)) {

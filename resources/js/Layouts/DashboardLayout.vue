@@ -48,6 +48,7 @@ onUnmounted(() => {
 // Custom Navigation Items (Admin only)
 const navItems = computed(() => [
     { name: 'Gestão de Dados', route: 'admin.data.index', active: route().current('admin.data.*'), masterOnly: true, icon: DatabaseIcon },
+    { name: 'Gestão de Clientes', route: 'admin.clients.index', active: route().current('admin.clients.*'), masterOnly: true, icon: UsersIcon },
     { name: 'Users', route: 'admin.users.index', active: route().current('admin.users.*'), masterOnly: true, icon: UsersIcon },
     { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true, icon: ActivityIcon },
     { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true, icon: SettingsIcon2 },

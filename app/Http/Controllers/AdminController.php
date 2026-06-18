@@ -54,6 +54,14 @@ class AdminController extends Controller
     }
 
     /**
+     * Display the clients management page.
+     */
+    public function clientsIndex()
+    {
+        return \Inertia\Inertia::render('Admin/Clients/Index');
+    }
+
+    /**
      * Display user activity analytics.
      */
     public function activityIndex()

@@ -110,7 +110,7 @@ onMounted(() => {
             // Se o URL não tem filtro mas o localstorage tem, e é diferente do padrão do backend, aplica
             if (parsed.country_id && parsed.country_id != props.filters.country_id) {
                 selectedCountry.value = parsed.country_id;
-                applyFilters();
+                applyFilters(true);
             }
         }
     }
@@ -147,17 +147,24 @@ const clearFilters = () => {
     });
 };
 
-const applyFilters = () => {
+const applyFilters = (isRehydrating = false) => {
     saveFilters();
     isLoading.value = true;
+
+    const query = { 
+        country_id: selectedCountry.value,
+        supplier_id: selectedSupplier.value,
+        sort_field: props.filters.sort_field,
+        sort_direction: props.filters.sort_direction
+    };
+
+    if (isRehydrating) {
+        query._rehydrating = 1;
+    }
+
     router.get(
         route('dashboard.page', { slug: props.currentPage.slug }),
-        { 
-            country_id: selectedCountry.value,
-            supplier_id: selectedSupplier.value,
-            sort_field: props.filters.sort_field,
-            sort_direction: props.filters.sort_direction
-        },
+        query,
         { 
             preserveState: true, 
             replace: true,
