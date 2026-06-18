@@ -195,6 +195,12 @@ class InternalDashboardController extends Controller
             $viewData['pricesData'] = $this->priceDataService->getContinuousData(
                 $countryId, $productId, $supplierId, $range
             );
+            
+            if (auth()->user() && auth()->user()->is_master) {
+                $viewData['recentBestPrices'] = $this->priceDataService->getRecentBestPrices($productId, $range);
+            } else {
+                $viewData['recentBestPrices'] = [];
+            }
         }
 
         $viewData['countries'] = $countries;

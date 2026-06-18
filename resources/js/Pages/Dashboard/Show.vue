@@ -46,6 +46,7 @@ const props = defineProps({
   chartData: Object,
   chartWeeklyData: Object,
   settings: Object,
+  recentBestPrices: Array,
 });
 
 const monthsFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -650,6 +651,51 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                           <span class="text-sm font-bold text-slate-600 uppercase tracking-widest group-hover:text-blue-600 transition-colors">{{ yearKey }}</span>
                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- BEST RECENT PRICES (MASTERS ONLY) -->
+            <div v-if="$page.props.auth.user.is_master && recentBestPrices && recentBestPrices.length > 0" class="mt-8 bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">Melhores Preços</h3>
+                    <div class="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-100">
+                        Top {{ recentBestPrices.length }} Semanas
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-50">
+                                <th class="py-3 px-4 rounded-tl-xl">Fornecedor</th>
+                                <th class="py-3 px-4">Data</th>
+                                <th class="py-3 px-4 text-center">Ano / Semana</th>
+                                <th class="py-3 px-4 text-right rounded-tr-xl">Preço</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr v-for="(bestPrice, index) in recentBestPrices" :key="index" class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="py-4 px-4">
+                                    <div class="font-bold text-slate-800 text-xs uppercase group-hover:text-blue-600 transition-colors">
+                                        {{ bestPrice.supplier }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    {{ new Date(bestPrice.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) }}
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    <div class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+                                        {{ bestPrice.week_label }}
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-right">
+                                    <div class="text-sm font-black text-slate-900 tabular-nums">
+                                        $ {{ formatNumber(bestPrice.price) }}
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

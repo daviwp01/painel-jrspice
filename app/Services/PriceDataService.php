@@ -224,6 +224,40 @@ class PriceDataService
     }
 
     /**
+     * Get the 3 best (lowest) prices for the most recent 3 distinct weeks.
+     */
+    public function getRecentBestPrices(int $productId, ?array $range = null): array
+    {
+        return Cache::remember("product_best_prices_{$productId}_" . ($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
+            $prices = ProductPrice::with('supplier')
+                ->where('product_id', $productId)
+                ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+                ->orderBy('date', 'desc')
+                ->get();
+
+            $weeksMap = [];
+            foreach ($prices as $price) {
+                $date = Carbon::parse($price->date);
+                $year = $date->isoWeekYear(); // Use isoWeekYear to match isoWeek correctly
+                $week = $date->isoWeek();
+                $yw = sprintf("%04d-%02d", $year, $week);
+
+                if (!isset($weeksMap[$yw]) || $price->price < $weeksMap[$yw]['price']) {
+                    $weeksMap[$yw] = [
+                        'supplier' => $price->supplier->name ?? 'N/A',
+                        'date' => $price->date,
+                        'price' => (float)$price->price,
+                        'week_label' => "{$year}/{$week}",
+                    ];
+                }
+            }
+
+            krsort($weeksMap);
+            return array_slice(array_values($weeksMap), 0, 3);
+        });
+    }
+
+    /**
      * Calculate metrics (Latest, Year, All-time) via SQL aggregations.
      */
     public function calculateMetrics(int $productId, ?array $range): array
