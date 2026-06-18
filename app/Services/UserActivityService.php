@@ -215,7 +215,7 @@ class UserActivityService
             // que o Backend acabou de criar acidentalmente há poucos segundos atrás.
             UserSearchLog::where('user_id', $user->id)
                 ->where('filter_type', $filterType)
-                ->where('created_at', '>=', now()->subSeconds(10))
+                ->where('searched_at', '>=', now()->subSeconds(10))
                 ->delete();
                 
             // Limpamos o cache e a sessão para não impedir a gravação do valor real da memória
