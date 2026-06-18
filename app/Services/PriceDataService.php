@@ -189,9 +189,14 @@ class PriceDataService
      */
     public function calculateChartWeekly(int $productId, ?array $range = null): array
     {
-        $prices = ProductPrice::where('product_id', $productId)
+        // Utilizamos o banco de dados para agrupar e achar o valor mínimo da semana (Economia de Memória OOM)
+        $prices = DB::table('product_prices')
+            ->where('product_id', $productId)
             ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
-            ->orderBy('date', 'asc')
+            ->selectRaw('YEAR(date) as yr, FLOOR((DAYOFYEAR(date) - 1) / 7) as wk, MIN(price) as min_p')
+            ->groupBy('yr', 'wk')
+            ->orderBy('yr', 'asc')
+            ->orderBy('wk', 'asc')
             ->get();
 
         if ($prices->isEmpty()) {
@@ -199,14 +204,9 @@ class PriceDataService
         }
 
         $chartData = [];
-        foreach ($prices as $price) {
-            $date = Carbon::parse($price->date);
-            $year = $date->year;
-            $startOfYear = $date->copy()->startOfYear();
-            
-            // Match JS logic: Math.floor((dateVal - start) / (7 * 24 * 60 * 60 * 1000))
-            // using dayOfYear - 1 is exactly the number of full days since Jan 1st 00:00:00
-            $week = (int) floor(($date->dayOfYear - 1) / 7);
+        foreach ($prices as $row) {
+            $year = (int) $row->yr;
+            $week = (int) $row->wk;
             
             if ($week < 0) $week = 0;
             if ($week > 51) $week = 51;
@@ -215,9 +215,7 @@ class PriceDataService
                 $chartData[$year] = array_fill(0, 52, null);
             }
             
-            if ($chartData[$year][$week] === null || $price->price < $chartData[$year][$week]) {
-                $chartData[$year][$week] = (float)round($price->price, 2);
-            }
+            $chartData[$year][$week] = (float)round($row->min_p, 2);
         }
 
         return $chartData;
@@ -229,25 +227,43 @@ class PriceDataService
     public function getRecentBestPrices(int $productId, ?array $range = null): array
     {
         return Cache::remember("product_best_prices_{$productId}_" . ($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
-            $prices = ProductPrice::with('supplier')
-                ->where('product_id', $productId)
-                ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
-                ->orderBy('date', 'desc')
-                ->get();
+            // Utilizamos DB facade com cursor() para evitar estourar a memória (OOM) hidratando milhares de models
+            $query = DB::table('product_prices')
+                ->join('suppliers', 'suppliers.id', '=', 'product_prices.supplier_id')
+                ->select('product_prices.date', 'product_prices.price', 'suppliers.name as supplier')
+                ->where('product_prices.product_id', $productId)
+                ->when($range, fn($q) => $q->whereBetween('product_prices.date', [$range['start'], $range['end']]))
+                ->orderBy('product_prices.date', 'desc');
 
             $weeksMap = [];
-            foreach ($prices as $price) {
+            $completedWeeks = [];
+            $currentYw = null;
+
+            foreach ($query->cursor() as $price) {
                 $date = Carbon::parse($price->date);
-                $year = $date->isoWeekYear(); // Use isoWeekYear to match isoWeek correctly
+                $year = $date->isoWeekYear(); 
                 $week = $date->isoWeek();
                 $yw = sprintf("%04d-%02d", $year, $week);
 
+                // Detecta mudança de semana para contar quantas já varremos inteiras
+                if ($currentYw !== $yw) {
+                    if ($currentYw !== null && !in_array($currentYw, $completedWeeks)) {
+                        $completedWeeks[] = $currentYw;
+                    }
+                    $currentYw = $yw;
+                    
+                    // Se já fechamos 3 semanas distintas, podemos parar a varredura do banco (Economia absurda de CPU/RAM)
+                    if (count($completedWeeks) >= 3) {
+                        break;
+                    }
+                }
+
                 if (!isset($weeksMap[$yw]) || $price->price < $weeksMap[$yw]['price']) {
                     $weeksMap[$yw] = [
-                        'supplier' => $price->supplier->name ?? 'N/A',
+                        'supplier' => $price->supplier ?? 'N/A',
                         'date' => $price->date,
                         'price' => (float)$price->price,
-                        'week_label' => "{$year}/{$week}",
+                        'week_label' => "{$year} / {$week}",
                     ];
                 }
             }
