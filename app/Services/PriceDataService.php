@@ -227,49 +227,45 @@ class PriceDataService
     public function getRecentBestPrices(int $productId, ?array $range = null): array
     {
         return Cache::remember("product_best_prices_{$productId}_" . ($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
-            // Utilizamos DB facade com cursor() para evitar estourar a memória (OOM) hidratando milhares de models
-            $query = DB::table('product_prices')
+            // Encontra a data mais recente com preços para este produto no range
+            $latestDate = DB::table('product_prices')
+                ->where('product_id', $productId)
+                ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+                ->max('date');
+
+            if (!$latestDate) {
+                return [];
+            }
+
+            // Define o início e fim da semana baseada na data mais recente encontrada
+            $startOfWeek = Carbon::parse($latestDate)->startOfWeek(Carbon::MONDAY)->toDateString();
+            $endOfWeek = Carbon::parse($latestDate)->endOfWeek(Carbon::SUNDAY)->toDateString();
+
+            // Pega os 3 melhores (menores) preços apenas desta semana
+            $bestPrices = DB::table('product_prices')
                 ->join('suppliers', 'suppliers.id', '=', 'product_prices.supplier_id')
                 ->select('product_prices.date', 'product_prices.price', 'suppliers.name as supplier')
                 ->where('product_prices.product_id', $productId)
-                ->when($range, fn($q) => $q->whereBetween('product_prices.date', [$range['start'], $range['end']]))
-                ->orderBy('product_prices.date', 'desc');
+                ->whereBetween('product_prices.date', [$startOfWeek, $endOfWeek])
+                ->orderBy('product_prices.price', 'asc')
+                ->limit(3)
+                ->get();
 
-            $weeksMap = [];
-            $completedWeeks = [];
-            $currentYw = null;
-
-            foreach ($query->cursor() as $price) {
+            $result = [];
+            foreach ($bestPrices as $price) {
                 $date = Carbon::parse($price->date);
                 $year = $date->isoWeekYear(); 
                 $week = $date->isoWeek();
-                $yw = sprintf("%04d-%02d", $year, $week);
-
-                // Detecta mudança de semana para contar quantas já varremos inteiras
-                if ($currentYw !== $yw) {
-                    if ($currentYw !== null && !in_array($currentYw, $completedWeeks)) {
-                        $completedWeeks[] = $currentYw;
-                    }
-                    $currentYw = $yw;
-                    
-                    // Se já fechamos 3 semanas distintas, podemos parar a varredura do banco (Economia absurda de CPU/RAM)
-                    if (count($completedWeeks) >= 3) {
-                        break;
-                    }
-                }
-
-                if (!isset($weeksMap[$yw]) || $price->price < $weeksMap[$yw]['price']) {
-                    $weeksMap[$yw] = [
-                        'supplier' => $price->supplier ?? 'N/A',
-                        'date' => $price->date,
-                        'price' => (float)$price->price,
-                        'week_label' => "{$year} / {$week}",
-                    ];
-                }
+                
+                $result[] = [
+                    'supplier' => $price->supplier ?? 'N/A',
+                    'date' => $price->date,
+                    'price' => (float)$price->price,
+                    'week_label' => "{$year} / {$week}",
+                ];
             }
 
-            krsort($weeksMap);
-            return array_slice(array_values($weeksMap), 0, 3);
+            return $result;
         });
     }
 

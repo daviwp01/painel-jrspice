@@ -138,6 +138,7 @@ const clearFilters = () => {
 
     isLoading.value = true;
     router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+        clear_filters: 1,
         country_id: defCountry,
         sort_field: props.filters.sort_field,
         sort_direction: props.filters.sort_direction

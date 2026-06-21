@@ -63,10 +63,6 @@ class InternalDashboardController extends Controller
             abort(403);
         }
 
-        if ($request->has("clear_filters")) {
-            session()->forget(["current_filter_country_id", "current_filter_product_id", "current_filter_supplier_id", "current_filter_date_range"]);
-        }
-
         $viewData = [
             'currentPage' => $currentPage,
             'filters' => [

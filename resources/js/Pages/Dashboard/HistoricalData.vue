@@ -408,8 +408,8 @@ const changePage = (url) => {
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
                                     {{ isMobile ? 'PREÇO' : 'PREÇO' }}
-                                    <ArrowUpIcon v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
-                                    <ArrowDownIcon v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowUp v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
+                                    <ArrowDown v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>

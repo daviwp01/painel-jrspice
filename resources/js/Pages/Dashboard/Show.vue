@@ -313,6 +313,7 @@ const clearFilters = () => {
 
     isLoading.value = true;
     router.get(route('dashboard.page', { slug: props.currentPage.slug }), {
+        clear_filters: 1,
         country_id: defCountry,
         product_id: defProduct,
         date_range: 'Todos'
@@ -659,7 +660,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                 <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
                     <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">Melhores Preços</h3>
                     <div class="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-100">
-                        Top {{ recentBestPrices.length }} Semanas
+                        Top {{ recentBestPrices.length }} Fornecedores
                     </div>
                 </div>
 

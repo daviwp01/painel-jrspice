@@ -545,7 +545,7 @@ class DataController extends Controller
 
         // 3. Disparar restauração (é essencialmente uma importação do backup)
         $batch = Bus::batch([
-            new \App\Jobs\ProcessDataImport($fullPath, $jobId)
+            new \App\Jobs\ProcessDataImport($tempImportPath, $jobId)
         ])->name("Restauração de Dados - {$jobId}")->dispatch();
 
         \App\Models\Setting::set('active_import_batch_id', $batch->id);
