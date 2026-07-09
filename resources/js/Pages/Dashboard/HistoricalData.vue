@@ -31,6 +31,7 @@ const props = defineProps({
     default: () => ({ data: [], links: [] })
   },
   settings: Object,
+  last_prices_update: String,
 });
 
 const selectedCountry = ref(props.filters.country_id || '');
@@ -355,12 +356,14 @@ const changePage = (url) => {
 
 
         <!-- Page Title Region -->
-        <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-slate-200 mb-4 mt-2 gap-4">
+        <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-slate-200 mb-8 gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
-                <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest rounded-full border border-slate-200 bg-white inline-block px-3 py-1 shadow-sm flex items-center gap-2">
-                    <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
-                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm flex items-center gap-2">
+                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString('pt-BR') : '--' }}</span>
+                    </p>
+                </div>
             </div>
         </div>
 

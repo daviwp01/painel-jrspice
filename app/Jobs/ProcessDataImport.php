@@ -232,6 +232,7 @@ class ProcessDataImport implements ShouldQueue
                 gc_collect_cycles();
             }
 
+            Cache::forget('last_prices_update');
             if ($this->jobId) {
                 Cache::put("import_progress_{$this->jobId}", ['current' => $totalRows, 'total' => $totalRows, 'status' => 'completed', 'percentage' => 100], 600);
             }

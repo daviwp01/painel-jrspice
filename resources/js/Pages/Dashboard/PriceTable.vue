@@ -25,6 +25,7 @@ const props = defineProps({
   products: Object,     // Now paginated
   filters: Object,
   settings: Object,
+  last_prices_update: String,
 });
 
 const selectedCountry = ref(props.filters.country_id || '');
@@ -269,7 +270,7 @@ const changePage = (url) => {
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
                 <div class="flex flex-wrap items-center gap-2 mt-2">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm flex items-center gap-2">
-                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ new Date().toLocaleString('pt-BR') }}</span>
+                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString('pt-BR') : '--' }}</span>
                     </p>
                 </div>
             </div>

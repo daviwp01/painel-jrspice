@@ -67,6 +67,10 @@ class InternalDashboardController extends Controller
             session()->forget(["current_filter_country_id", "current_filter_product_id", "current_filter_supplier_id", "current_filter_date_range"]);
         }
 
+        $latestPriceCreated = Cache::remember('last_prices_update', 300, function () {
+            return \App\Models\ProductPrice::max('created_at');
+        });
+
         $viewData = [
             'currentPage' => $currentPage,
             'filters' => [
@@ -78,6 +82,9 @@ class InternalDashboardController extends Controller
                 'sort_direction' => $request->query('sort_direction'),
             ],
             'settings' => $this->dashboardService->getSettings(),
+            'last_prices_update' => $latestPriceCreated 
+                ? Carbon::parse($latestPriceCreated)->toIso8601String() 
+                : null,
         ];
 
         if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {
