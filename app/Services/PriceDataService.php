@@ -102,7 +102,8 @@ class PriceDataService
         // Trasformação final para o frontend
         $paginated->getCollection()->transform(function ($product) {
             $latest = $product->latest_price ? (float) $product->latest_price : null;
-            $previous = $product->previous_price ? (float) $product->previous_price : $latest;
+            $hasPrevious = !is_null($product->previous_price);
+            $previous = $hasPrevious ? (float) $product->previous_price : $latest;
 
             $variation = ($latest && $previous && $previous > 0)
                 ? (($latest - $previous) / $previous) * 100
@@ -111,7 +112,7 @@ class PriceDataService
             $product->latest_price = $latest;
             $product->previous_price = $previous;
             $product->variation = round($variation, 2);
-            $product->status = $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$product->previous_price && $product->latest_price ? 'new' : 'none'));
+            $product->status = $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$hasPrevious && $latest ? 'new' : 'none'));
             
             return $product;
         });
