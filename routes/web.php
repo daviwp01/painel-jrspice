@@ -21,6 +21,12 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::get('/dashboard/page/{slug}', [InternalDashboardController::class, 'show'])->name('dashboard.page');
     Route::post('/dashboard/contact/send', [InternalDashboardController::class, 'sendContactEmail'])->name('dashboard.contact.send');
     Route::get('/dashboard/export/prices', [InternalDashboardController::class, 'exportPricesPdf'])->name('dashboard.export.prices');
+
+    // Gestão de Clientes / Exportações
+    Route::get('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'index'])->name('export-processes.index');
+    Route::post('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'store'])->name('export-processes.store');
+    Route::put('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'update'])->name('export-processes.update');
+    Route::delete('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'destroy'])->name('export-processes.destroy');
 });
 
 Route::middleware('auth')->group(function () {
@@ -32,7 +38,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(function () {
-    Route::get('/clients', [AdminController::class, 'clientsIndex'])->name('admin.clients.index');
+    Route::get('/clients', [\App\Http\Controllers\ExportProcessController::class, 'index'])->name('admin.clients.index');
     Route::get('/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
     Route::get('/activity', [AdminController::class, 'activityIndex'])->name('admin.activity.index');
     Route::post('/activity/clear', [AdminController::class, 'bulkClearActivity'])->name('admin.activity.clear');
@@ -73,6 +79,10 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::put('/data/products/{product}', [DataController::class, 'updateProduct'])->name('admin.data.products.update');
     Route::delete('/data/products/{product}', [DataController::class, 'destroyProduct'])->name('admin.data.products.destroy');
     Route::post('/data/products/clear-harvests', [DataController::class, 'clearAllHarvests'])->name('admin.data.products.clear-harvests');
+
+    Route::post('/data/clients', [DataController::class, 'storeClient'])->name('admin.data.clients.store');
+    Route::put('/data/clients/{client}', [DataController::class, 'updateClient'])->name('admin.data.clients.update');
+    Route::delete('/data/clients/{client}', [DataController::class, 'destroyClient'])->name('admin.data.clients.destroy');
 
     Route::post('/data/prices', [DataController::class, 'storePrice'])->name('admin.data.prices.store');
     Route::post('/data/prices/truncate', [DataController::class, 'truncatePrices'])->name('admin.data.prices.truncate');

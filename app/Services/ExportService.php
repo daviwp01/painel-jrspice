@@ -35,8 +35,8 @@ class ExportService
         foreach ($countries as $country) {
             $products = Product::query()
                 ->where('country_id', $country->id)
-                ->whereHas('prices', function ($q) use ($startOfWeek, $endOfWeek) {
-                    $q->whereBetween('date', [$startOfWeek, $endOfWeek]);
+                ->whereHas('prices', function ($q) use ($endOfWeek) {
+                    $q->where('date', '<=', $endOfWeek);
                 })
                 ->addSelect([
                     'latest_price' => ProductPrice::select('price')

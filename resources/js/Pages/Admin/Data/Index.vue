@@ -10,7 +10,8 @@ import {
     TrendingUp as ActivityIcon, 
     FileUp as FileUpIcon,
     Search as SearchIcon,
-    Plus as PlusIcon
+    Plus as PlusIcon,
+    Users as UsersIcon
 } from 'lucide-vue-next';
 
 // Tab Components
@@ -20,9 +21,11 @@ import SuppliersTab from './Tabs/SuppliersTab.vue';
 import ProductsTab from './Tabs/ProductsTab.vue';
 import PricesTab from './Tabs/PricesTab.vue';
 import ImportTab from './Tabs/ImportTab.vue';
+import ClientsTab from './Tabs/ClientsTab.vue';
 
 const tabs = [
     { id: 'pages', name: 'Páginas / Menu', icon: LayoutIcon },
+    { id: 'clients', name: 'Clientes (Exp/Imp)', icon: UsersIcon },
     { id: 'countries', name: 'Países', icon: GlobeIcon },
     { id: 'products', name: 'Produtos', icon: PackageIcon },
     { id: 'suppliers', name: 'Fornecedores', icon: TruckIcon },
@@ -32,6 +35,7 @@ const tabs = [
 
 const props = defineProps({
     pages: Object,
+    clients: Object,
     countries: Object,
     products: Object,
     suppliers: Object,
@@ -53,6 +57,7 @@ const filters = ref({
     products_search: props.filters?.products_search || '',
     suppliers_search: props.filters?.suppliers_search || '',
     prices_search: props.filters?.prices_search || '',
+    clients_search: props.filters?.clients_search || '',
 });
 
 let timeout;
@@ -66,6 +71,7 @@ const performSearch = () => {
                 countries_search: filters.value.countries_search,
                 suppliers_search: filters.value.suppliers_search,
                 prices_search: filters.value.prices_search,
+                clients_search: filters.value.clients_search,
             },
             {
                 preserveState: true,
@@ -89,7 +95,7 @@ watch(activeTab, (newTab) => {
 
 // Observa mudanças nos filtros e dispara a busca
 watch(
-    () => [filters.value.products_search, filters.value.countries_search, filters.value.suppliers_search, filters.value.prices_search],
+    () => [filters.value.products_search, filters.value.countries_search, filters.value.suppliers_search, filters.value.prices_search, filters.value.clients_search],
     () => {
         performSearch();
     }
@@ -120,16 +126,18 @@ const searchableProducts = computed(() => {
 
 
                 <!-- Tabs Navigation -->
-                <div class="bg-white rounded-t-2xl border-b border-slate-200 shadow-sm overflow-hidden flex flex-nowrap overflow-x-auto">
-                    <button 
-                        v-for="tab in tabs" 
-                        :key="tab.id"
-                        @click="activeTab = tab.id" 
-                        :class="activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/10' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'" 
-                        class="px-6 py-5 border-b-[4px] font-bold text-sm uppercase tracking-widest transition-all flex items-center gap-3 whitespace-nowrap"
-                    >
-                        <component :is="tab.icon" class="w-5 h-5" /> {{ tab.name }}
-                    </button>
+                <div class="bg-white rounded-t-2xl border-b border-slate-200 shadow-sm overflow-hidden">
+                    <div class="flex flex-nowrap overflow-x-auto hide-scrollbar">
+                        <button 
+                            v-for="tab in tabs" 
+                            :key="tab.id"
+                            @click="activeTab = tab.id" 
+                            :class="activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/10' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'" 
+                            class="flex-1 md:flex-none px-2 py-3.5 md:px-4 md:py-4 border-b-[4px] font-bold text-[10px] md:text-xs lg:text-sm uppercase tracking-normal md:tracking-wider transition-all flex items-center justify-center gap-1.5 md:gap-2 whitespace-nowrap"
+                        >
+                            <component :is="tab.icon" class="w-4 h-4" /> {{ tab.name }}
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tab Content -->
@@ -138,6 +146,13 @@ const searchableProducts = computed(() => {
                     <PagesTab 
                         v-show="activeTab === 'pages'" 
                         :pages="pages" 
+                    />
+
+                    <ClientsTab 
+                        v-show="activeTab === 'clients'" 
+                        :clients="clients" 
+                        :filters="filters"
+                        @updateSearch="updateSearch"
                     />
 
                     <CountriesTab 
@@ -184,3 +199,13 @@ const searchableProducts = computed(() => {
         </div>
     </DashboardLayout>
 </template>
+
+<style scoped>
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+</style>

@@ -47,6 +47,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Gerenciar Dados
                                 </NavLink>
+                                <NavLink
+                                    :href="route('export-processes.index')"
+                                    :active="route().current('export-processes.*')"
+                                >
+                                    Gestão de Clientes
+                                </NavLink>
                             </div>
                         </div>
 
@@ -128,6 +134,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('admin.data.index')"
                         >
                             Gerenciar Dados
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('export-processes.index')"
+                            :active="route().current('export-processes.*')"
+                        >
+                            Gestão de Clientes
                         </ResponsiveNavLink>
                     </div>
 

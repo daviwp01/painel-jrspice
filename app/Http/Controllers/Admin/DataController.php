@@ -11,6 +11,7 @@ use App\Models\Country;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Supplier;
+use App\Models\Client;
 use Illuminate\Support\Str;
 use App\Imports\DataImport;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -30,6 +31,7 @@ class DataController extends Controller
         $suppliers_search = $request->input('suppliers_search');
         $prices_search = $request->input('prices_search');
         $pages_search = $request->input('pages_search');
+        $clients_search = $request->input('clients_search');
 
         return Inertia::render('Admin/Data/Index', [
             'pages' => DashboardPage::orderBy('order')
@@ -87,12 +89,19 @@ class DataController extends Controller
                 ->orderBy('id', 'desc')
                 ->paginate(15, ['*'], 'prices_page')
                 ->withQueryString(),
+
+            'clients' => Client::when($clients_search, function($q, $search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })
+                ->orderBy('name', 'asc')
+                ->paginate(15, ['*'], 'clients_page')
+                ->withQueryString(),
                 
             'settings' => \App\Models\Setting::all()->pluck('value', 'key'),
             'all_countries' => Country::orderBy('name')->get(),
             'all_products' => Product::with('country')->orderBy('name')->get(),
             'all_suppliers' => Supplier::orderBy('name')->get(),
-            'filters' => $request->only(['products_search', 'countries_search', 'suppliers_search', 'prices_search', 'tab']),
+            'filters' => $request->only(['products_search', 'countries_search', 'suppliers_search', 'prices_search', 'pages_search', 'clients_search', 'tab']),
             'default_filter_config' => [
                 'country_id'  => \App\Models\Setting::get('default_filter_country_id'),
                 'product_ids' => \App\Models\Setting::get('default_filter_product_ids') ?? [],
@@ -142,6 +151,16 @@ class DataController extends Controller
 
         Product::create($validated);
         return redirect()->back();
+    }
+
+    public function storeClient(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:exporter,importer',
+        ]);
+        Client::create($validated);
+        return redirect()->back()->with('success', 'Cliente criado.');
     }
 
     public function storePrice(Request $request)
@@ -199,6 +218,16 @@ class DataController extends Controller
 
         $product->update($validated);
         return redirect()->back()->with('success', 'Produto atualizado.');
+    }
+
+    public function updateClient(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:exporter,importer',
+        ]);
+        $client->update($validated);
+        return redirect()->back()->with('success', 'Cliente atualizado.');
     }
 
     public function updatePrice(Request $request, ProductPrice $price)
@@ -266,6 +295,12 @@ class DataController extends Controller
     {
         $product->delete();
         return redirect()->back()->with('success', 'Produto removido.');
+    }
+
+    public function destroyClient(Client $client)
+    {
+        $client->delete();
+        return redirect()->back()->with('success', 'Cliente removido.');
     }
 
     public function updateSettings(Request $request)
