@@ -33,24 +33,38 @@ class ExportService
         $exportData = [];
 
         foreach ($countries as $country) {
+            // Descobre qual foi a última data que teve importação até o período selecionado
+            $latestImportDate = ProductPrice::whereHas('product', function ($q) use ($country) {
+                $q->where('country_id', $country->id);
+            })
+            ->where('date', '<=', $endOfWeek)
+            ->max('date');
+
+            if (!$latestImportDate) {
+                continue;
+            }
+
+            $actualRangeStart = Carbon::parse($latestImportDate)->startOfWeek(Carbon::MONDAY);
+            $actualRangeEnd = Carbon::parse($latestImportDate)->endOfWeek(Carbon::SUNDAY);
+
             $products = Product::query()
                 ->where('country_id', $country->id)
-                ->whereHas('prices', function ($q) use ($endOfWeek) {
-                    $q->where('date', '<=', $endOfWeek);
+                ->whereHas('prices', function ($q) use ($actualRangeStart, $actualRangeEnd) {
+                    $q->whereBetween('date', [$actualRangeStart->toDateString(), $actualRangeEnd->toDateString()]);
                 })
                 ->addSelect([
                     'latest_price' => ProductPrice::select('price')
                         ->whereColumn('product_id', 'products.id')
-                        ->where('date', '<=', $endOfWeek)
+                        ->where('date', '<=', $actualRangeEnd->toDateString())
                         ->orderBy('date', 'desc')
                         ->orderBy('price', 'asc')
                         ->limit(1),
                     'previous_price' => ProductPrice::select('price')
                         ->whereColumn('product_id', 'products.id')
-                        ->where('date', '<', function ($q) use ($endOfWeek) {
+                        ->where('date', '<', function ($q) use ($actualRangeEnd) {
                             $q->select('date')->from('product_prices')
                                 ->whereColumn('product_id', 'products.id')
-                                ->where('date', '<=', $endOfWeek)
+                                ->where('date', '<=', $actualRangeEnd->toDateString())
                                 ->orderBy('date', 'desc')
                                 ->limit(1);
                         })
@@ -60,7 +74,7 @@ class ExportService
                     'latest_supplier' => Supplier::select('name')
                         ->join('product_prices', 'product_prices.supplier_id', '=', 'suppliers.id')
                         ->whereColumn('product_prices.product_id', 'products.id')
-                        ->where('product_prices.date', '<=', $endOfWeek)
+                        ->where('product_prices.date', '<=', $actualRangeEnd->toDateString())
                         ->orderBy('product_prices.date', 'desc')
                         ->orderBy('product_prices.price', 'asc')
                         ->limit(1),

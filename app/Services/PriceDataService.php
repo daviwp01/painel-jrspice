@@ -29,18 +29,22 @@ class PriceDataService
         ->max('date');
 
         if ($latestImportDate) {
-            // Se achou uma data, pega a semana dessa data para definir o limite de exibição
+            // Se achou uma data, pega a semana dessa data para definir o limite de exibição e filtrar os produtos
+            $actualRangeStart = Carbon::parse($latestImportDate)->startOfWeek(Carbon::MONDAY);
             $actualRangeEnd = Carbon::parse($latestImportDate)->endOfWeek(Carbon::SUNDAY);
             $referenceEnd = $actualRangeEnd;
+
+            $query->whereHas('prices', function ($q) use ($supplierId, $actualRangeStart, $actualRangeEnd) {
+                $q->whereBetween('date', [$actualRangeStart->toDateString(), $actualRangeEnd->toDateString()])
+                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+            });
         } else {
             $referenceEnd = $rangeEnd;
+            $query->whereHas('prices', function ($q) use ($supplierId, $referenceEnd) {
+                $q->where('date', '<=', $referenceEnd->toDateString())
+                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+            });
         }
-
-        // Garante que mostramos os produtos que possuem preços registrados até o período de referência
-        $query->whereHas('prices', function ($q) use ($supplierId, $referenceEnd) {
-            $q->where('date', '<=', $referenceEnd->toDateString())
-                ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
-        });
 
         // Subqueries (Lógica d0117d79 - Estabilização)
         $query->addSelect([
