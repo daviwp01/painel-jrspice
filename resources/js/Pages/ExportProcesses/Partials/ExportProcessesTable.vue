@@ -189,14 +189,14 @@ const changePage = (url) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 const getStatusConfig = (status) => {
-  if (!status) return { class: 'bg-slate-100 text-slate-500 border-slate-200', dot: 'bg-slate-400' };
+  if (!status) return { class: 'bg-slate-50/50 text-slate-600 border-slate-200/60', dot: 'bg-slate-400' };
   const s = status.toLowerCase();
-  if (s.includes('finalizado'))               return { class: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-  if (s.includes('invoice'))                  return { class: 'bg-blue-50 text-blue-700 border-blue-200',         dot: 'bg-blue-500'    };
-  if (s.includes('atraso') || s.includes('falta')) return { class: 'bg-rose-50 text-rose-700 border-rose-200',   dot: 'bg-rose-500'    };
-  if (s.includes('transbordo') || s.includes('chegou')) return { class: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' };
-  if (s.includes('embarcar'))                 return { class: 'bg-amber-50 text-amber-700 border-amber-200',      dot: 'bg-amber-500'   };
-  return { class: 'bg-slate-100 text-slate-500 border-slate-200', dot: 'bg-slate-400' };
+  if (s.includes('finalizado'))               return { class: 'bg-emerald-50/35 text-emerald-800 border-emerald-500/15', dot: 'bg-emerald-500' };
+  if (s.includes('invoice'))                  return { class: 'bg-sky-50/35 text-sky-800 border-sky-500/15',         dot: 'bg-sky-500'    };
+  if (s.includes('atraso') || s.includes('falta')) return { class: 'bg-rose-50/35 text-rose-800 border-rose-500/15',   dot: 'bg-rose-500'    };
+  if (s.includes('transbordo') || s.includes('chegou')) return { class: 'bg-purple-50/35 text-purple-800 border-purple-500/15', dot: 'bg-purple-500' };
+  if (s.includes('embarcar'))                 return { class: 'bg-amber-50/35 text-amber-800 border-amber-500/15',      dot: 'bg-amber-500'   };
+  return { class: 'bg-slate-50/50 text-slate-600 border-slate-200/60', dot: 'bg-slate-400' };
 };
 
 const formatDate = (d) => {
@@ -390,7 +390,7 @@ const formatCurrency = (val) => {
             <td v-if="isVisible('status')" class="px-5 py-4 whitespace-nowrap">
               <div
                 v-if="process.status"
-                class="status-badge-trigger inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border cursor-pointer transition-all select-none shadow-sm hover:border-slate-350"
+                class="status-badge-trigger inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold normal-case border cursor-pointer transition-all select-none shadow-sm hover:border-slate-300"
                 :class="getStatusConfig(process.status).class"
                 @click.stop="openStatusSelector(process, $event)"
               >
@@ -400,7 +400,7 @@ const formatCurrency = (val) => {
               </div>
               <div 
                 v-else 
-                class="status-badge-trigger inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border border-slate-200 bg-slate-50 hover:bg-slate-100/70 text-slate-400 hover:text-slate-600 cursor-pointer transition-all select-none hover:border-slate-300 shadow-sm"
+                class="status-badge-trigger inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold normal-case border border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 text-slate-450 hover:text-slate-600 cursor-pointer transition-all select-none hover:border-slate-300 shadow-sm"
                 @click.stop="openStatusSelector(process, $event)"
               >
                 Sem status
@@ -511,7 +511,7 @@ const formatCurrency = (val) => {
       :style="statusDropdownStyle"
     >
       <div class="px-4 py-2 border-b border-slate-100 mb-1">
-        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Alterar Status</p>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Alterar status</p>
         <p class="text-xs font-black text-slate-700 truncate mt-0.5">{{ activeStatusSelectorProcess.contract_number || 'Sem número' }}</p>
       </div>
       <div class="max-h-60 overflow-y-auto">
@@ -520,8 +520,8 @@ const formatCurrency = (val) => {
           :key="statusOpt"
           @click.stop="selectStatus(activeStatusSelectorProcess.id, statusOpt)"
           type="button"
-          class="w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
-          :class="activeStatusSelectorProcess.status === statusOpt ? 'text-blue-600 bg-blue-50/50' : 'text-slate-650'"
+          class="w-full text-left px-4 py-2 text-xs font-semibold normal-case hover:bg-slate-50 flex items-center gap-2.5 transition-colors"
+          :class="activeStatusSelectorProcess.status === statusOpt ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'"
         >
           <span class="w-2 h-2 rounded-full shrink-0" :class="getStatusConfig(statusOpt).dot"></span>
           {{ statusOpt }}
