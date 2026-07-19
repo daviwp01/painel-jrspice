@@ -7,7 +7,7 @@ import LegalModal from '@/Components/LegalModal.vue';
 import { 
     LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, 
     Settings as SettingsIcon2, Database as DatabaseIcon, 
-    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2 
+    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2, Package
 } from 'lucide-vue-next';
 
 const page = usePage();
@@ -87,7 +87,7 @@ const navItems = computed(() => [
                                      route().current('dashboard.page', { slug: pg.slug }) 
                                      ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' 
                                      : 'text-slate-400 hover:bg-white/5 hover:text-white']">
-                            <ChartLineIcon class="w-4 h-4 transition-colors" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-300'" />
+                            <component :is="pg.component === 'MyProducts/Index' ? Package : ChartLineIcon" class="w-4 h-4 transition-colors" :class="route().current('dashboard.page', {slug: pg.slug}) ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-300'" />
                             {{ pg.title }}
                             <div v-if="route().current('dashboard.page', { slug: pg.slug })" class="absolute left-[-20px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-blue-500 rounded-r-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
                         </Link>

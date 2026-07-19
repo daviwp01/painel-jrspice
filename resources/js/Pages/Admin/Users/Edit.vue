@@ -30,6 +30,10 @@ const props = defineProps({
     user: Object,
     available_pages: Array,
     default_allowed_pages: Array,
+    clients: {
+        type: Array,
+        default: () => []
+    }
 });
 
 const form = useForm({
@@ -39,6 +43,7 @@ const form = useForm({
     new_password_confirmation: '',
     phone: props.user.phone || '',
     company_name: props.user.company_name || '',
+    client_id: props.user.client_id || '',
     is_master: Boolean(props.user.is_master),
     is_active: Boolean(props.user.is_active !== undefined ? props.user.is_active : true),
     allowed_pages: (Array.isArray(props.user.allowed_pages) && props.user.allowed_pages.length > 0) 
@@ -189,6 +194,26 @@ const isFormValid = computed(() => {
                                     />
                                 </div>
                                 <InputError :message="form.errors.company_name" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <InputLabel for="client_id" :value="$t('Vincular Cliente')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                                        <User class="w-4 h-4" />
+                                    </div>
+                                    <select
+                                        id="client_id"
+                                        v-model="form.client_id"
+                                        class="block w-full py-3 pl-11 pr-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
+                                    >
+                                        <option value="">{{ $t('Nenhum') }}</option>
+                                        <option v-for="client in clients" :key="client.id" :value="client.id">
+                                            {{ client.name }} ({{ client.type }})
+                                        </option>
+                                    </select>
+                                </div>
+                                <InputError :message="form.errors.client_id" />
                             </div>
                         </div>
                     </div>

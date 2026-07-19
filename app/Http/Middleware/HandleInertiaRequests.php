@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                         'id' => $page->id,
                         'title' => $page->title,
                         'slug' => $page->slug,
+                        'component' => $page->component,
                     ])
                     ->values();
             },

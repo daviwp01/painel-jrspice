@@ -31,7 +31,7 @@ class ExportProcessController extends Controller
 
         $processes = $query->paginate(50)->withQueryString();
 
-        return Inertia::render('ExportProcesses/Index', [
+        return Inertia::render('Admin/Clients/Index', [
             'exportProcesses' => $processes,
             'clients' => Client::orderBy('name')->get(),
             'products' => Product::orderBy('name')->get(),
@@ -97,6 +97,8 @@ class ExportProcessController extends Controller
             'dhl_number' => 'nullable|string|max:255',
             'etd_date' => 'nullable|date',
             'eta_date' => 'nullable|date',
+            'shipping_company' => 'nullable|string|max:255',
+            'container_number' => 'nullable|string|max:255',
             'observations' => 'nullable|string',
         ]);
     }

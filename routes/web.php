@@ -27,6 +27,13 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::post('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'store'])->name('export-processes.store');
     Route::put('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'update'])->name('export-processes.update');
     Route::delete('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'destroy'])->name('export-processes.destroy');
+
+    // Portal do Cliente ("Meus Produtos")
+    Route::get('/meus-produtos', [\App\Http\Controllers\ClientDashboardController::class, 'myProducts'])->name('my-products.index');
+    Route::get('/meus-produtos/{process}', [\App\Http\Controllers\ClientDashboardController::class, 'showContract'])->name('my-products.show');
+    Route::post('/meus-produtos/{process}/documentos', [\App\Http\Controllers\ClientDashboardController::class, 'uploadDocument'])->name('my-products.upload-document');
+    Route::get('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'downloadDocument'])->name('my-products.download-document');
+    Route::delete('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'deleteDocument'])->name('my-products.delete-document');
 });
 
 Route::middleware('auth')->group(function () {

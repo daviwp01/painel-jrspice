@@ -87,6 +87,59 @@ class InternalDashboardController extends Controller
                 : null,
         ];
 
+        if ($currentPage->component === 'MyProducts/Index') {
+            if (!$user->client_id && !$user->is_master) {
+                $viewData['exportProcesses'] = ['data' => []];
+                $viewData['summary'] = [
+                    'total_tons' => 0,
+                    'total_contracts' => 0,
+                    'active_shipments' => 0
+                ];
+                $viewData['warning'] = 'Seu usuário ainda não está vinculado a nenhuma empresa cliente no sistema. Entre em contato com a administração.';
+            } else {
+                $query = \App\Models\ExportProcess::with(['exporter', 'importer', 'product', 'seller'])
+                    ->orderBy('date', 'desc');
+
+                if ($user->client_id) {
+                    $query->where(function ($q) use ($user) {
+                        $q->where('exporter_id', $user->client_id)
+                          ->orWhere('importer_id', $user->client_id);
+                    });
+                }
+
+                if ($request->has('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('contract_number', 'like', "%{$search}%")
+                          ->orWhere('register_number', 'like', "%{$search}%")
+                          ->orWhereHas('product', function ($pq) use ($search) {
+                              $pq->where('name', 'like', "%{$search}%");
+                          });
+                    });
+                }
+
+                $viewData['exportProcesses'] = $query->paginate(20)->withQueryString();
+                $viewData['filters'] = $request->only(['search']);
+                
+                $sumQuery = \App\Models\ExportProcess::query();
+                if ($user->client_id) {
+                    $sumQuery->where(function ($q) use ($user) {
+                        $q->where('exporter_id', $user->client_id)
+                          ->orWhere('importer_id', $user->client_id);
+                    });
+                }
+
+                $viewData['summary'] = [
+                    'total_tons' => (float) (clone $sumQuery)->sum('quantity_tons'),
+                    'total_contracts' => (int) (clone $sumQuery)->count(),
+                    'active_shipments' => (int) (clone $sumQuery)
+                        ->whereNotNull('container_number')
+                        ->whereNotIn('status', ['Processo FINALIZADO'])
+                        ->count()
+                ];
+            }
+        }
+
         if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {
             $this->loadDashboardData($request, $currentPage, $viewData);
         }

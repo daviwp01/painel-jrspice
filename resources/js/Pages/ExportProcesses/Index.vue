@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import ExportProcessesStats from './Partials/ExportProcessesStats.vue';
@@ -35,10 +35,8 @@ const closeSlideOver = () => {
   }, 300); // clear after animation
 };
 
-// Computed for exporters and importers
-import { computed } from 'vue';
-const exporters = computed(() => props.clients.filter(c => c.type === 'exportador'));
-const importers = computed(() => props.clients.filter(c => c.type === 'importador'));
+const exporters = computed(() => props.clients.filter(c => c.type === 'exporter' || c.type === 'exportador'));
+const importers = computed(() => props.clients.filter(c => c.type === 'importer' || c.type === 'importador'));
 </script>
 
 <template>

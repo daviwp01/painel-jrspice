@@ -1,35 +1,81 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Users, Construction } from 'lucide-vue-next';
+import ExportProcessesStats from '@/Pages/ExportProcesses/Partials/ExportProcessesStats.vue';
+import ExportProcessesTable from '@/Pages/ExportProcesses/Partials/ExportProcessesTable.vue';
+import ExportProcessSlideOver from '@/Pages/ExportProcesses/Partials/ExportProcessSlideOver.vue';
+
+const props = defineProps({
+  exportProcesses: Object,
+  clients: Array,
+  products: Array,
+  sellers: Array,
+  filters: Object,
+  summary: Object,
+});
+
+const isSlideOverOpen = ref(false);
+const editingProcess = ref(null);
+
+const openCreateForm = () => {
+  editingProcess.value = null;
+  isSlideOverOpen.value = true;
+};
+
+const openEditForm = (process) => {
+  editingProcess.value = process;
+  isSlideOverOpen.value = true;
+};
+
+const closeSlideOver = () => {
+  isSlideOverOpen.value = false;
+  setTimeout(() => { editingProcess.value = null; }, 300);
+};
+
+const exporters = computed(() => props.clients.filter(c => c.type === 'exporter' || c.type === 'exportador'));
+const importers = computed(() => props.clients.filter(c => c.type === 'importer' || c.type === 'importador'));
 </script>
 
 <template>
-  <Head title="Clientes" />
+  <Head title="Gestão de Clientes" />
 
   <DashboardLayout>
-    <template #header>
-        <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">Gestão de Clientes</h2>
-    </template>
+    <div class="px-6 py-7 md:px-8 w-full max-w-none space-y-6">
 
-    <div class="p-6 md:p-8 space-y-8 w-full max-w-none">
-      <div class="flex items-center justify-between">
+      <!-- Page Title -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
-          <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-3">
-            <Users class="w-8 h-8 text-blue-600" />
-            Gestão de Clientes
-          </h2>
-          <p class="text-slate-500 mt-1 text-sm font-medium">Acompanhe contratos, pedidos, documentações e o rastreamento logístico para os clientes.</p>
+          <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Gestão de Clientes</h1>
+          <p class="text-sm font-medium text-slate-500 mt-1">Contratos, embarques, comissões e acompanhamento logístico.</p>
+        </div>
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
+          {{ exportProcesses.total || 0 }} contratos registrados
         </div>
       </div>
 
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-xl border-2 border-dashed border-blue-200 mb-6">
-          <Construction class="w-8 h-8 text-blue-500" />
-        </div>
-        <h3 class="text-lg font-bold text-slate-800">Em Desenvolvimento</h3>
-        <p class="text-slate-500 font-medium mt-1 max-w-md mx-auto text-sm">Esta página está sendo construída. Em breve, a empresa poderá alimentar todos os dados de rastreamento, status de embarque e contratos, refletindo diretamente na área de acompanhamento do cliente.</p>
-      </div>
+      <!-- Stats Cards -->
+      <ExportProcessesStats :summary="summary" />
+
+      <!-- Table -->
+      <ExportProcessesTable
+        :exportProcesses="exportProcesses"
+        :filters="filters"
+        @create="openCreateForm"
+        @edit="openEditForm"
+      />
+
     </div>
+
+    <!-- Slide-over -->
+    <ExportProcessSlideOver
+      :is-open="isSlideOverOpen"
+      :process="editingProcess"
+      :exporters="exporters"
+      :importers="importers"
+      :products="products"
+      :sellers="sellers"
+      @close="closeSlideOver"
+    />
   </DashboardLayout>
 </template>

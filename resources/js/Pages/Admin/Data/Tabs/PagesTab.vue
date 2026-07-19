@@ -88,6 +88,7 @@ const formatLabel = (label) => {
                             <option value="Dashboard/PriceTable">Modelo: Listagem de Preços Semanais</option>
                             <option value="Dashboard/Contact">Modelo: Página de Contatos</option>
                             <option value="Dashboard/HistoricalData">Modelo: Consulta de Histórico</option>
+                            <option value="MyProducts/Index">Modelo: Meus Contratos / Acompanhamento</option>
                         </select>
                     </div>
                     <div>

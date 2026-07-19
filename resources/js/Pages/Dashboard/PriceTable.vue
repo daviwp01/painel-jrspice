@@ -290,32 +290,32 @@ const changePage = (url) => {
             
             <div class="flex flex-col lg:flex-row gap-4 mb-4 mt-2 w-full">
                 <!-- PAÍS DE ORIGEM -->
-                <div class="w-full lg:w-[30%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
+                <div class="w-full lg:w-[40%] xl:w-[35%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-100/50 transition-colors"></div>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
+                    <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
                         PAÍS DE ORIGEM
                     </p>
-                    <div class="flex items-center gap-5 relative z-10">
-                        <CountryFlag v-if="currentCountryData.name" :name="currentCountryData.name" class-name="w-14 h-10 object-cover" />
-                        <h2 class="text-3xl md:text-5xl font-bold text-slate-800 tracking-tight uppercase break-all w-full leading-tight">
+                    <div class="flex items-center gap-4 relative z-10">
+                        <CountryFlag v-if="currentCountryData.name" :name="currentCountryData.name" class-name="w-12 h-8 md:w-14 md:h-10 object-cover shrink-0" />
+                        <h2 class="text-base md:text-lg lg:text-lg xl:text-2xl 2xl:text-4xl font-bold text-slate-800 tracking-tight uppercase break-words w-full leading-tight">
                             {{ currentCountryData.name || 'Selecione O País' }}
                         </h2>
                     </div>
                 </div>
 
                 <!-- LEGENDA -->
-                <div class="w-full lg:w-[70%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
-                    <div class="flex flex-col lg:flex-row gap-6 lg:items-center justify-between w-full">
+                <div class="w-full lg:w-[60%] xl:w-[65%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
+                    <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
+                    <div class="flex flex-col xl:flex-row gap-6 xl:items-center justify-between w-full">
                         
-                        <div class="grid grid-cols-2 gap-x-2 sm:gap-x-8 lg:gap-x-10 gap-y-4 md:gap-y-8 mt-2 overflow-visible">
-                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-4 h-4 md:w-5 md:h-5 stroke-[3] shrink-0" /> PREÇO CAIU</div>
-                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-4 h-4 md:w-5 md:h-5 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
-                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-4 h-4 md:w-5 md:h-5 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
-                            <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-4 h-4 md:w-5 md:h-5 shrink-0" /> PRODUTO NOVO</div>
+                        <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 lg:gap-x-6 gap-y-4 md:gap-y-6 mt-2 overflow-visible">
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> PREÇO CAIU</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-4 h-4 md:w-4 md:h-4 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-4 h-4 md:w-4 md:h-4 shrink-0" /> PRODUTO NOVO</div>
                         </div>
 
-                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
                             <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Em relação ao preço anterior</p>
                             <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços em Dólar p/ ton 1XFCL 40'</p>
                             <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços à confirmação final</p>

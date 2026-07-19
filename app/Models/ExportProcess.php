@@ -14,6 +14,7 @@ class ExportProcess extends Model
         'estimated_receipt_date', 'seller_id', 'to_pay_usd', 'receipt_date', 
         'paid_in_date', 'paid_in_brl',
         'incident', 'video_sent', 'video_date', 'status', 'status_date', 
+        'shipping_company', 'container_number',
         'dhl_date', 'dhl_number', 'etd_date', 'eta_date', 'observations'
     ];
 
@@ -48,5 +49,10 @@ class ExportProcess extends Model
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(ExportProcessDocument::class, 'export_process_id');
     }
 }
