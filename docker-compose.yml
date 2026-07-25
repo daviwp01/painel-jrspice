@@ -55,7 +55,7 @@ services:
     image: mariadb:10.11
     container_name: ${COMPOSE_PROJECT_NAME:-laravel}_db
     restart: unless-stopped
-    command: [ "mysqld", "--innodb-buffer-pool-size=1.5G", "--performance-schema=OFF", "--max-connections=150" ]
+    command: [ "mysqld", "--innodb-buffer-pool-size=1536M", "--performance-schema=OFF", "--max-connections=150" ]
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-laravel}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
