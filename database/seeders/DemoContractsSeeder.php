@@ -12,8 +12,9 @@ class DemoContractsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Limpar registros demo antigos para garantir estado limpo
-        ExportProcess::query()->delete();
+        // ⚠️ SEGURO PARA PRODUÇÃO: apenas insere/atualiza registros demo pelo contract_number.
+        // NUNCA apaga dados existentes de produção.
+        $demoContracts = ['JRS-2026-001','JRS-2026-042','JRS-2026-078','JRS-2026-101','JRS-2026-142','JRS-2026-178'];
 
         // Atualizar/garantir clientes com papéis corretos
         $clientNortao = Client::where('name', 'like', '%Nortão Agro%')->first();
@@ -178,12 +179,15 @@ class DemoContractsSeeder extends Seeder
         $daviUser = User::where('email', 'davi.wordpress@gmail.com')->first();
 
         foreach ($contracts as $contract) {
-            $process = ExportProcess::create($contract);
+            $process = ExportProcess::updateOrCreate(
+                ['contract_number' => $contract['contract_number']],
+                $contract
+            );
             if ($daviUser && in_array($process->contract_number, ['JRS-2026-001', 'JRS-2026-042', 'JRS-2026-078'])) {
-                $process->users()->sync([$daviUser->id]);
+                $process->users()->syncWithoutDetaching([$daviUser->id]);
             }
         }
 
-        $this->command->info('✓ Contratos demo de Abóbora criados com sucesso!');
+        $this->command->info('✓ Contratos demo de Abóbora criados/atualizados com sucesso! Dados de produção intactos.');
     }
 }
