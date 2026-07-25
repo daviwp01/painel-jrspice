@@ -13,7 +13,7 @@ services:
     networks:
       - appnet
       - nginx-proxy
-    mem_limit: 512M
+    mem_limit: 1G
 
   worker:
     build: ./docker/php
@@ -49,13 +49,13 @@ services:
     networks:
       - appnet
       - nginx-proxy
-    mem_limit: 64M
+    mem_limit: 128M
 
   db:
     image: mariadb:10.11
     container_name: ${COMPOSE_PROJECT_NAME:-laravel}_db
     restart: unless-stopped
-    command: [ "mysqld", "--innodb-buffer-pool-size=128M", "--performance-schema=OFF", "--max-connections=50" ]
+    command: [ "mysqld", "--innodb-buffer-pool-size=1.5G", "--performance-schema=OFF", "--max-connections=150" ]
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-laravel}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
@@ -65,7 +65,7 @@ services:
       - dbdata:/var/lib/mysql
     networks:
       - appnet
-    mem_limit: 512M
+    mem_limit: 2G
 
 networks:
   appnet:
