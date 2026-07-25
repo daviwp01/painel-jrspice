@@ -48,7 +48,7 @@ const openLegal = (type) => {
                         Enterprise Analytics Platform
                     </div>
                     <Link href="/">
-                        <img src="/logo-white.png" alt="JR SPICE" class="h-24 w-auto object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-110" />
+                        <img src="/logo-white.png" alt="XPICE" class="h-24 w-auto object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-110" />
                     </Link>
                 </div>
 
@@ -81,7 +81,7 @@ const openLegal = (type) => {
                 <Link href="/">
                     <img
                         src="/logo-black.png"
-                        alt="JR SPICE"
+                        alt="XPICE"
                         class="h-14 w-auto object-contain transition-transform duration-500 hover:scale-105"
                     />
                 </Link>

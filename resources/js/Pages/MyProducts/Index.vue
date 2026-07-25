@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Package, Search, ChevronRight, TrendingUp, ShieldAlert, ArrowUpRight, Ship } from 'lucide-vue-next';
 
@@ -10,6 +10,9 @@ const props = defineProps({
   filters: Object,
   warning: String,
 });
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
 
 const search = ref(props.filters?.search || '');
 let searchTimeout = null;
@@ -24,14 +27,23 @@ const handleSearch = () => {
   }, 350);
 };
 
+const getOperationSigla = (process) => {
+  if (user.value?.client_id && process.importer_id === user.value.client_id) {
+    return { sigla: 'IMP', label: 'Importação', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  }
+  if (user.value?.client_id && process.exporter_id === user.value.client_id) {
+    return { sigla: 'EXP', label: 'Exportação', class: 'bg-blue-50 text-blue-700 border-blue-200' };
+  }
+  return { sigla: 'IMP', label: 'Importação', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+};
+
 const getStatusConfig = (status) => {
   if (!status) return { class: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
   const s = status.toLowerCase();
   if (s.includes('finalizado')) return { class: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-  if (s.includes('invoice')) return { class: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' };
-  if (s.includes('atraso') || s.includes('falta')) return { class: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
   if (s.includes('transbordo') || s.includes('chegou')) return { class: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' };
-  if (s.includes('embarcar')) return { class: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
+  if (s.includes('embarcar') || s.includes('embarque')) return { class: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
+  if (s.includes('atraso') || s.includes('falta')) return { class: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' };
   return { class: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
 };
 
@@ -39,6 +51,15 @@ const formatDate = (d) => {
   if (!d) return '—';
   const date = new Date(d);
   return isNaN(date.getTime()) ? d : date.toLocaleDateString('pt-BR');
+};
+
+const isEtaOverdue = (process) => {
+  if (!process?.eta_date) return false;
+  if (process.status && process.status.toLowerCase().includes('finalizado')) return false;
+  const eta = new Date(process.eta_date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return eta < today;
 };
 </script>
 
@@ -126,15 +147,18 @@ const formatDate = (d) => {
 
           <!-- Table -->
           <div class="overflow-x-auto flex-1">
-            <table class="w-full text-left border-collapse min-w-[800px]">
+            <table class="w-full text-left border-collapse min-w-[900px]">
               <thead>
                 <tr class="border-b border-slate-100 bg-slate-50">
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Data</th>
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Contrato</th>
+                  <th class="px-4 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Tipo</th>
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Produto</th>
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Qtd (Ton)</th>
-                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Previsão Chegada (ETA)</th>
+                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Preço ($)</th>
+                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">ETD</th>
+                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">ETA</th>
                   <th class="w-14"></th>
                 </tr>
               </thead>
@@ -153,13 +177,24 @@ const formatDate = (d) => {
                       {{ process.contract_number || '—' }}
                     </span>
                   </td>
+                  <td class="px-4 py-4 whitespace-nowrap text-center">
+                    <span 
+                      :class="['inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider border', getOperationSigla(process).class]"
+                      :title="getOperationSigla(process).label"
+                    >
+                      {{ getOperationSigla(process).sigla }}
+                    </span>
+                  </td>
                   <td class="px-6 py-4 text-sm font-semibold text-slate-800 max-w-[240px] truncate">
                     {{ process.product?.name || '—' }}
                   </td>
                   <td class="px-6 py-4 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
                     {{ process.quantity_tons ? Number(process.quantity_tons).toLocaleString('pt-BR') : '—' }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
+                    {{ process.price_per_ton_usd ? `$ ${Number(process.price_per_ton_usd).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
                     <span
                       v-if="process.status"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border"
@@ -171,6 +206,9 @@ const formatDate = (d) => {
                     <span v-else class="text-sm text-slate-300 font-medium">—</span>
                   </td>
                   <td class="px-6 py-4 text-sm font-semibold text-slate-600 whitespace-nowrap tabular-nums">
+                    {{ formatDate(process.etd_date) }}
+                  </td>
+                  <td :class="['px-6 py-4 text-sm whitespace-nowrap tabular-nums', isEtaOverdue(process) ? 'font-bold text-rose-500 bg-rose-50/30' : 'font-semibold text-slate-600']">
                     {{ formatDate(process.eta_date) }}
                   </td>
                   <td class="px-4 py-4 text-right whitespace-nowrap">
@@ -185,7 +223,7 @@ const formatDate = (d) => {
 
                 <!-- Empty State -->
                 <tr v-if="!exportProcesses.data?.length">
-                  <td colspan="7" class="px-6 py-20 text-center">
+                  <td colspan="10" class="px-6 py-20 text-center">
                     <div class="inline-flex flex-col items-center gap-4">
                       <div class="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center">
                         <Package class="w-8 h-8 text-slate-400" />

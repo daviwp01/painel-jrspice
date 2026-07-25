@@ -27,6 +27,8 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::post('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'store'])->name('export-processes.store');
     Route::put('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'update'])->name('export-processes.update');
     Route::delete('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'destroy'])->name('export-processes.destroy');
+    Route::post('/export-processes/bulk-delete', [\App\Http\Controllers\ExportProcessController::class, 'bulkDestroy'])->name('export-processes.bulk-delete');
+    Route::post('/export-processes/bulk-sync-clients', [\App\Http\Controllers\ExportProcessController::class, 'bulkSyncClients'])->name('export-processes.bulk-sync-clients');
 
     // Portal do Cliente ("Meus Produtos")
     Route::get('/meus-produtos', [\App\Http\Controllers\ClientDashboardController::class, 'myProducts'])->name('my-products.index');
@@ -34,6 +36,9 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::post('/meus-produtos/{process}/documentos', [\App\Http\Controllers\ClientDashboardController::class, 'uploadDocument'])->name('my-products.upload-document');
     Route::get('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'downloadDocument'])->name('my-products.download-document');
     Route::delete('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'deleteDocument'])->name('my-products.delete-document');
+
+    // Avaliações de contratos (cliente)
+    Route::post('/meus-produtos/{process}/avaliacoes', [\App\Http\Controllers\ProcessReviewController::class, 'store'])->name('reviews.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -108,4 +113,9 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
 
     // Default Filter Config
     Route::post('/data/default-filters', [DataController::class, 'saveDefaultFilters'])->name('admin.data.default-filters.save');
+
+    // Avaliações (Admin)
+    Route::get('/reviews', [\App\Http\Controllers\ProcessReviewController::class, 'adminIndex'])->name('admin.reviews.index');
+    Route::get('/reviews/{review}', [\App\Http\Controllers\ProcessReviewController::class, 'adminShow'])->name('admin.reviews.show');
+    Route::post('/reviews/{review}/reply', [\App\Http\Controllers\ProcessReviewController::class, 'reply'])->name('admin.reviews.reply');
 });

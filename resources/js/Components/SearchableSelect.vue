@@ -158,10 +158,10 @@ const clearOption = (e) => {
                 @click="toggleDropdown"
                 class="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer" 
                 :class="[
-                    isOpen ? 'text-blue-500' : (variant === 'dark' ? 'text-slate-500' : 'text-slate-500')
+                    isOpen ? 'text-[#b2862e]' : (variant === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500')
                 ]"
             >
-                <component :is="icon" class="w-3.5 h-3.5" v-if="icon" />
+                <component :is="icon" class="w-3.5 h-3.5 text-[#b2862e]" v-if="icon" />
                 {{ label }}
             </label>
             

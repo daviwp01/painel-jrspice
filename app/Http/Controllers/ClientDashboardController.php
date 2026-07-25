@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExportProcess;
 use App\Models\ExportProcessDocument;
+use App\Models\ProcessReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -16,24 +17,17 @@ class ClientDashboardController extends Controller
     public function myProducts(Request $request)
     {
         $user = auth()->user();
+        $userId = $user->id;
+        $userClientId = $user->client_id;
 
-        if (!$user->client_id) {
-            return Inertia::render('MyProducts/Index', [
-                'exportProcesses' => ['data' => []],
-                'summary' => [
-                    'total_tons' => 0,
-                    'total_contracts' => 0,
-                    'active_shipments' => 0
-                ],
-                'warning' => 'Seu usuário ainda não está vinculado a nenhuma empresa cliente no sistema. Entre em contato com a administração.'
-            ]);
-        }
+        $applyUserFilter = function ($q) use ($userId) {
+            $q->whereHas('users', function ($uq) use ($userId) {
+                $uq->where('users.id', $userId);
+            });
+        };
 
-        $query = ExportProcess::with(['exporter', 'importer', 'product', 'seller'])
-            ->where(function ($q) use ($user) {
-                $q->where('exporter_id', $user->client_id)
-                  ->orWhere('importer_id', $user->client_id);
-            })
+        $query = ExportProcess::with(['exporter', 'importer', 'product', 'seller', 'users'])
+            ->where($applyUserFilter)
             ->orderBy('date', 'desc');
 
         if ($request->has('search')) {
@@ -49,24 +43,12 @@ class ClientDashboardController extends Controller
 
         $processes = $query->paginate(20)->withQueryString();
 
-        // Calculate summary for this client
-        $totalTons = ExportProcess::where(function ($q) use ($user) {
-            $q->where('exporter_id', $user->client_id)
-              ->orWhere('importer_id', $user->client_id);
-        })->sum('quantity_tons');
-
-        $totalContracts = ExportProcess::where(function ($q) use ($user) {
-            $q->where('exporter_id', $user->client_id)
-              ->orWhere('importer_id', $user->client_id);
-        })->count();
-
-        $activeShipments = ExportProcess::where(function ($q) use ($user) {
-            $q->where('exporter_id', $user->client_id)
-              ->orWhere('importer_id', $user->client_id);
-        })
-        ->whereNotNull('container_number')
-        ->whereNotIn('status', ['Processo FINALIZADO'])
-        ->count();
+        $totalTons = ExportProcess::where($applyUserFilter)->sum('quantity_tons');
+        $totalContracts = ExportProcess::where($applyUserFilter)->count();
+        $activeShipments = ExportProcess::where($applyUserFilter)
+            ->whereNotNull('container_number')
+            ->whereNotIn('status', ['Processo FINALIZADO'])
+            ->count();
 
         return Inertia::render('MyProducts/Index', [
             'exportProcesses' => $processes,
@@ -84,17 +66,20 @@ class ClientDashboardController extends Controller
      */
     public function showContract(ExportProcess $process)
     {
+        $this->authorizeAccess($process);
+
+        $process->load(['exporter', 'importer', 'product', 'seller', 'users', 'documents.uploader']);
+
+        // Load this user's review (if any)
         $user = auth()->user();
-
-        // Security check
-        if ($process->exporter_id !== $user->client_id && $process->importer_id !== $user->client_id) {
-            abort(403, 'Você não tem permissão para visualizar este contrato.');
-        }
-
-        $process->load(['exporter', 'importer', 'product', 'seller', 'documents.uploader']);
+        $userReview = ProcessReview::with('repliedBy:id,name')
+            ->where('export_process_id', $process->id)
+            ->where('user_id', $user->id)
+            ->first();
 
         return Inertia::render('MyProducts/Show', [
-            'process' => $process,
+            'process'    => $process,
+            'userReview' => $userReview,
         ]);
     }
 
@@ -103,12 +88,7 @@ class ClientDashboardController extends Controller
      */
     public function uploadDocument(Request $request, ExportProcess $process)
     {
-        $user = auth()->user();
-
-        // Security check
-        if ($process->exporter_id !== $user->client_id && $process->importer_id !== $user->client_id) {
-            abort(403, 'Você não tem permissão para anexar documentos neste contrato.');
-        }
+        $this->authorizeAccess($process);
 
         $request->validate([
             'file' => 'required|file|max:20480|mimes:pdf,doc,docx,jpg,jpeg,png,mp4,mov,avi',
@@ -186,5 +166,17 @@ class ClientDashboardController extends Controller
         $document->delete();
 
         return redirect()->back()->with('success', 'Documento excluído com sucesso.');
+    }
+
+    private function authorizeAccess(ExportProcess $process)
+    {
+        $user = auth()->user();
+        if ($user->is_master) return;
+
+        $isLinkedUser = $process->users()->where('users.id', $user->id)->exists();
+
+        if (!$isLinkedUser) {
+            abort(403, 'Você não tem permissão para acessar este contrato.');
+        }
     }
 }

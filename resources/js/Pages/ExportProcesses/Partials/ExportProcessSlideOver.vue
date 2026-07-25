@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import { X, Loader2, FileText, DollarSign, Truck, Trash2, AlertTriangle, CheckCircle } from 'lucide-vue-next';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import MultiSearchableSelect from '@/Components/MultiSearchableSelect.vue';
 
 const props = defineProps({
   isOpen: { type: Boolean, required: true },
@@ -10,11 +11,21 @@ const props = defineProps({
   exporters: Array,
   importers: Array,
   products: Array,
-  sellers: Array
+  sellers: Array,
+  clients: Array,
+  users: Array,
+  users_list: { type: Array, default: () => [] }
 });
 
 const emit = defineEmits(['close']);
 const currentTab = ref('general');
+
+const userOptions = computed(() => {
+  if (props.users && props.users.length) return props.users;
+  if (props.usersList && props.usersList.length) return props.usersList;
+  if (props.users_list && props.users_list.length) return props.users_list;
+  return [];
+});
 
 const form = useForm({
   date: '', contract_number: '', register_number: '',
@@ -27,7 +38,34 @@ const form = useForm({
   status: '', status_date: '', dhl_date: '', dhl_number: '',
   etd_date: '', eta_date: '', observations: '',
   shipping_company: '', container_number: '',
+  client_ids: [],
 });
+
+const clientSearchQuery = ref('');
+
+const filteredClientsList = computed(() => {
+  if (!props.clients) return [];
+  const q = clientSearchQuery.value.toLowerCase().trim();
+  if (!q) return props.clients;
+  return props.clients.filter(c => 
+    (c.name && c.name.toLowerCase().includes(q)) || 
+    (c.country && c.country.toLowerCase().includes(q))
+  );
+});
+
+const toggleClientSelection = (id) => {
+  const index = form.client_ids.indexOf(id);
+  if (index > -1) {
+    form.client_ids.splice(index, 1);
+  } else {
+    form.client_ids.push(id);
+  }
+};
+
+const getClientName = (id) => {
+  const c = props.clients?.find(item => item.id === id);
+  return c ? c.name : `Cliente #${id}`;
+};
 
 watch(() => props.process, (newProcess) => {
   if (newProcess) {
@@ -41,8 +79,10 @@ watch(() => props.process, (newProcess) => {
         ? val
         : (typeof form[key] === 'boolean' ? false : '');
     });
+    form.client_ids = newProcess.users ? newProcess.users.map(u => u.id) : [];
   } else {
     form.reset();
+    form.client_ids = [];
   }
   currentTab.value = 'general';
 }, { immediate: true });
@@ -203,8 +243,9 @@ const labelClass = "block text-xs font-bold text-slate-500 uppercase tracking-wi
             </div>
 
             <!-- Empresas -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 pb-3 border-b border-slate-100">Empresas</h3>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+              <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest pb-3 border-b border-slate-100">Empresas & Permissões</h3>
+              
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label :class="labelClass">Exportador</label>
@@ -224,6 +265,16 @@ const labelClass = "block text-xs font-bold text-slate-500 uppercase tracking-wi
                     class="mt-1.5"
                   />
                 </div>
+              </div>
+
+              <!-- Vincular Clientes ao Contrato (Permissão de Visualização) -->
+              <div class="pt-4 border-t border-slate-100">
+                <MultiSearchableSelect
+                  v-model="form.client_ids"
+                  :options="userOptions"
+                  label="Vincular Usuários com Acesso ao Contrato"
+                  placeholder="Selecione os usuários da plataforma..."
+                />
               </div>
             </div>
 

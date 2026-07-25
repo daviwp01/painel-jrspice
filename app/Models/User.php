@@ -24,7 +24,6 @@ class User extends Authenticatable
         'is_active',
         'phone',
         'company_name',
-        'client_id',
         'tenant_id',
         'allowed_pages',
         'last_login_at',
@@ -90,13 +89,5 @@ class User extends Authenticatable
     public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\UserSession::class);
-    }
-
-    /**
-     * Get the client associated with the user.
-     */
-    public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Client::class);
     }
 }

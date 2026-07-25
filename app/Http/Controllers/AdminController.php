@@ -56,9 +56,9 @@ class AdminController extends Controller
     /**
      * Display the clients management page.
      */
-    public function clientsIndex()
+    public function clientsIndex(\Illuminate\Http\Request $request)
     {
-        return \Inertia\Inertia::render('Admin/Clients/Index');
+        return app(\App\Http\Controllers\ExportProcessController::class)->index($request);
     }
 
     /**
@@ -186,7 +186,6 @@ class AdminController extends Controller
             'tenant_id' => ['nullable', 'string'],
             'phone' => ['nullable', 'string', 'max:20'],
             'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
-            'client_id' => ['nullable', 'exists:clients,id'],
         ], [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
@@ -197,7 +196,6 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'company_name' => $request->company_name,
-            'client_id' => $request->client_id,
             'is_active' => $request->boolean('is_active', true),
             'tenant_id' => $request->input('tenant_id'),
             'allowed_pages' => $request->input('allowed_pages', []),
@@ -237,7 +235,6 @@ class AdminController extends Controller
             'allowed_pages' => ['nullable', 'array'],
             'phone' => ['nullable', 'string', 'max:20'],
             'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
-            'client_id' => ['nullable', 'exists:clients,id'],
         ];
 
         if ($request->filled('new_password')) {
@@ -260,7 +257,6 @@ class AdminController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'company_name' => $request->company_name,
-            'client_id' => $request->client_id,
             'allowed_pages' => $request->input('allowed_pages', []),
         ];
 

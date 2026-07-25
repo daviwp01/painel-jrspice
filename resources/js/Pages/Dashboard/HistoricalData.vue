@@ -255,7 +255,7 @@ const changePage = (url) => {
       <div class="border-t border-slate-800/50 pt-4">
          <div class="flex items-center justify-between mb-4 px-3">
              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                 <span class="w-1 h-1 rounded-full bg-blue-500"></span> Filtros de Busca
+                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> Filtros de Busca
              </p>
              <div class="flex items-center gap-3">
                  <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
@@ -301,7 +301,7 @@ const changePage = (url) => {
 
             <div class="relative px-1">
               <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 cursor-pointer">
-                  <Calendar class="w-3.5 h-3.5"/> Data (Ano / Semana)
+                  <Calendar class="w-3.5 h-3.5 text-[#b2862e]"/> Data (Ano / Semana)
               </label>
               
               <!-- CUSTOM TREE SELECT -->

@@ -1,14 +1,103 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { Search, Plus, Pencil, ChevronLeft, ChevronRight, ChevronDown, Package, Columns3, Check, RotateCcw } from 'lucide-vue-next';
+import { Search, Plus, Pencil, ChevronLeft, ChevronRight, ChevronDown, Package, Columns3, Check, RotateCcw, Users, Trash2, X } from 'lucide-vue-next';
+import MultiSearchableSelect from '@/Components/MultiSearchableSelect.vue';
 
 const props = defineProps({
   exportProcesses: { type: Object, required: true },
-  filters: { type: Object, default: () => ({}) }
+  filters: { type: Object, default: () => ({}) },
+  clients: { type: Array, default: () => [] },
+  users: { type: Array, default: () => [] },
+  usersList: { type: Array, default: () => [] }
+});
+
+const userOptions = computed(() => {
+  if (props.users && props.users.length) return props.users;
+  if (props.usersList && props.usersList.length) return props.usersList;
+  if (props.users_list && props.users_list.length) return props.users_list;
+  return [];
 });
 
 const emit = defineEmits(['create', 'edit']);
+
+// ─── Bulk Selection State ──────────────────────────────────────────────────
+const selectedIds = ref([]);
+
+const isAllSelected = computed(() => {
+  const data = props.exportProcesses.data || [];
+  return data.length > 0 && selectedIds.value.length === data.length;
+});
+
+const toggleSelectAll = () => {
+  const data = props.exportProcesses.data || [];
+  if (isAllSelected.value) {
+    selectedIds.value = [];
+  } else {
+    selectedIds.value = data.map(p => p.id);
+  }
+};
+
+const handleBulkDelete = () => {
+  if (!selectedIds.value.length) return;
+  if (confirm(`Tem certeza que deseja excluir os ${selectedIds.value.length} processos selecionados?`)) {
+    router.post(route('export-processes.bulk-delete'), {
+      ids: selectedIds.value
+    }, {
+      onSuccess: () => {
+        selectedIds.value = [];
+      }
+    });
+  }
+};
+
+// ─── Bulk Link Clients Modal ───────────────────────────────────────────────
+const isBulkModalOpen = ref(false);
+const bulkClientSearchQuery = ref('');
+const bulkSelectedClientIds = ref([]);
+
+const filteredBulkClients = computed(() => {
+  if (!props.clients) return [];
+  const q = bulkClientSearchQuery.value.toLowerCase().trim();
+  if (!q) return props.clients;
+  return props.clients.filter(c => 
+    (c.name && c.name.toLowerCase().includes(q)) || 
+    (c.country && c.country.toLowerCase().includes(q))
+  );
+});
+
+const toggleBulkClientSelection = (id) => {
+  const idx = bulkSelectedClientIds.value.indexOf(id);
+  if (idx > -1) {
+    bulkSelectedClientIds.value.splice(idx, 1);
+  } else {
+    bulkSelectedClientIds.value.push(id);
+  }
+};
+
+const openBulkLinkModal = () => {
+  bulkSelectedClientIds.value = [];
+  bulkClientSearchQuery.value = '';
+  isBulkModalOpen.value = true;
+};
+
+const handleBulkSyncClients = () => {
+  if (!selectedIds.value.length || !bulkSelectedClientIds.value.length) {
+    alert('Selecione ao menos um cliente para atrelar aos contratos.');
+    return;
+  }
+
+  router.post(route('export-processes.bulk-sync-clients'), {
+    process_ids: selectedIds.value,
+    client_ids: bulkSelectedClientIds.value
+  }, {
+    onSuccess: () => {
+      isBulkModalOpen.value = false;
+      selectedIds.value = [];
+      bulkSelectedClientIds.value = [];
+    }
+  });
+};
 
 // ─── Column Definitions ────────────────────────────────────────────────────
 const ALL_COLUMNS = [
@@ -311,11 +400,46 @@ const formatCurrency = (val) => {
       </div>
     </div>
 
+    <!-- Floating Bulk Actions Bar -->
+    <div v-if="selectedIds.length > 0" class="mx-6 mb-4 bg-slate-900 text-white px-5 py-3 rounded-2xl flex items-center justify-between shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-black bg-blue-600 text-white px-3 py-1 rounded-lg uppercase tracking-wider">
+          {{ selectedIds.length }} {{ selectedIds.length === 1 ? 'contrato selecionado' : 'contratos selecionados' }}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          @click="openBulkLinkModal"
+          class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md active:scale-95"
+        >
+          <Users class="w-4 h-4" />
+          Vincular Clientes
+        </button>
+
+        <button 
+          @click="handleBulkDelete"
+          class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md active:scale-95"
+        >
+          <Trash2 class="w-4 h-4" />
+          Excluir Selecionados
+        </button>
+      </div>
+    </div>
+
     <!-- Table Wrapper -->
     <div ref="scrollContainerRef" class="overflow-x-auto flex-1 relative">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="border-b border-slate-100 bg-slate-50">
+            <th class="px-4 py-3.5 w-10 text-center">
+              <input 
+                type="checkbox" 
+                :checked="isAllSelected"
+                @change="toggleSelectAll"
+                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4"
+              />
+            </th>
             <th v-if="isVisible('date')"              class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Data</th>
             <th v-if="isVisible('contract_number')"   class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Contrato</th>
             <th v-if="isVisible('register_number')"   class="px-5 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Registro</th>
@@ -342,6 +466,14 @@ const formatCurrency = (val) => {
             @click="$emit('edit', process)"
             class="hover:bg-blue-50/50 cursor-pointer transition-colors duration-100 group"
           >
+            <td class="px-4 py-4 text-center w-10" @click.stop>
+              <input 
+                type="checkbox" 
+                :value="process.id"
+                v-model="selectedIds"
+                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4"
+              />
+            </td>
             <td v-if="isVisible('date')"
                 class="px-5 py-4 text-sm font-semibold text-slate-600 whitespace-nowrap tabular-nums">
               {{ formatDate(process.date) }}
@@ -372,12 +504,12 @@ const formatCurrency = (val) => {
               {{ process.quantity_tons ? Number(process.quantity_tons).toLocaleString('pt-BR') : '—' }}
             </td>
             <td v-if="isVisible('price_per_ton_usd')"
-                class="px-5 py-4 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
-              {{ process.price_per_ton_usd ? `$${Number(process.price_per_ton_usd).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—' }}
+                class="px-5 py-4 text-sm font-semibold text-slate-600 text-right tabular-nums whitespace-nowrap">
+              {{ process.price_per_ton_usd ? `$ ${Number(process.price_per_ton_usd).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—' }}
             </td>
             <td v-if="isVisible('sales_usd')"
-                class="px-5 py-4 text-sm font-black text-slate-900 text-right tabular-nums whitespace-nowrap">
-              {{ formatCurrency(process.sales_usd) }}
+                class="px-5 py-4 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
+              {{ process.sales_usd ? `$ ${Number(process.sales_usd).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—' }}
             </td>
             <td v-if="isVisible('seller')"
                 class="px-5 py-4 text-sm font-medium text-slate-500 whitespace-nowrap">
@@ -527,6 +659,49 @@ const formatCurrency = (val) => {
           {{ statusOpt }}
           <Check v-if="activeStatusSelectorProcess.status === statusOpt" class="w-3.5 h-3.5 text-blue-600 ml-auto shrink-0" />
         </button>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Bulk Link Clients Modal -->
+  <Teleport to="body">
+    <div v-if="isBulkModalOpen" class="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-base font-black text-slate-900 uppercase tracking-tighter">Vincular Clientes aos Contratos</h3>
+            <p class="text-xs font-medium text-slate-500 mt-0.5">Atrele clientes aos {{ selectedIds.length }} contratos selecionados</p>
+          </div>
+          <button @click="isBulkModalOpen = false" class="text-slate-400 hover:text-slate-600">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="py-2">
+          <MultiSearchableSelect
+            v-model="bulkSelectedClientIds"
+            :options="userOptions"
+            label="Selecione os Clientes / Usuários"
+            placeholder="Buscar por nome, e-mail, telefone..."
+          />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <button 
+            type="button"
+            @click="isBulkModalOpen = false"
+            class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl uppercase tracking-wider transition-colors"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            @click="handleBulkSyncClients"
+            class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl uppercase tracking-wider shadow-lg shadow-blue-200/50 transition-all active:scale-95"
+          >
+            Atrelar aos {{ selectedIds.length }} Contratos
+          </button>
+        </div>
       </div>
     </div>
   </Teleport>

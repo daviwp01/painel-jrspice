@@ -25,8 +25,8 @@ O módulo depende primariamente do model `ExportProcess` (`export_processes` tab
 Para garantir manutenibilidade e seguir princípios de _Clean Code_ e arquitetura baseada em componentes, o front-end principal foi fragmentado.
 
 ### 4.1. Orquestrador
-- **`resources/js/Pages/ExportProcesses/Index.vue`**
-  - Componente "Maestro".
+- **`resources/js/Pages/Admin/Clients/Index.vue`**
+  - Componente "Maestro" da Gestão de Clientes.
   - Busca os dados e gerencia o estado principal (ex: `isSlideOverOpen`, `editingProcess`).
   - Menos de 100 linhas. Filtra exportadores e importadores das props via _computed properties_.
 

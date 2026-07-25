@@ -13,7 +13,7 @@ class ExportProcessController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ExportProcess::with(['exporter', 'importer', 'product', 'seller'])
+        $query = ExportProcess::with(['exporter', 'importer', 'product', 'seller', 'users'])
             ->orderBy('date', 'desc');
 
         if ($request->has('search')) {
@@ -31,9 +31,27 @@ class ExportProcessController extends Controller
 
         $processes = $query->paginate(50)->withQueryString();
 
+        $users = User::orderBy('name')->get();
+        $clients = Client::orderBy('name')->get();
+
+        $usersListData = $users->map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email ?: '',
+                'phone' => $u->phone ?: '',
+                'company_name' => $u->company_name ?: '',
+                'country' => '',
+                'type' => 'Usuário',
+            ];
+        })->values()->all();
+
         return Inertia::render('Admin/Clients/Index', [
             'exportProcesses' => $processes,
-            'clients' => Client::orderBy('name')->get(),
+            'clients' => $clients,
+            'users' => $usersListData,
+            'usersList' => $usersListData,
+            'users_list' => $usersListData,
             'products' => Product::orderBy('name')->get(),
             'sellers' => User::orderBy('name')->get(),
             'filters' => $request->only(['search', 'status']),
@@ -48,7 +66,8 @@ class ExportProcessController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validateProcess($request);
-        ExportProcess::create($validated);
+        $process = ExportProcess::create($validated);
+        $this->syncContractUsers($process, $request->input('client_ids', []));
         return redirect()->back()->with('success', 'Processo criado com sucesso.');
     }
 
@@ -56,6 +75,7 @@ class ExportProcessController extends Controller
     {
         $validated = $this->validateProcess($request);
         $exportProcess->update($validated);
+        $this->syncContractUsers($exportProcess, $request->input('client_ids', []));
         return redirect()->back()->with('success', 'Processo atualizado com sucesso.');
     }
 
@@ -63,6 +83,42 @@ class ExportProcessController extends Controller
     {
         $exportProcess->delete();
         return redirect()->back()->with('success', 'Processo excluído.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate(['ids' => 'required|array', 'ids.*' => 'exists:export_processes,id']);
+        ExportProcess::whereIn('id', $request->ids)->delete();
+        return redirect()->back()->with('success', count($request->ids) . ' processos excluídos com sucesso.');
+    }
+
+    public function bulkSyncClients(Request $request)
+    {
+        $request->validate([
+            'process_ids' => 'required|array',
+            'process_ids.*' => 'exists:export_processes,id',
+            'client_ids' => 'nullable|array',
+        ]);
+
+        $selected = $request->input('client_ids', []);
+        $processes = ExportProcess::whereIn('id', $request->process_ids)->get();
+
+        foreach ($processes as $process) {
+            $this->syncContractUsers($process, $selected, true);
+        }
+
+        return redirect()->back()->with('success', 'Usuários vinculados com sucesso aos contratos selecionados.');
+    }
+
+    private function syncContractUsers(ExportProcess $process, array $selected, bool $withoutDetaching = false)
+    {
+        $userIds = array_map('intval', array_filter($selected, 'is_numeric'));
+
+        if ($withoutDetaching) {
+            $process->users()->syncWithoutDetaching($userIds);
+        } else {
+            $process->users()->sync($userIds);
+        }
     }
 
     private function validateProcess(Request $request)
@@ -100,6 +156,8 @@ class ExportProcessController extends Controller
             'shipping_company' => 'nullable|string|max:255',
             'container_number' => 'nullable|string|max:255',
             'observations' => 'nullable|string',
+            'client_ids' => 'nullable|array',
+            'client_ids.*' => 'exists:users,id',
         ]);
     }
 }

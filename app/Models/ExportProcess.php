@@ -55,4 +55,14 @@ class ExportProcess extends Model
     {
         return $this->hasMany(ExportProcessDocument::class, 'export_process_id');
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'export_process_users');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(ProcessReview::class, 'export_process_id');
+    }
 }

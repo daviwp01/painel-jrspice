@@ -9,6 +9,9 @@ import ExportProcessSlideOver from '@/Pages/ExportProcesses/Partials/ExportProce
 const props = defineProps({
   exportProcesses: Object,
   clients: Array,
+  users: Array,
+  usersList: Array,
+  users_list: Array,
   products: Array,
   sellers: Array,
   filters: Object,
@@ -33,8 +36,15 @@ const closeSlideOver = () => {
   setTimeout(() => { editingProcess.value = null; }, 300);
 };
 
-const exporters = computed(() => props.clients.filter(c => c.type === 'exporter' || c.type === 'exportador'));
-const importers = computed(() => props.clients.filter(c => c.type === 'importer' || c.type === 'importador'));
+const exporters = computed(() => (props.clients || []).filter(c => c.type === 'exporter' || c.type === 'exportador'));
+const importers = computed(() => (props.clients || []).filter(c => c.type === 'importer' || c.type === 'importador'));
+
+const userOptions = computed(() => {
+  if (props.users && props.users.length) return props.users;
+  if (props.usersList && props.usersList.length) return props.usersList;
+  if (props.users_list && props.users_list.length) return props.users_list;
+  return [];
+});
 </script>
 
 <template>
@@ -61,6 +71,9 @@ const importers = computed(() => props.clients.filter(c => c.type === 'importer'
       <ExportProcessesTable
         :exportProcesses="exportProcesses"
         :filters="filters"
+        :clients="clients"
+        :users="userOptions"
+        :usersList="userOptions"
         @create="openCreateForm"
         @edit="openEditForm"
       />
@@ -75,6 +88,9 @@ const importers = computed(() => props.clients.filter(c => c.type === 'importer'
       :importers="importers"
       :products="products"
       :sellers="sellers"
+      :clients="clients"
+      :users="userOptions"
+      :usersList="userOptions"
       @close="closeSlideOver"
     />
   </DashboardLayout>
