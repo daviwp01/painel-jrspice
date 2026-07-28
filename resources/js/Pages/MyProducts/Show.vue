@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { ArrowLeft, ClipboardList, Ship, MessageSquare, Star } from 'lucide-vue-next';
+import { ArrowLeft, ClipboardList, Ship, MessageSquare, Star, AlertTriangle } from 'lucide-vue-next';
 
 import TabDetails      from './Partials/TabDetails.vue';
 import TabTracking     from './Partials/TabTracking.vue';

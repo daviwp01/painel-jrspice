@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Package, Search, ChevronRight, TrendingUp, ShieldAlert, ArrowUpRight, Ship } from 'lucide-vue-next';
+import { Package, Search, ChevronRight, TrendingUp, ShieldAlert, ArrowUpRight, Ship, AlertTriangle } from 'lucide-vue-next';
 
 const props = defineProps({
   exportProcesses: Object,
@@ -131,6 +131,17 @@ const isEtaOverdue = (process) => {
 
         <!-- Table Card -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <!-- Banner inside Table Header -->
+          <div class="bg-amber-500/10 border-b border-amber-200 px-6 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2 text-amber-900 font-bold">
+              <AlertTriangle class="w-4 h-4 text-amber-600 shrink-0" />
+              <span>Contratos Fictícios &bull; Tela em Desenvolvimento</span>
+            </div>
+            <span class="text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300/70 px-2 py-0.5 rounded-md uppercase tracking-wider">
+              Ambiente de Testes / Demonstração
+            </span>
+          </div>
+
           <!-- Toolbar -->
           <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
             <div class="relative flex-1 max-w-sm">
@@ -151,7 +162,10 @@ const isEtaOverdue = (process) => {
               <thead>
                 <tr class="border-b border-slate-100 bg-slate-50">
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Data</th>
-                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nº Contrato</th>
+                  <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Nº Contrato
+                    <span class="ml-1 text-[10px] font-extrabold text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded uppercase tracking-tight">Fictício</span>
+                  </th>
                   <th class="px-4 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Tipo</th>
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Produto</th>
                   <th class="px-6 py-3.5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Qtd (Ton)</th>
