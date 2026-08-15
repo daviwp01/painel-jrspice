@@ -24,6 +24,10 @@ class User extends Authenticatable
         'is_active',
         'phone',
         'company_name',
+        'cargo',
+        'import_experience',
+        'import_volume',
+        'decision_role',
         'tenant_id',
         'allowed_pages',
         'last_login_at',
@@ -89,5 +93,35 @@ class User extends Authenticatable
     public function sessions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\UserSession::class);
+    }
+
+    public static function getImportExperienceOptions(): array
+    {
+        return [
+            'Sim, importamos diretamente com o fornecedor',
+            'Sim, através de trading ou broker',
+            'Não, compramos no mercado interno',
+            'Estamos avaliando começar',
+        ];
+    }
+
+    public static function getImportVolumeOptions(): array
+    {
+        return [
+            'Contêiner cheio, com frequência',
+            'Contêiner cheio, esporadicamente',
+            'Menos de um contêiner',
+            'Ainda não sei',
+        ];
+    }
+
+    public static function getDecisionRoleOptions(): array
+    {
+        return [
+            'Decido a compra',
+            'Participo da decisão',
+            'Pesquiso e levo para aprovação',
+            'Outro',
+        ];
     }
 }

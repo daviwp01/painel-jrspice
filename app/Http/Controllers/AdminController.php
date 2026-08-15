@@ -184,8 +184,12 @@ class AdminController extends Controller
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
             'tenant_id' => ['nullable', 'string'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+            'cargo' => ['nullable', 'string', 'max:255'],
+            'import_experience' => ['nullable', 'string', 'max:255'],
+            'import_volume' => ['nullable', 'string', 'max:255'],
+            'decision_role' => ['nullable', 'string', 'max:255'],
         ], [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
@@ -196,6 +200,10 @@ class AdminController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'company_name' => $request->company_name,
+            'cargo' => $request->cargo,
+            'import_experience' => $request->import_experience,
+            'import_volume' => $request->import_volume,
+            'decision_role' => $request->decision_role,
             'is_active' => $request->boolean('is_active', true),
             'tenant_id' => $request->input('tenant_id'),
             'allowed_pages' => $request->input('allowed_pages', []),
@@ -218,7 +226,10 @@ class AdminController extends Controller
             'user' => $user,
             'available_pages' => $allPages,
             'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', []),
-            'clients' => \App\Models\Client::orderBy('name')->get()
+            'clients' => \App\Models\Client::orderBy('name')->get(),
+            'importExperienceOptions' => User::getImportExperienceOptions(),
+            'importVolumeOptions' => User::getImportVolumeOptions(),
+            'decisionRoleOptions' => User::getDecisionRoleOptions(),
         ]);
     }
 
@@ -233,8 +244,12 @@ class AdminController extends Controller
             'is_master' => ['boolean'],
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+            'cargo' => ['nullable', 'string', 'max:255'],
+            'import_experience' => ['nullable', 'string', 'max:255'],
+            'import_volume' => ['nullable', 'string', 'max:255'],
+            'decision_role' => ['nullable', 'string', 'max:255'],
         ];
 
         if ($request->filled('new_password')) {
@@ -257,6 +272,10 @@ class AdminController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'company_name' => $request->company_name,
+            'cargo' => $request->cargo,
+            'import_experience' => $request->import_experience,
+            'import_volume' => $request->import_volume,
+            'decision_role' => $request->decision_role,
             'allowed_pages' => $request->input('allowed_pages', []),
         ];
 

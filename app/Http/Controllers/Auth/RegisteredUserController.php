@@ -21,7 +21,11 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'importExperienceOptions' => User::getImportExperienceOptions(),
+            'importVolumeOptions' => User::getImportVolumeOptions(),
+            'decisionRoleOptions' => User::getDecisionRoleOptions(),
+        ]);
     }
 
     /**
@@ -35,8 +39,12 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => 'nullable|string|max:20',
-            'company_name' => ['nullable', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+            'phone' => 'required|string|max:30',
+            'company_name' => ['required', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
+            'cargo' => ['required', 'string', 'max:255'],
+            'import_experience' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getImportExperienceOptions())],
+            'import_volume' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getImportVolumeOptions())],
+            'decision_role' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getDecisionRoleOptions())],
         ], [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
@@ -49,6 +57,10 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'company_name' => $request->company_name,
+            'cargo' => $request->cargo,
+            'import_experience' => $request->import_experience,
+            'import_volume' => $request->import_volume,
+            'decision_role' => $request->decision_role,
             'is_active' => !$requiresActivation,
             'allowed_pages' => array_values(Setting::get('default_allowed_pages', [])),
         ]);

@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { Trash2, Edit2, UserPlus, ShieldCheck, Search, Users, UserCheck, Filter, CheckCircle, MessageCircle } from 'lucide-vue-next';
+import { Trash2, Edit2, UserPlus, ShieldCheck, Search, Users, UserCheck, Filter, CheckCircle, MessageCircle, Eye } from 'lucide-vue-next';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
 import ToggleSwitch from '@/Components/ToggleSwitch.vue';
 import Pagination from '@/Components/Pagination.vue';
@@ -19,6 +19,14 @@ const props = defineProps({
 const showConfirmDelete = ref(false);
 const userToDelete = ref(null);
 const isDeleting = ref(false);
+
+const showLeadInfoModal = ref(false);
+const selectedUserLead = ref(null);
+
+const viewLeadDetails = (user) => {
+    selectedUserLead.value = user;
+    showLeadInfoModal.value = true;
+};
 
 const confirmDeleteAction = (user) => {
     userToDelete.value = user;
@@ -254,6 +262,13 @@ const openWhatsApp = (phone) => {
 
                         <div class="flex items-center space-x-0.5">
                             <button
+                                @click="viewLeadDetails(user)"
+                                class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent rounded-lg transition-all active:scale-90"
+                                title="Visualizar Lead"
+                            >
+                                <Eye class="w-4 h-4" />
+                            </button>
+                            <button
                                 @click="openWhatsApp(user.phone)"
                                 :disabled="user.id === $page.props.auth.user.id || !user.phone"
                                 class="p-2 border border-transparent rounded-lg transition-all active:scale-90"
@@ -364,6 +379,13 @@ const openWhatsApp = (phone) => {
                                 <td class="px-4 py-5 whitespace-nowrap text-center font-medium">
                                     <div class="flex items-center justify-center space-x-1">
                                         <button
+                                            @click="viewLeadDetails(user)"
+                                            class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 border border-transparent rounded-xl transition-all active:scale-90"
+                                            title="Visualizar Lead"
+                                        >
+                                            <Eye class="w-4 h-4" />
+                                        </button>
+                                        <button
                                             @click="openWhatsApp(user.phone)"
                                             :disabled="user.id === $page.props.auth.user.id || !user.phone"
                                             class="p-2.5 border border-transparent rounded-xl transition-all active:scale-90"
@@ -423,5 +445,86 @@ const openWhatsApp = (phone) => {
             @close="showConfirmDelete = false"
             @confirm="deleteUser"
         />
+
+        <!-- Lead Information Modal -->
+        <div v-if="showLeadInfoModal" class="fixed inset-0 z-[100] overflow-y-auto animate-in fade-in duration-200" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" @click="showLeadInfoModal = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-100">
+                    <div class="bg-slate-50/50 px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-indigo-100 rounded-xl text-indigo-600">
+                                <Users class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-slate-800 tracking-tight uppercase">Informações de Lead</h3>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ selectedUserLead?.name }}</p>
+                            </div>
+                        </div>
+                        <button @click="showLeadInfoModal = false" class="text-slate-400 hover:text-slate-600 transition-colors p-1.5 hover:bg-slate-100 rounded-lg">
+                            <span class="sr-only">Fechar</span>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="px-6 py-6 space-y-6">
+                        <!-- Professional Info -->
+                        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">Empresa</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.company_name || 'Não informado' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">Cargo</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.cargo || 'Não informado' }}</span>
+                            </div>
+                            <div class="col-span-2 pt-2 border-t border-slate-200/50">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">WhatsApp</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.phone || 'Não informado' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Lead Questions -->
+                        <div class="space-y-4">
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">1. Sua empresa já importa insumos alimentícios?</span>
+                                <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
+                                    {{ selectedUserLead?.import_experience || 'Sem resposta' }}
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">2. Volume aproximado por embarque</span>
+                                <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
+                                    {{ selectedUserLead?.import_volume || 'Sem resposta' }}
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">3. Seu papel na decisão de compra</span>
+                                <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
+                                    {{ selectedUserLead?.decision_role || 'Sem resposta' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 flex justify-end">
+                        <button
+                            type="button"
+                            @click="showLeadInfoModal = false"
+                            class="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-600 transition-all shadow-sm"
+                        >
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </DashboardLayout>
 </template>

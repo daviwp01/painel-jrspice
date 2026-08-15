@@ -23,7 +23,8 @@ import {
     Phone,
     Building2,
     Check,
-    CheckCircle
+    CheckCircle,
+    FileText
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -31,6 +32,18 @@ const props = defineProps({
     available_pages: Array,
     default_allowed_pages: Array,
     clients: {
+        type: Array,
+        default: () => []
+    },
+    importExperienceOptions: {
+        type: Array,
+        default: () => []
+    },
+    importVolumeOptions: {
+        type: Array,
+        default: () => []
+    },
+    decisionRoleOptions: {
         type: Array,
         default: () => []
     }
@@ -43,6 +56,10 @@ const form = useForm({
     new_password_confirmation: '',
     phone: props.user.phone || '',
     company_name: props.user.company_name || '',
+    cargo: props.user.cargo || '',
+    import_experience: props.user.import_experience || '',
+    import_volume: props.user.import_volume || '',
+    decision_role: props.user.decision_role || '',
     client_id: props.user.client_id || '',
     is_master: Boolean(props.user.is_master),
     is_active: Boolean(props.user.is_active !== undefined ? props.user.is_active : true),
@@ -194,6 +211,78 @@ const isFormValid = computed(() => {
                                     />
                                 </div>
                                 <InputError :message="form.errors.company_name" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Lead Information -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
+                        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-3">
+                            <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                                <FileText class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 tracking-tight">Informações de Lead</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Respostas do cadastro e perfil profissional</p>
+                            </div>
+                        </div>
+
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <InputLabel for="cargo" value="Cargo" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <TextInput
+                                    id="cargo"
+                                    type="text"
+                                    class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
+                                    v-model="form.cargo"
+                                    placeholder="Ex: Gerente de Compras"
+                                />
+                                <InputError :message="form.errors.cargo" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <InputLabel for="import_experience" value="Sua empresa já importa insumos alimentícios?" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <select
+                                    id="import_experience"
+                                    v-model="form.import_experience"
+                                    class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
+                                >
+                                    <option value="">Selecione uma opção...</option>
+                                    <option v-for="option in importExperienceOptions" :key="option" :value="option">
+                                        {{ option }}
+                                    </option>
+                                </select>
+                                <InputError :message="form.errors.import_experience" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <InputLabel for="import_volume" value="Volume aproximado por embarque" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <select
+                                    id="import_volume"
+                                    v-model="form.import_volume"
+                                    class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
+                                >
+                                    <option value="">Selecione uma opção...</option>
+                                    <option v-for="option in importVolumeOptions" :key="option" :value="option">
+                                        {{ option }}
+                                    </option>
+                                </select>
+                                <InputError :message="form.errors.import_volume" />
+                            </div>
+
+                            <div class="space-y-2">
+                                <InputLabel for="decision_role" value="Seu papel na decisão de compra" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <select
+                                    id="decision_role"
+                                    v-model="form.decision_role"
+                                    class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
+                                >
+                                    <option value="">Selecione uma opção...</option>
+                                    <option v-for="option in decisionRoleOptions" :key="option" :value="option">
+                                        {{ option }}
+                                    </option>
+                                </select>
+                                <InputError :message="form.errors.decision_role" />
                             </div>
                         </div>
                     </div>
