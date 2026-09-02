@@ -34,6 +34,7 @@ class User extends Authenticatable
         'last_activity_at',
         'email_notified_at',
         'email_clicked_at',
+        'registered_via_external_form',
     ];
 
     /**
@@ -63,6 +64,7 @@ class User extends Authenticatable
             'last_activity_at' => 'datetime',
             'email_notified_at' => 'datetime',
             'email_clicked_at' => 'datetime',
+            'registered_via_external_form' => 'boolean',
         ];
     }
     /**

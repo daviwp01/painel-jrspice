@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Plataforma</title>
+    <style>
+        /* Estilos base (sem sombras, seguindo padrão de etapas) */
+        .jr-register-container {
+            max-width: 500px;
+            margin: 0 auto;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            /* box-shadow removido conforme solicitado */
+        }
+        
+        /* Indicador de Etapas */
+        .jr-steps-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .jr-steps-line-bg {
+            position: absolute;
+            left: 0;
+            top: 14px;
+            width: 100%;
+            height: 2px;
+            background-color: #f3f4f6;
+            z-index: 1;
+        }
+        .jr-steps-line-active {
+            position: absolute;
+            left: 0;
+            top: 14px;
+            height: 2px;
+            background-color: #2563eb;
+            z-index: 1;
+            transition: width 0.3s ease;
+        }
+        .jr-step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+        .jr-step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #e5e7eb;
+            background-color: #fff;
+            color: #9ca3af;
+            transition: all 0.3s;
+        }
+        .jr-step-circle.active {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .jr-step-label {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 8px;
+            color: #9ca3af;
+            letter-spacing: 0.5px;
+        }
+        .jr-step-label.active {
+            color: #2563eb;
+        }
+
+        /* Formulário */
+        .jr-step-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .jr-step-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .jr-form-group {
+            margin-bottom: 1rem;
+        }
+        .jr-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+        }
+        .jr-form-group input, .jr-form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-sizing: border-box;
+            font-size: 0.875rem;
+            color: #374151;
+            background-color: #fff;
+            transition: border-color 0.2s;
+        }
+        .jr-form-group input:focus, .jr-form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        /* Ações (Botões) */
+        .jr-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .jr-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border: none;
+        }
+        .jr-btn-prev {
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            width: 33%;
+        }
+        .jr-btn-prev:hover {
+            background-color: #f9fafb;
+        }
+        .jr-btn-next, .jr-btn-submit {
+            background-color: #2563eb;
+            color: #fff;
+            flex: 1;
+        }
+        .jr-btn-next:hover, .jr-btn-submit:hover {
+            background-color: #1d4ed8;
+        }
+        .jr-btn-submit:disabled, .jr-btn-next:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        /* Mensagens de erro e sucesso */
+        .jr-error-message {
+            color: #dc2626;
+            font-size: 0.75rem;
+            margin-top: 0.375rem;
+            display: none;
+        }
+        .jr-alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            font-size: 0.875rem;
+        }
+        .jr-alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .jr-alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+    </style>
+</head>
+<body>
+
+<div class="jr-register-container">
+    <div id="jr-alert-box" class="jr-alert"></div>
+
+    <!-- Indicador de Etapas -->
+    <div class="jr-steps-indicator">
+        <div class="jr-steps-line-bg"></div>
+        <div class="jr-steps-line-active" id="jr-progress-line" style="width: 0%;"></div>
+        
+        <div class="jr-step-item">
+            <div class="jr-step-circle active" id="jr-circle-1">1</div>
+            <span class="jr-step-label active" id="jr-label-1">Acesso</span>
+        </div>
+        <div class="jr-step-item">
+            <div class="jr-step-circle" id="jr-circle-2">2</div>
+            <span class="jr-step-label" id="jr-label-2">Empresa</span>
+        </div>
+        <div class="jr-step-item">
+            <div class="jr-step-circle" id="jr-circle-3">3</div>
+            <span class="jr-step-label" id="jr-label-3">Perfil</span>
+        </div>
+    </div>
+
+    <form id="jr-register-form">
+        <!-- ETAPA 1: ACESSO -->
+        <div class="jr-step-content active" id="jr-step-1">
+            <div class="jr-form-group">
+                <label for="name">Nome Completo</label>
+                <input type="text" id="name" name="name" placeholder="Ex: João da Silva">
+                <div class="jr-error-message" id="error-name"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="email">E-mail Corporativo</label>
+                <input type="email" id="email" name="email" placeholder="nome@empresa.com">
+                <div class="jr-error-message" id="error-email"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" placeholder="••••••••">
+                <div class="jr-error-message" id="error-password"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="password_confirmation">Confirmar Senha</label>
+                <input type="password" id="password_confirmation" name="password_confirmation" placeholder="••••••••">
+                <div class="jr-error-message" id="error-password_confirmation"></div>
+            </div>
+        </div>
+
+        <!-- ETAPA 2: EMPRESA -->
+        <div class="jr-step-content" id="jr-step-2">
+            <div class="jr-form-group">
+                <label for="phone">Telefone / WhatsApp</label>
+                <input type="tel" id="phone" name="phone" placeholder="(11) 99999-9999">
+                <div class="jr-error-message" id="error-phone"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="company_name">Nome da Empresa</label>
+                <input type="text" id="company_name" name="company_name" placeholder="Sua Empresa">
+                <div class="jr-error-message" id="error-company_name"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="cargo">Cargo</label>
+                <input type="text" id="cargo" name="cargo" placeholder="Ex: Gerente de Compras">
+                <div class="jr-error-message" id="error-cargo"></div>
+            </div>
+        </div>
+
+        <!-- ETAPA 3: PERFIL -->
+        <div class="jr-step-content" id="jr-step-3">
+            <div class="jr-form-group">
+                <label for="import_experience">Sua empresa já importa insumos alimentícios?</label>
+                <select id="import_experience" name="import_experience">
+                    <option value="" disabled selected>Selecione uma opção...</option>
+                    <option value="Sim, importamos diretamente com o fornecedor">Sim, importamos diretamente com o fornecedor</option>
+                    <option value="Sim, através de trading ou broker">Sim, através de trading ou broker</option>
+                    <option value="Não, compramos no mercado interno">Não, compramos no mercado interno</option>
+                    <option value="Estamos avaliando começar">Estamos avaliando começar</option>
+                </select>
+                <div class="jr-error-message" id="error-import_experience"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="import_volume">Volume aproximado por embarque</label>
+                <select id="import_volume" name="import_volume">
+                    <option value="" disabled selected>Selecione uma opção...</option>
+                    <option value="Contêiner cheio, com frequência">Contêiner cheio, com frequência</option>
+                    <option value="Contêiner cheio, esporadicamente">Contêiner cheio, esporadicamente</option>
+                    <option value="Menos de um contêiner">Menos de um contêiner</option>
+                    <option value="Ainda não sei">Ainda não sei</option>
+                </select>
+                <div class="jr-error-message" id="error-import_volume"></div>
+            </div>
+            <div class="jr-form-group">
+                <label for="decision_role">Seu papel na decisão de compra</label>
+                <select id="decision_role" name="decision_role">
+                    <option value="" disabled selected>Selecione uma opção...</option>
+                    <option value="Decido a compra">Decido a compra</option>
+                    <option value="Participo da decisão">Participo da decisão</option>
+                    <option value="Pesquiso e levo para aprovação">Pesquiso e levo para aprovação</option>
+                    <option value="Outro">Outro</option>
+                </select>
+                <div class="jr-error-message" id="error-decision_role"></div>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="jr-actions">
+            <button type="button" class="jr-btn jr-btn-prev" id="jr-btn-prev" style="display: none;">Voltar</button>
+            <button type="button" class="jr-btn jr-btn-next" id="jr-btn-next">Continuar</button>
+            <button type="submit" class="jr-btn jr-btn-submit" id="jr-btn-submit" style="display: none;">Criar Conta</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // URL base da sua API Laravel - MUDAR ISSO PARA O DOMÍNIO REAL EM PRODUÇÃO
+    const API_URL = window.location.origin + '/api/external/register';
+
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    const btnPrev = document.getElementById('jr-btn-prev');
+    const btnNext = document.getElementById('jr-btn-next');
+    const btnSubmit = document.getElementById('jr-btn-submit');
+    const progressLine = document.getElementById('jr-progress-line');
+
+    function updateUI() {
+        // Atualizar barra de progresso (0%, 50%, 100%)
+        progressLine.style.width = ((currentStep - 1) / (totalSteps - 1)) * 100 + '%';
+
+        // Atualizar bolinhas e labels
+        for (let i = 1; i <= totalSteps; i++) {
+            const circle = document.getElementById(`jr-circle-${i}`);
+            const label = document.getElementById(`jr-label-${i}`);
+            if (i <= currentStep) {
+                circle.classList.add('active');
+                label.classList.add('active');
+            } else {
+                circle.classList.remove('active');
+                label.classList.remove('active');
+            }
+
+            // Mostrar a etapa correta
+            const stepContent = document.getElementById(`jr-step-${i}`);
+            if (i === currentStep) {
+                stepContent.classList.add('active');
+            } else {
+                stepContent.classList.remove('active');
+            }
+        }
+
+        // Mostrar/esconder botões
+        btnPrev.style.display = currentStep > 1 ? 'block' : 'none';
+        
+        if (currentStep === totalSteps) {
+            btnNext.style.display = 'none';
+            btnSubmit.style.display = 'block';
+        } else {
+            btnNext.style.display = 'block';
+            btnSubmit.style.display = 'none';
+        }
+    }
+
+    function clearErrors() {
+        document.querySelectorAll('.jr-error-message').forEach(el => {
+            el.style.display = 'none';
+            el.innerText = '';
+        });
+        const alertBox = document.getElementById('jr-alert-box');
+        alertBox.style.display = 'none';
+        alertBox.className = 'jr-alert';
+    }
+
+    function validateStep1() {
+        clearErrors();
+        let valid = true;
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const password_confirmation = document.getElementById('password_confirmation').value;
+
+        if (!name) { document.getElementById('error-name').innerText = 'Nome é obrigatório'; document.getElementById('error-name').style.display = 'block'; valid = false; }
+        if (!email) { document.getElementById('error-email').innerText = 'E-mail é obrigatório'; document.getElementById('error-email').style.display = 'block'; valid = false; }
+        if (!password) { document.getElementById('error-password').innerText = 'Senha é obrigatória'; document.getElementById('error-password').style.display = 'block'; valid = false; }
+        if (password && password.length < 8) { document.getElementById('error-password').innerText = 'A senha deve ter pelo menos 8 caracteres'; document.getElementById('error-password').style.display = 'block'; valid = false; }
+        if (password !== password_confirmation) { document.getElementById('error-password_confirmation').innerText = 'As senhas não conferem'; document.getElementById('error-password_confirmation').style.display = 'block'; valid = false; }
+
+        return valid;
+    }
+
+    function validateStep2() {
+        clearErrors();
+        let valid = true;
+        const phone = document.getElementById('phone').value;
+        const company_name = document.getElementById('company_name').value;
+        const cargo = document.getElementById('cargo').value;
+
+        if (!phone) { document.getElementById('error-phone').innerText = 'Telefone é obrigatório'; document.getElementById('error-phone').style.display = 'block'; valid = false; }
+        if (!company_name) { document.getElementById('error-company_name').innerText = 'Nome da empresa é obrigatório'; document.getElementById('error-company_name').style.display = 'block'; valid = false; }
+        if (!cargo) { document.getElementById('error-cargo').innerText = 'Cargo é obrigatório'; document.getElementById('error-cargo').style.display = 'block'; valid = false; }
+
+        return valid;
+    }
+
+    function validateStep3() {
+        clearErrors();
+        let valid = true;
+        const exp = document.getElementById('import_experience').value;
+        const vol = document.getElementById('import_volume').value;
+        const role = document.getElementById('decision_role').value;
+
+        if (!exp) { document.getElementById('error-import_experience').innerText = 'Selecione uma opção'; document.getElementById('error-import_experience').style.display = 'block'; valid = false; }
+        if (!vol) { document.getElementById('error-import_volume').innerText = 'Selecione uma opção'; document.getElementById('error-import_volume').style.display = 'block'; valid = false; }
+        if (!role) { document.getElementById('error-decision_role').innerText = 'Selecione uma opção'; document.getElementById('error-decision_role').style.display = 'block'; valid = false; }
+
+        return valid;
+    }
+
+    btnNext.addEventListener('click', () => {
+        let isValid = false;
+        if (currentStep === 1) isValid = validateStep1();
+        else if (currentStep === 2) isValid = validateStep2();
+
+        if (isValid && currentStep < totalSteps) {
+            currentStep++;
+            updateUI();
+        }
+    });
+
+    btnPrev.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateUI();
+            clearErrors();
+        }
+    });
+
+    document.getElementById('jr-register-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!validateStep3()) return;
+
+        const form = e.target;
+        const alertBox = document.getElementById('jr-alert-box');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Processando...';
+        btnPrev.disabled = true;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alertBox.className = 'jr-alert jr-alert-success';
+                alertBox.innerText = result.message || 'Cadastro realizado com sucesso!';
+                alertBox.style.display = 'block';
+                form.reset();
+                currentStep = 1;
+                updateUI();
+            } else if (response.status === 422) {
+                const errors = result.errors;
+                let errorStep = 1;
+                
+                // Mapear qual etapa teve erro para voltar a tela
+                for (const field in errors) {
+                    const errorEl = document.getElementById(`error-${field}`);
+                    if (errorEl) {
+                        errorEl.innerText = errors[field][0];
+                        errorEl.style.display = 'block';
+                        
+                        if (['name', 'email', 'password'].includes(field)) errorStep = 1;
+                        else if (['phone', 'company_name', 'cargo'].includes(field)) errorStep = Math.max(errorStep, 2);
+                        else errorStep = Math.max(errorStep, 3);
+                    }
+                }
+                
+                if (currentStep !== errorStep) {
+                    currentStep = errorStep;
+                    updateUI();
+                }
+
+                alertBox.className = 'jr-alert jr-alert-danger';
+                alertBox.innerText = 'Por favor, verifique os erros nos campos.';
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.className = 'jr-alert jr-alert-danger';
+                alertBox.innerText = result.message || 'Erro ao processar. Tente novamente.';
+                alertBox.style.display = 'block';
+            }
+        } catch (error) {
+            alertBox.className = 'jr-alert jr-alert-danger';
+            alertBox.innerText = 'Erro de conexão com o servidor.';
+            alertBox.style.display = 'block';
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Criar Conta';
+            btnPrev.disabled = false;
+        }
+    });
+
+    // Iniciar UI
+    updateUI();
+</script>
+
+</body>
+</html>
