@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import axios from 'axios';
@@ -208,6 +208,41 @@ const processedProducts = computed(() => {
     }));
 });
 
+// --------------------------------------------------------
+// NAVEGAÇÃO: linha da tabela -> "Detalhes por produto" (Dashboard/Show)
+// --------------------------------------------------------
+const { props: pageProps } = usePage();
+const DETAIL_PAGE_SLUG = 'detalhes-por-produto';
+
+// 🔒 RESTRIÇÃO TEMPORÁRIA: por enquanto só masters podem clicar na linha e
+// ir para "Detalhes por produto". Para liberar a todos depois, basta apagar
+// a linha `isMaster.value &&` abaixo (mantendo a checagem de permissão da página).
+const isMaster = computed(() => !!pageProps.auth?.user?.is_master);
+
+const canOpenDetails = computed(() =>
+    isMaster.value &&
+    (pageProps.dashboardPages || []).some(p => p.slug === DETAIL_PAGE_SLUG)
+);
+
+const detailParams = (prod) => ({
+    country_id: selectedCountry.value || props.filters.country_id,
+    product_id: prod.id,
+});
+
+const openDetails = (prod, event) => {
+    if (!canOpenDetails.value || !prod?.id) return;
+
+    // O <Link> do nome já navega: evita disparo duplicado ao clicar no produto
+    if (event?.target?.closest?.('a')) return;
+
+    isLoading.value = true;
+    router.get(
+        route('dashboard.page', { slug: DETAIL_PAGE_SLUG }),
+        detailParams(prod),
+        { onFinish: () => { isLoading.value = false; } }
+    );
+};
+
 const formatPaginationLabel = (label) => {
     if (!label) return '';
     const l = label.toLowerCase();
@@ -359,9 +394,22 @@ const changePage = (url) => {
                         </tr>
                     </thead>
                         <tbody class="divide-y divide-slate-100 font-bold bg-white">
-                            <tr v-for="prod in processedProducts" :key="prod.id" class="hover:bg-slate-50/50 transition-colors group">
+                            <tr v-for="prod in processedProducts" :key="prod.id"
+                                class="hover:bg-slate-50/50 transition-colors group"
+                                :class="canOpenDetails ? 'cursor-pointer' : ''"
+                                @click="openDetails(prod, $event)">
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-slate-900 group-hover:text-blue-600 transition-colors text-[11px] md:text-2xl leading-tight whitespace-normal break-words max-w-[120px] md:max-w-none">
-                                    {{ prod.name }}
+                                    <Link v-if="canOpenDetails"
+                                        :href="route('dashboard.page', { slug: DETAIL_PAGE_SLUG })"
+                                        :data="detailParams(prod)"
+                                        :on-start="() => isLoading = true"
+                                        :on-finish="() => isLoading = false"
+                                        title="Ver detalhes do produto"
+                                        class="inline-flex items-start gap-1.5 md:gap-2 outline-none focus-visible:text-blue-600">
+                                        <span>{{ prod.name }}</span>
+                                        <ArrowUpRight class="w-3 h-3 md:w-5 md:h-5 shrink-0 mt-1 md:mt-2 text-slate-300 group-hover:text-blue-500 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                                    </Link>
+                                    <template v-else>{{ prod.name }}</template>
                                 </td>
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums text-slate-900 pr-1 md:pr-6 text-sm md:text-3xl font-black">
                                     {{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
