@@ -7,6 +7,7 @@ import { Truck, ChevronDown, ChevronUp, Check, MapPin, Box, Calendar, Search, X,
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { Line } from 'vue-chartjs';
+import { createFixedTooltip } from '@/Utils/FixedChartTooltip';
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler } from 'chart.js';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler);
@@ -173,12 +174,26 @@ const currentHarvest = computed(() => {
     return null;
 });
 
+// Tooltip fixo no topo do gráfico (não acompanha o mouse)
+const fixedTooltip = createFixedTooltip({ align: 'center' });
+
+// Mês de cada uma das 52 semanas do eixo SEMANAL. O rótulo do eixo fica vazio
+// fora do início do mês, então o tooltip usa esta lista para mostrar o mês SEMPRE.
+const WEEK_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const weeklyMonthLabels = Array.from({ length: 52 }, (_, i) =>
+    WEEK_MONTHS[new Date(2024, 0, 1 + (i * 7)).getMonth()]
+);
+
 const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
         legend: { display: false },
         tooltip: {
+            // Tooltip fixo no topo (ver Utils/FixedChartTooltip) — enabled:false
+            // desativa o tooltip padrão que acompanharia o mouse.
+            enabled: false,
+            external: fixedTooltip,
             mode: 'index',
             intersect: false,
             backgroundColor: '#0f172a',
@@ -188,6 +203,16 @@ const chartOptions = computed(() => ({
             titleFont: { size: 14, weight: 'bold' },
             bodyFont: { size: 15 },
             callbacks: {
+                // Mês sempre visível no tooltip (SEMANAL: usa o mês da semana,
+                // pois o rótulo do eixo só aparece no início do mês)
+                title: (items) => {
+                    const item = items?.[0];
+                    if (!item) return '';
+                    if (chartMode.value === 'SEMANAL') {
+                        return weeklyMonthLabels[item.dataIndex] || item.label || '';
+                    }
+                    return item.label || '';
+                },
                 label: (context) => ` ${context.dataset.label}: $ ${context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
                 labelColor: (context) => ({
                     borderColor: 'transparent',
