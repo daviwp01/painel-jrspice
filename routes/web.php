@@ -22,23 +22,25 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     Route::post('/dashboard/contact/send', [InternalDashboardController::class, 'sendContactEmail'])->name('dashboard.contact.send');
     Route::get('/dashboard/export/prices', [InternalDashboardController::class, 'exportPricesPdf'])->name('dashboard.export.prices');
 
-    // Gestão de Clientes / Exportações
-    Route::get('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'index'])->name('export-processes.index');
-    Route::post('/export-processes', [\App\Http\Controllers\ExportProcessController::class, 'store'])->name('export-processes.store');
-    Route::put('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'update'])->name('export-processes.update');
-    Route::delete('/export-processes/{exportProcess}', [\App\Http\Controllers\ExportProcessController::class, 'destroy'])->name('export-processes.destroy');
-    Route::post('/export-processes/bulk-delete', [\App\Http\Controllers\ExportProcessController::class, 'bulkDestroy'])->name('export-processes.bulk-delete');
-    Route::post('/export-processes/bulk-sync-clients', [\App\Http\Controllers\ExportProcessController::class, 'bulkSyncClients'])->name('export-processes.bulk-sync-clients');
-
     // Portal do Cliente ("Meus Produtos")
     Route::get('/meus-produtos', [\App\Http\Controllers\ClientDashboardController::class, 'myProducts'])->name('my-products.index');
-    Route::get('/meus-produtos/{process}', [\App\Http\Controllers\ClientDashboardController::class, 'showContract'])->name('my-products.show');
-    Route::post('/meus-produtos/{process}/documentos', [\App\Http\Controllers\ClientDashboardController::class, 'uploadDocument'])->name('my-products.upload-document');
+    Route::get('/meus-produtos/{contract}', [\App\Http\Controllers\ClientDashboardController::class, 'showContract'])->name('my-products.show');
+    Route::post('/meus-produtos/{contract}/documentos', [\App\Http\Controllers\ClientDashboardController::class, 'uploadDocument'])->name('my-products.upload-document');
+    Route::get('/documentos-contrato/{document}/preview', [\App\Http\Controllers\ClientDashboardController::class, 'previewDocument'])
+        ->name('my-products.preview-document');
     Route::get('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'downloadDocument'])->name('my-products.download-document');
     Route::delete('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'deleteDocument'])->name('my-products.delete-document');
 
     // Avaliações de contratos (cliente)
-    Route::post('/meus-produtos/{process}/avaliacoes', [\App\Http\Controllers\ProcessReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/meus-produtos/{contract}/avaliacoes', [\App\Http\Controllers\ContractReviewController::class, 'store'])->name('reviews.store');
+
+    // Track & Trace (multi-carrier)
+    Route::get('/meus-produtos/{contract}/rastreamento', [\App\Http\Controllers\Api\ContainerTrackingController::class, 'forContract'])
+        ->middleware('throttle:30,1')
+        ->name('my-products.tracking');
+    Route::get('/rastreamento/{container}', [\App\Http\Controllers\Api\ContainerTrackingController::class, 'show'])
+        ->middleware('throttle:30,1')
+        ->name('tracking.show');
 });
 
 Route::middleware('auth')->group(function () {
@@ -50,7 +52,19 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(function () {
-    Route::get('/clients', [\App\Http\Controllers\ExportProcessController::class, 'index'])->name('admin.clients.index');
+    Route::get('/clients', [\App\Http\Controllers\ContractController::class, 'index'])->name('admin.clients.index');
+
+    Route::get('/contracts/{contract}', [\App\Http\Controllers\ContractController::class, 'show'])->name('contracts.show');
+    Route::get('/contracts/{contract}/rastreamento', [\App\Http\Controllers\Api\ContainerTrackingController::class, 'forContract'])
+        ->middleware('throttle:30,1')
+        ->name('contracts.tracking');
+    Route::post('/contracts', [\App\Http\Controllers\ContractController::class, 'store'])->name('contracts.store');
+    Route::put('/contracts/{contract}', [\App\Http\Controllers\ContractController::class, 'update'])->name('contracts.update');
+    Route::patch('/contracts/{contract}/status', [\App\Http\Controllers\ContractController::class, 'updateStatus'])->name('contracts.status');
+    Route::delete('/contracts/{contract}', [\App\Http\Controllers\ContractController::class, 'destroy'])->name('contracts.destroy');
+    Route::post('/contracts/bulk-delete', [\App\Http\Controllers\ContractController::class, 'bulkDestroy'])->name('contracts.bulk-delete');
+    Route::post('/contracts/bulk-sync-users', [\App\Http\Controllers\ContractController::class, 'bulkSyncUsers'])->name('contracts.bulk-sync-users');
+
     Route::get('/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
     Route::get('/activity', [AdminController::class, 'activityIndex'])->name('admin.activity.index');
     Route::post('/activity/clear', [AdminController::class, 'bulkClearActivity'])->name('admin.activity.clear');
@@ -115,7 +129,7 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::post('/data/default-filters', [DataController::class, 'saveDefaultFilters'])->name('admin.data.default-filters.save');
 
     // Avaliações (Admin)
-    Route::get('/reviews', [\App\Http\Controllers\ProcessReviewController::class, 'adminIndex'])->name('admin.reviews.index');
-    Route::get('/reviews/{review}', [\App\Http\Controllers\ProcessReviewController::class, 'adminShow'])->name('admin.reviews.show');
-    Route::post('/reviews/{review}/reply', [\App\Http\Controllers\ProcessReviewController::class, 'reply'])->name('admin.reviews.reply');
+    Route::get('/reviews', [\App\Http\Controllers\ContractReviewController::class, 'adminIndex'])->name('admin.reviews.index');
+    Route::get('/reviews/{review}', [\App\Http\Controllers\ContractReviewController::class, 'adminShow'])->name('admin.reviews.show');
+    Route::post('/reviews/{review}/reply', [\App\Http\Controllers\ContractReviewController::class, 'reply'])->name('admin.reviews.reply');
 });

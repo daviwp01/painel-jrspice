@@ -88,38 +88,14 @@ class InternalDashboardController extends Controller
         ];
 
         if ($currentPage->component === 'MyProducts/Index') {
-            $applyUserFilter = function ($q) use ($user) {
-                $q->whereHas('users', function ($uq) use ($user) {
-                    $uq->where('users.id', $user->id);
-                });
-            };
+            $this->activityService->logSearch(
+                $user,
+                'page',
+                $currentPage->title,
+                $currentPage->component
+            );
 
-            $query = \App\Models\ExportProcess::with(['exporter', 'importer', 'product', 'seller', 'users'])
-                ->where($applyUserFilter)
-                ->orderBy('date', 'desc');
-
-            if ($request->has('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('contract_number', 'like', "%{$search}%")
-                      ->orWhere('register_number', 'like', "%{$search}%")
-                      ->orWhereHas('product', function ($pq) use ($search) {
-                          $pq->where('name', 'like', "%{$search}%");
-                      });
-                });
-            }
-
-            $viewData['exportProcesses'] = $query->paginate(20)->withQueryString();
-            $viewData['filters'] = $request->only(['search']);
-            
-            $viewData['summary'] = [
-                'total_tons' => (float) \App\Models\ExportProcess::where($applyUserFilter)->sum('quantity_tons'),
-                'total_contracts' => (int) \App\Models\ExportProcess::where($applyUserFilter)->count(),
-                'active_shipments' => (int) \App\Models\ExportProcess::where($applyUserFilter)
-                    ->whereNotNull('container_number')
-                    ->whereNotIn('status', ['Processo FINALIZADO'])
-                    ->count()
-            ];
+            return app(ClientDashboardController::class)->myProducts($request);
         }
 
         if (in_array($currentPage->component, self::TECHNICAL_DASHBOARDS, true)) {

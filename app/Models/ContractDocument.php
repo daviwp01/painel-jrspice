@@ -3,23 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ExportProcessDocument extends Model
+class ContractDocument extends Model
 {
     protected $fillable = [
-        'export_process_id',
+        'contract_id',
         'name',
         'file_path',
         'file_type',
         'uploaded_by',
     ];
 
-    public function exportProcess()
+    public function contract(): BelongsTo
     {
-        return $this->belongsTo(ExportProcess::class, 'export_process_id');
+        return $this->belongsTo(Contract::class, 'contract_id');
     }
 
-    public function uploader()
+    public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }

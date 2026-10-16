@@ -196,7 +196,7 @@ const filterRating = (r) => {
             <div class="flex-1 min-w-0 space-y-0.5">
               <p class="text-sm font-bold text-slate-800 truncate">{{ review.user?.name ?? '—' }}</p>
               <p class="text-[10px] text-slate-400 flex items-center gap-1.5">
-                <span class="font-mono">{{ review.process?.contract_number }}</span>
+                <span class="font-mono">{{ review.contract?.contract_number }}</span>
                 <span>·</span>
                 <span>{{ new Date(review.created_at).toLocaleDateString('pt-BR') }}</span>
               </p>

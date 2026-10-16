@@ -7,16 +7,17 @@ import {
   DollarSign, Tag, UserCheck, Truck, AlertCircle, Eye
 } from 'lucide-vue-next';
 import MediaPreviewModal from '@/Components/MediaPreviewModal.vue';
+import { getShipmentProgress, getRemainingDays } from '@/Utils/contracts';
 
 const props = defineProps({
   process: Object,
-  originPort: String,
-  destinationPort: String,
-  etdDate: String,
-  etaDate: String,
-  telemetry: Object,
-  animatedProgress: Number,
 });
+
+// Everything shown here is derived from the contract itself.
+const originLabel = computed(() => props.process?.exporter?.country || '—');
+const destinationLabel = computed(() => props.process?.importer?.country || '—');
+const progress = computed(() => getShipmentProgress(props.process || {}));
+const remainingDays = computed(() => getRemainingDays(props.process || {}));
 
 const emit = defineEmits(['go-tracking']);
 
@@ -86,45 +87,14 @@ const getStatusConfig = (status) => {
   return { class: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' };
 };
 
-// Exemplos Práticos de Documentos de Importação (B/L, Foto Estufagem, Vídeo Inspeção)
-const demoDocuments = computed(() => [
-  {
-    id: 'demo_bl',
-    name: `Exemplo_Bill_of_Lading_BL_${props.process.contract_number}.pdf`,
-    file_type: 'pdf',
-    uploader: { name: 'JR Spice Admin' },
-    created_at: props.process.date || new Date().toISOString(),
-    url: 'https://pdfobject.com/pdf/sample.pdf',
-    isDemo: true,
-  },
-  {
-    id: 'demo_photo',
-    name: `Foto_Estufagem_Lacre_Container_${props.process.container_number || 'MSMU'}.jpg`,
-    file_type: 'image',
-    uploader: { name: 'Controle de Qualidade' },
-    created_at: props.process.date || new Date().toISOString(),
-    url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
-    isDemo: true,
-  },
-  {
-    id: 'demo_video',
-    name: `Video_Embarque_Navio_Porto_${props.process.contract_number}.mp4`,
-    file_type: 'video',
-    uploader: { name: 'Equipe de Logística Portuária' },
-    created_at: props.process.date || new Date().toISOString(),
-    url: 'https://www.youtube.com/watch?v=-mrFL0WNV9s',
-    isDemo: true,
-  }
-]);
-
-// Combined documents: real uploaded documents + demo documents
-const allDocuments = computed(() => {
-  const realDocs = (props.process.documents || []).map(doc => ({
+// Documentos reais enviados para este contrato (nenhum dado fictício).
+const allDocuments = computed(() =>
+  (props.process.documents || []).map((doc) => ({
     ...doc,
-    url: route('my-products.download-document', doc.id)
-  }));
-  return [...realDocs, ...demoDocuments.value];
-});
+    url: route('my-products.preview-document', doc.id),
+    downloadUrl: route('my-products.download-document', doc.id),
+  })),
+);
 </script>
 
 <template>
@@ -274,21 +244,21 @@ const allDocuments = computed(() => {
             <div>
               <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 uppercase tracking-wider">Origem</span>
               <h4 class="text-xs font-bold text-slate-200 mt-1 flex items-center gap-1.5">
-                <MapPin class="w-3.5 h-3.5 text-blue-400 shrink-0" />{{ originPort }}
+                <MapPin class="w-3.5 h-3.5 text-blue-400 shrink-0" />{{ originLabel }}
               </h4>
             </div>
             <div class="text-right">
               <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black text-emerald-400 uppercase tracking-wider">Destino</span>
               <h4 class="text-xs font-bold text-slate-200 mt-1 flex items-center gap-1.5 justify-end">
-                {{ destinationPort }}<MapPin class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                {{ destinationLabel }}<MapPin class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               </h4>
             </div>
           </div>
 
           <div class="py-6 px-4 relative">
             <div class="relative h-1 bg-slate-800 rounded-full">
-              <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-[3500ms] ease-in-out shadow-[0_0_10px_rgba(59,130,246,0.6)]" :style="{ width: animatedProgress + '%' }"></div>
-              <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-[3500ms] ease-in-out flex flex-col items-center z-20" :style="{ left: animatedProgress + '%' }">
+              <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-[3500ms] ease-in-out shadow-[0_0_10px_rgba(59,130,246,0.6)]" :style="{ width: progress + '%' }"></div>
+              <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-[3500ms] ease-in-out flex flex-col items-center z-20" :style="{ left: progress + '%' }">
                 <div class="absolute w-6 h-6 rounded-full bg-blue-500/30 animate-ping pointer-events-none"></div>
                 <div class="w-8 h-8 rounded-lg bg-blue-600 border border-blue-400 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
                   <Ship class="w-4 h-4 text-white animate-pulse" />
@@ -302,11 +272,11 @@ const allDocuments = computed(() => {
           <div class="flex justify-between items-center pt-3 border-t border-slate-800/80 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
             <div class="flex items-center gap-1.5">
               <Navigation class="w-3.5 h-3.5 text-blue-400" />
-              Status: <span class="text-slate-200 ml-1 font-bold">{{ telemetry.status }}</span>
+              Status: <span class="text-slate-200 ml-1 font-bold">{{ process.status || 'Sem status' }}</span>
             </div>
             <div class="flex items-center gap-1.5 font-mono">
               <Calendar class="w-3.5 h-3.5 text-rose-400" />
-              <span>{{ telemetry.etaDays }}</span>
+              <span>{{ remainingDays === null ? '—' : `${remainingDays} dias até a ETA` }}</span>
             </div>
           </div>
         </div>
@@ -357,7 +327,6 @@ const allDocuments = computed(() => {
                 </p>
                 <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1">
                   <span>Por: {{ doc.uploader?.name || 'Sistema' }}</span>
-                  <span v-if="doc.isDemo" class="text-blue-600 font-bold bg-blue-50 border border-blue-100 px-1.5 rounded">Exemplo</span>
                 </p>
               </div>
             </div>
@@ -374,7 +343,7 @@ const allDocuments = computed(() => {
               </button>
 
               <a
-                :href="doc.url"
+                :href="doc.downloadUrl"
                 target="_blank"
                 class="p-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 transition-all shadow-sm"
                 title="Baixar"
@@ -383,7 +352,7 @@ const allDocuments = computed(() => {
               </a>
 
               <button
-                v-if="!doc.isDemo && (doc.uploaded_by === user.id || user.is_master)"
+                v-if="doc.uploaded_by === user.id || user.is_master"
                 @click="deleteDocument(doc.id)"
                 class="p-1.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-400 hover:text-rose-600 transition-all shadow-sm"
                 title="Excluir"

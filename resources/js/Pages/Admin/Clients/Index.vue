@@ -1,50 +1,54 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import ExportProcessesStats from '@/Pages/ExportProcesses/Partials/ExportProcessesStats.vue';
-import ExportProcessesTable from '@/Pages/ExportProcesses/Partials/ExportProcessesTable.vue';
-import ExportProcessSlideOver from '@/Pages/ExportProcesses/Partials/ExportProcessSlideOver.vue';
+import ContractStats from '@/Pages/Contracts/Partials/ContractStats.vue';
+import ContractsTable from '@/Pages/Contracts/Partials/ContractsTable.vue';
+import ContractSlideOver from '@/Pages/Contracts/Partials/ContractSlideOver.vue';
+import ContractTrackingSlideOver from '@/Pages/Contracts/Partials/ContractTrackingSlideOver.vue';
 
 const props = defineProps({
-  exportProcesses: Object,
+  rows: Object,
   clients: Array,
-  users: Array,
-  usersList: Array,
-  users_list: Array,
-  products: Array,
   sellers: Array,
+  contractProducts: Array,
+  countries: Array,
+  users: Array,
+  statusOptions: Array,
   filters: Object,
+  activeFilters: Object,
   summary: Object,
 });
 
 const isSlideOverOpen = ref(false);
-const editingProcess = ref(null);
+const editingContractId = ref(null);
+const trackingContract = ref(null);
+const isTrackingOpen = ref(false);
+
+const openTracking = (row) => {
+  trackingContract.value = row;
+  isTrackingOpen.value = true;
+};
+
+const closeTracking = () => {
+  isTrackingOpen.value = false;
+  setTimeout(() => { trackingContract.value = null; }, 300);
+};
 
 const openCreateForm = () => {
-  editingProcess.value = null;
+  editingContractId.value = null;
   isSlideOverOpen.value = true;
 };
 
-const openEditForm = (process) => {
-  editingProcess.value = process;
+const openEditForm = (row) => {
+  editingContractId.value = row.contract_id;
   isSlideOverOpen.value = true;
 };
 
 const closeSlideOver = () => {
   isSlideOverOpen.value = false;
-  setTimeout(() => { editingProcess.value = null; }, 300);
+  setTimeout(() => { editingContractId.value = null; }, 300);
 };
-
-const exporters = computed(() => (props.clients || []).filter(c => c.type === 'exporter' || c.type === 'exportador'));
-const importers = computed(() => (props.clients || []).filter(c => c.type === 'importer' || c.type === 'importador'));
-
-const userOptions = computed(() => {
-  if (props.users && props.users.length) return props.users;
-  if (props.usersList && props.usersList.length) return props.usersList;
-  if (props.users_list && props.users_list.length) return props.users_list;
-  return [];
-});
 </script>
 
 <template>
@@ -52,46 +56,50 @@ const userOptions = computed(() => {
 
   <DashboardLayout>
     <div class="px-6 py-7 md:px-8 w-full max-w-none space-y-6">
-
-      <!-- Page Title -->
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
           <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Gestão de Clientes</h1>
-          <p class="text-sm font-medium text-slate-500 mt-1">Contratos, embarques, comissões e acompanhamento logístico.</p>
+          <p class="text-sm font-medium text-slate-500 mt-1">
+            Contratos, itens, embarques, comissões e acompanhamento logístico.
+          </p>
         </div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
-          {{ exportProcesses.total || 0 }} contratos registrados
+          {{ summary?.total_contracts || 0 }} contratos · {{ rows?.total || 0 }} itens
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <ExportProcessesStats :summary="summary" />
+      <ContractStats :summary="summary" :filters="filters" />
 
-      <!-- Table -->
-      <ExportProcessesTable
-        :exportProcesses="exportProcesses"
+      <ContractsTable
+        :rows="rows"
         :filters="filters"
         :clients="clients"
-        :users="userOptions"
-        :usersList="userOptions"
+        :users="users"
+        :statusOptions="statusOptions"
+        :sellers="sellers"
+        :contractProducts="contractProducts"
+        :countries="countries"
         @create="openCreateForm"
         @edit="openEditForm"
+        @tracking="openTracking"
       />
-
     </div>
 
-    <!-- Slide-over -->
-    <ExportProcessSlideOver
+    <ContractSlideOver
       :is-open="isSlideOverOpen"
-      :process="editingProcess"
-      :exporters="exporters"
-      :importers="importers"
-      :products="products"
-      :sellers="sellers"
+      :contract-id="editingContractId"
       :clients="clients"
-      :users="userOptions"
-      :usersList="userOptions"
+      :sellers="sellers"
+      :contract-products="contractProducts"
+      :users="users"
+      :status-options="statusOptions"
       @close="closeSlideOver"
+    />
+
+    <ContractTrackingSlideOver
+      :is-open="isTrackingOpen"
+      :contract="trackingContract"
+      @close="closeTracking"
     />
   </DashboardLayout>
 </template>

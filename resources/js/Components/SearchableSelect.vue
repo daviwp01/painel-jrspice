@@ -53,21 +53,62 @@ const dropdownRef = ref(null);
 const searchInput = ref(null);
 const calculatedDirection = ref(props.direction);
 
+// Painel fechado: busca (~50px) + lista (280px) + bordas/padding = 341px,
+// mais a folga do gap (12px) entre o gatilho e o painel.
+const MAX_LIST_HEIGHT = 280;
+const MIN_LIST_HEIGHT = 96;
+const PANEL_OVERHEAD = 73;
+const FULL_PANEL_HEIGHT = 341 + PANEL_OVERHEAD - MAX_LIST_HEIGHT + 12; // 353
+
+const listMaxHeight = ref(MAX_LIST_HEIGHT);
+
+/**
+ * Sobe até o ancestral que realmente recorta o painel (container de scroll).
+ * Medir só a janela engana dentro de modais com `overflow-y-auto`.
+ */
+const findClippingAncestor = () => {
+    let node = dropdownRef.value || null;
+
+    while (node && node !== document.body) {
+        const { overflowY } = window.getComputedStyle(node);
+        if (['auto', 'scroll', 'hidden', 'clip'].includes(overflowY)) {
+            return node;
+        }
+        node = node.parentElement;
+    }
+
+    return null;
+};
+
 const updateDirection = () => {
     if (!dropdownRef.value) return;
+
     const rect = dropdownRef.value.getBoundingClientRect();
-    const spaceAbove = rect.top;
-    
-    // Se a direção for 'up' mas tivermos menos de 220px de espaço no teto, forçamos 'down'
-    if (props.direction === 'up' && spaceAbove < 220) {
-        calculatedDirection.value = 'down';
-    } else {
-        calculatedDirection.value = props.direction;
+    const clip = findClippingAncestor();
+    const clipRect = clip ? clip.getBoundingClientRect() : null;
+
+    const spaceAbove = rect.top - (clipRect ? clipRect.top : 0);
+    const spaceBelow = (clipRect ? clipRect.bottom : window.innerHeight) - rect.bottom;
+
+    let direction = props.direction;
+
+    // Inverte apenas quando a direção preferida não cabe e a oposta tem mais espaço.
+    const preferredSpace = direction === 'up' ? spaceAbove : spaceBelow;
+    const oppositeSpace = direction === 'up' ? spaceBelow : spaceAbove;
+
+    if (preferredSpace < FULL_PANEL_HEIGHT && oppositeSpace > preferredSpace) {
+        direction = direction === 'up' ? 'down' : 'up';
     }
+
+    calculatedDirection.value = direction;
+
+    // O painel nunca deve ser cortado: a lista encolhe até caber no espaço real.
+    const available = (direction === 'up' ? spaceAbove : spaceBelow) - PANEL_OVERHEAD;
+    listMaxHeight.value = Math.max(MIN_LIST_HEIGHT, Math.min(MAX_LIST_HEIGHT, available));
 };
 
 watch(() => props.direction, (newDir) => {
-    calculatedDirection.value = newDir;
+    updateDirection();
 });
 
 const toggleDropdown = () => {
@@ -226,7 +267,7 @@ const clearOption = (e) => {
             </div>
 
             <!-- Options List -->
-            <div :class="['max-h-[280px] overflow-y-auto p-1 scrollbar-thin', variant === 'dark' ? 'scrollbar-thumb-slate-800' : 'scrollbar-thumb-slate-200']">
+            <div :style="{ maxHeight: listMaxHeight + 'px' }" :class="['overflow-y-auto p-1 scrollbar-thin', variant === 'dark' ? 'scrollbar-thumb-slate-800' : 'scrollbar-thumb-slate-200']">
                 <div 
                     v-for="option in filteredOptions" 
                     :key="option.id"

@@ -58,7 +58,7 @@ class AdminController extends Controller
      */
     public function clientsIndex(\Illuminate\Http\Request $request)
     {
-        return app(\App\Http\Controllers\ExportProcessController::class)->index($request);
+        return app(\App\Http\Controllers\ContractController::class)->index($request);
     }
 
     /**

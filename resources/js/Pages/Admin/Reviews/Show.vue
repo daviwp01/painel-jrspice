@@ -11,6 +11,8 @@ const props = defineProps({
 const ratingLabel = (r) =>
   ['', 'Muito Ruim', 'Ruim', 'Regular', 'Bom', 'Excelente'][r] ?? '—';
 
+const firstProduct = (review) => review.contract?.items?.[0]?.product?.name ?? '—';
+
 const form = useForm({
   admin_reply: props.review.admin_reply ?? '',
 });
@@ -23,7 +25,7 @@ const submit = () => {
 </script>
 
 <template>
-  <Head :title="`Avaliação – ${review.process?.contract_number}`" />
+  <Head :title="`Avaliação – ${review.contract?.contract_number}`" />
   <DashboardLayout>
     <div class="px-6 py-7 md:px-8 w-full max-w-none space-y-6">
 
@@ -46,8 +48,8 @@ const submit = () => {
             Avaliação do Contrato
           </h1>
           <p class="text-sm font-medium text-slate-500 mt-1">
-            Contrato <span class="font-bold text-slate-700">{{ review.process?.contract_number }}</span>
-            · Produto <span class="font-bold text-slate-700">{{ review.process?.product?.name ?? '—' }}</span>
+            Contrato <span class="font-bold text-slate-700">{{ review.contract?.contract_number }}</span>
+            · Produto <span class="font-bold text-slate-700">{{ firstProduct(review) }}</span>
           </p>
         </div>
         <span
@@ -137,15 +139,15 @@ const submit = () => {
             <div class="space-y-2">
               <div>
                 <p class="text-[10px] text-slate-400 uppercase tracking-wider">Número</p>
-                <p class="text-sm font-bold text-slate-800 font-mono">{{ review.process?.contract_number }}</p>
+                <p class="text-sm font-bold text-slate-800 font-mono">{{ review.contract?.contract_number }}</p>
               </div>
               <div>
                 <p class="text-[10px] text-slate-400 uppercase tracking-wider">Produto</p>
-                <p class="text-sm font-bold text-slate-700">{{ review.process?.product?.name ?? '—' }}</p>
+                <p class="text-sm font-bold text-slate-700">{{ firstProduct(review) }}</p>
               </div>
               <div>
                 <p class="text-[10px] text-slate-400 uppercase tracking-wider">Status</p>
-                <p class="text-xs font-semibold text-slate-600">{{ review.process?.status ?? '—' }}</p>
+                <p class="text-xs font-semibold text-slate-600">{{ review.contract?.status ?? '—' }}</p>
               </div>
             </div>
           </div>

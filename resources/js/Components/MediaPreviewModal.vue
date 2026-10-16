@@ -38,7 +38,6 @@ const youtubeEmbedUrl = computed(() => {
 });
 
 const isYoutube = computed(() => {
-  if (props.file?.isDemo) return true;
   const url = fileUrl.value || '';
   return url.includes('youtube') || url.includes('youtu.be');
 });

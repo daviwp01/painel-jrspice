@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminUserSeeder::class,
             SMTPSettingsSeeder::class,
-            DemoContractsSeeder::class,
         ]);
+
+        // Contratos reais são carregados via `php artisan contracts:import`.
     }
 }

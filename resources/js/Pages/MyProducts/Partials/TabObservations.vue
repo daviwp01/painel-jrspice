@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { formatDate } from '@/Utils/contracts';
 import {
   MessageSquare, Info, AlertTriangle, Video, FileText, Truck,
   CheckCircle2, Clock, Calendar, ArrowRight
@@ -8,12 +9,6 @@ import {
 const props = defineProps({
   process: Object,
 });
-
-const formatDate = (d) => {
-  if (!d) return '—';
-  const date = new Date(d);
-  return isNaN(date.getTime()) ? d : date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-};
 
 const timelineEntries = computed(() => {
   const list = [];

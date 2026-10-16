@@ -41,18 +41,24 @@ class AdminUserSeeder extends Seeder
         ];
 
         foreach ($admins as $admin) {
-            User::updateOrCreate(
+            // is_master is deliberately outside $fillable, so it must be set
+            // explicitly instead of through mass assignment.
+            $user = User::updateOrCreate(
                 ['email' => $admin['email']],
                 [
                     'name' => $admin['name'],
                     'phone' => $admin['phone'],
                     'company_name' => $admin['company_name'],
                     'password' => Hash::make($admin['password']),
-                    'is_master' => $admin['is_master'],
                     'tenant_id' => $admin['is_master'] ? 'master' : 'default',
                     'email_verified_at' => now(),
                 ]
             );
+
+            $user->forceFill([
+                'is_master' => $admin['is_master'],
+                'is_active' => true,
+            ])->save();
         }
 
         // Maintain the default admin just in case, or remove if the user implies replacing.
