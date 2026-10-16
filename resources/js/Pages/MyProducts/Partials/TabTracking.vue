@@ -101,6 +101,19 @@ const events = computed(() => {
 });
 
 /**
+ * Past events are completed; anything dated in the future is still pending and
+ * must render disabled, exactly like the carrier portal does.
+ */
+const timelineEvents = computed(() => {
+  const now = Date.now();
+
+  return events.value.map((event) => ({
+    ...event,
+    done: event.date ? new Date(String(event.date).slice(0, 10) + 'T00:00:00').getTime() <= now : false,
+  }));
+});
+
+/**
  * Real milestones only: every date shown here comes from the contract itself.
  * Nothing is estimated — unknown dates render as "aguardando".
  */
@@ -331,7 +344,7 @@ const carrierName = computed(() => data.value?.carrier_name || props.process.shi
 
           <div class="relative pl-10 space-y-8 before:content-[''] before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
             <div
-              v-for="(step, idx) in (events.length ? events : milestones)"
+              v-for="(step, idx) in (events.length ? timelineEvents : milestones)"
               :key="idx"
               class="relative group"
             >
@@ -349,7 +362,7 @@ const carrierName = computed(() => data.value?.carrier_name || props.process.shi
                 <div class="min-w-0">
                   <h4 class="text-sm font-black flex items-center gap-2" :class="step.done === false ? 'text-slate-400' : 'text-slate-800'">
                     {{ step.title || step.description || 'Evento' }}
-                    <CheckCircle v-if="step.done !== false" class="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle v-if="step.done" class="w-4 h-4 text-emerald-500 shrink-0" />
                   </h4>
                   <p v-if="step.description || step.location || step.transport" class="text-xs font-semibold text-slate-400 mt-1 max-w-xl leading-relaxed">
                     {{ [step.location, step.description, step.transport && step.voyage ? `${step.transport} · ${step.voyage}` : step.transport].filter(Boolean).join(' · ') }}
