@@ -54,7 +54,6 @@ final class ContractSaver
     {
         $contract->update([
             'status' => $data['status'],
-            'status_date' => $data['status_date'] ?? $contract->status_date,
         ]);
 
         return $contract;
@@ -101,7 +100,6 @@ final class ContractSaver
                 'etd_date' => $this->nullableDate($payload['etd_date'] ?? null),
                 'eta_date' => $this->nullableDate($payload['eta_date'] ?? null),
                 'dhl_number' => $this->nullableString($payload['dhl_number'] ?? null),
-                'status_date' => $this->nullableDate($payload['status_date'] ?? null),
                 'video_date' => $this->nullableDate($payload['video_date'] ?? null),
                 'video_reference' => $this->nullableString($payload['video_reference'] ?? null),
                 'observations' => $this->nullableString($payload['observations'] ?? null),
@@ -140,7 +138,6 @@ final class ContractSaver
             'country' => $this->nullableString($data['country'] ?? null),
             'seller_id' => $this->nullableId($data['seller_id'] ?? null),
             'status' => $this->nullableString($data['status'] ?? null),
-            'status_date' => $this->nullableDate($data['status_date'] ?? null),
             'dhl_date' => $this->nullableDate($data['dhl_date'] ?? null),
             'dhl_number' => $this->nullableString($data['dhl_number'] ?? null),
             'etd_date' => $this->nullableDate($data['etd_date'] ?? null),

@@ -20,7 +20,6 @@ class UpdateContractStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', Rule::in(ContractStatus::ALL)],
-            'status_date' => ['nullable', 'date'],
         ];
     }
 }

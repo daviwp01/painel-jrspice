@@ -14,7 +14,7 @@ $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
 $contractFields = [
     'date', 'contract_number', 'exporter_id', 'importer_id', 'country', 'seller_id',
-    'status', 'status_date', 'dhl_date', 'dhl_number', 'etd_date', 'eta_date',
+    'status', 'dhl_date', 'dhl_number', 'etd_date', 'eta_date',
     'video_sent', 'video_reference', 'video_date', 'incident', 'estimated_receipt_date',
     'exchange_rate', 'receipt_date', 'paid_in_date', 'paid_in_brl', 'observations',
     'shipping_company', 'container_number',
@@ -23,7 +23,7 @@ $contractFields = [
 $itemFields = [
     'register_number', 'product_id', 'quantity_tons', 'price_per_ton_usd', 'sales_usd',
     'commission_rate', 'commission_usd', 'to_pay_rate', 'to_pay_usd', 'etd_date',
-    'eta_date', 'dhl_number', 'status_date', 'video_date', 'video_reference', 'observations',
+    'eta_date', 'dhl_number', 'video_date', 'video_reference', 'observations',
 ];
 
 $formKeys = array_merge($contractFields, ['user_ids', 'items']);

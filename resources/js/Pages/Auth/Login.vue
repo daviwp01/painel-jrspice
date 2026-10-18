@@ -7,25 +7,63 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import PasswordInput from '@/Components/PasswordInput.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
+import { useRecaptcha } from '@/Composables/useRecaptcha';
 
-defineProps({
+const props = defineProps({
     canResetPassword: {
         type: Boolean,
     },
     status: {
         type: String,
     },
+    recaptchaSiteKey: {
+        type: String,
+        default: '',
+    },
+    recaptchaType: {
+        type: String,
+        default: 'v2',
+    },
+});
+
+const { render: renderRecaptcha, token: recaptchaToken, reset: resetRecaptcha } = useRecaptcha(
+    props.recaptchaSiteKey,
+    props.recaptchaType,
+);
+
+const recaptchaContainer = ref(null);
+const isV2 = () => props.recaptchaType === 'v2' && !!props.recaptchaSiteKey;
+
+onMounted(async () => {
+    if (isV2() && recaptchaContainer.value) {
+        await renderRecaptcha(recaptchaContainer.value);
+    }
 });
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
+    g_recaptcha: '',
 });
 
-const submit = () => {
+const submit = async () => {
+    form.clearErrors('g_recaptcha');
+    form.g_recaptcha = await recaptchaToken('login');
+
+    // O token da caixinha é de uso único e só existe depois do clique.
+    if (isV2() && !form.g_recaptcha) {
+        form.setError('g_recaptcha', 'Confirme que você não é um robô.');
+        return;
+    }
+
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+        onFinish: () => {
+            form.reset('password');
+            // O token anterior já foi gasto: libera uma nova tentativa.
+            resetRecaptcha();
+        },
     });
 };
 </script>
@@ -91,7 +129,17 @@ const submit = () => {
                 </Link>
             </div>
 
-            <div class="mt-8">
+            <div v-if="isV2()" class="mt-5 flex justify-center">
+                <div ref="recaptchaContainer"></div>
+            </div>
+
+            <InputError class="mt-4" :message="form.errors.g_recaptcha" />
+
+            <p v-if="recaptchaSiteKey && recaptchaType === 'v3'" class="mt-3 text-center text-[10px] text-gray-400">
+                Este site é protegido pelo reCAPTCHA.
+            </p>
+
+            <div class="mt-4">
                 <PrimaryButton
                     class="w-full justify-center py-3.5 bg-blue-600 hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-800 rounded-xl text-sm font-bold tracking-wide shadow-lg shadow-blue-100 transition-all"
                     :class="{ 'opacity-75 cursor-not-allowed': form.processing }"

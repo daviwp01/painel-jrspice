@@ -60,7 +60,7 @@
 | W | `Video enviado` | **linha** | texto livre (nº de rastreio, "ok", data…) | — |
 | X | `DATA VÍDEO` | **linha** | data **ou texto** | fórmula `=Data Status − 7` em algumas linhas |
 | Y | `STATUS` | contrato | lista dos 6 valores | — |
-| Z | `Data Status` | contrato | data | — |
+| Z | `Data Status` | contrato | data | **removido do sistema** — o valor é importado para `Data embarque ETD` |
 | AA | `Data DHL` | contrato | data **ou** `...` **ou** `CONCLUÍDO` **ou** `não se aplica` | fórmula `=IF(STATUS="Transbordo até"; Data Status − 10; "não se aplica")` |
 | AB | `Data embarque ETD` | contrato* | data | — |
 | AC | `Data da chegada ETA` | contrato* | data | — |

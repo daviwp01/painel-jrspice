@@ -10,6 +10,7 @@ use App\Models\ContractProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -25,7 +26,7 @@ class ClientPortalAccessTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('local');
+        Storage::fake('contracts');
 
         $exporter = Client::create(['name' => 'Golden Spices', 'type' => 'exporter', 'country' => 'China']);
         $importer = Client::create(['name' => 'Expin', 'type' => 'importer', 'country' => 'India']);
@@ -110,7 +111,7 @@ class ClientPortalAccessTest extends TestCase
             'uploaded_by' => $this->linkedClient->id,
         ]);
 
-        Storage::put($document->file_path, 'pdf-bytes');
+        Storage::disk('contracts')->put($document->file_path, 'pdf-bytes');
 
         $this->actingAs($this->linkedClient)
             ->get(route('my-products.download-document', $document))
@@ -127,17 +128,23 @@ class ClientPortalAccessTest extends TestCase
             'uploaded_by' => $this->linkedClient->id,
         ]);
 
-        Storage::put($document->file_path, 'pdf-bytes');
+        Storage::disk('contracts')->put($document->file_path, 'pdf-bytes');
 
         $this->actingAs(User::factory()->create())
             ->get(route('my-products.download-document', $document))
             ->assertForbidden();
     }
 
-    public function test_unlinked_user_cannot_upload_documents(): void
+    public function test_portal_exposes_no_upload_or_delete_route(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->post(route('my-products.upload-document', $this->contract), [
+        $this->assertFalse(Route::has('my-products.upload-document'));
+        $this->assertFalse(Route::has('my-products.delete-document'));
+    }
+
+    public function test_non_master_cannot_upload_documents(): void
+    {
+        $this->actingAs(User::factory()->create(['is_master' => false]))
+            ->post(route('contracts.documents.store', $this->contract), [
                 'file' => UploadedFile::fake()->create('invoice.pdf', 10, 'application/pdf'),
             ])
             ->assertForbidden();

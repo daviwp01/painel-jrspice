@@ -139,7 +139,7 @@ const milestones = computed(() => [
   {
     title: 'Processo finalizado',
     description: 'Entrega concluída e processo encerrado.',
-    date: isFinalized.value ? props.process.status_date : null,
+    date: isFinalized.value ? props.process.date : null,
     done: isFinalized.value,
   },
 ]);

@@ -24,7 +24,6 @@ class ContractItem extends Model
         'etd_date',
         'eta_date',
         'dhl_number',
-        'status_date',
         'video_date',
         'video_reference',
         'observations',
@@ -43,7 +42,6 @@ class ContractItem extends Model
         'to_pay_usd' => 'decimal:2',
         'etd_date' => 'date',
         'eta_date' => 'date',
-        'status_date' => 'date',
         'video_date' => 'date',
     ];
 

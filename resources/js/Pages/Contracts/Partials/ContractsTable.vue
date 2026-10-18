@@ -1,10 +1,16 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import {
+  useContractColumns,
+  contractColumn,
+  contractColumnsStorageKey,
+} from '@/Composables/useContractColumns';
 import { router, usePage } from '@inertiajs/vue3';
 import {
   Plus, ChevronLeft, ChevronRight, ChevronDown, Package,
   Columns3, Check, RotateCcw, Users, Trash2, X,
   ArrowUp, ArrowDown, ArrowUpDown, Ship,
+  GripVertical, Lock,
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -27,6 +33,19 @@ const sortDir = computed(() => (props.filters?.sort_dir === 'asc' ? 'asc' : 'des
 const isSortable = (key) => SORTABLE_COLUMNS.includes(key);
 const isActiveSort = (key) => isSortable(key) && sortBy.value === key;
 
+// Params that actually change the query. Display-only hints (active_count)
+// and the page itself are never sent back.
+const listParams = () => {
+  const params = { ...props.filters };
+  delete params.active_count;
+  delete params.per_page;
+  return params;
+};
+
+// Partial reload: only the table payload comes back, so the stats card, the
+// filter bar and the selects are not re-rendered nor re-fetched.
+const listOptions = { preserveState: true, preserveScroll: true, replace: true, only: ['rows', 'filters'] };
+
 const toggleSort = (key) => {
   if (!isSortable(key)) return;
 
@@ -34,8 +53,8 @@ const toggleSort = (key) => {
 
   router.get(
     route('admin.clients.index'),
-    { ...props.filters, sort_by: key, sort_dir: direction },
-    { preserveState: true, preserveScroll: true, replace: true },
+    { ...listParams(), per_page: perPage.value, sort_by: key, sort_dir: direction },
+    listOptions,
   );
 };
 
@@ -43,77 +62,37 @@ import ContractsFilterBar from './ContractsFilterBar.vue';
 
 const emit = defineEmits(['create', 'edit', 'tracking']);
 
-const ALL_COLUMNS = [
-  { key: 'date', label: 'Data', fixed: true, recommended: true },
-  { key: 'contract_number', label: 'Contrato', fixed: true, recommended: true },
-  { key: 'register_number', label: 'Registro', recommended: false },
-  { key: 'exporter', label: 'Exportador', recommended: true },
-  { key: 'importer', label: 'Importador', recommended: true },
-  { key: 'country', label: 'País', recommended: true },
-  { key: 'product', label: 'Produto', recommended: true },
-  { key: 'quantity_tons', label: 'Quantidade', recommended: true, numeric: true },
-  { key: 'price_per_ton_usd', label: 'Preço Ton US$', recommended: true, numeric: true },
-  { key: 'sales_usd', label: 'Venda US$', recommended: true, numeric: true },
-  { key: 'cumulative_sales_usd', label: 'Venda Anual US$', recommended: false, numeric: true },
-  { key: 'commission_usd', label: 'Comissão US$', recommended: true, numeric: true },
-  { key: 'cumulative_commission_usd', label: 'TT Comissão US$', recommended: false, numeric: true },
-  { key: 'exchange_rate', label: 'Taxa de Câmbio', recommended: false, numeric: true },
-  { key: 'estimated_euro', label: 'Estimado em Euro', recommended: false, numeric: true },
-  { key: 'estimated_receipt_date', label: 'Data Estimada Recebimento', recommended: false },
-  { key: 'seller', label: 'Vendedor', recommended: true },
-  { key: 'to_pay_usd', label: 'A pagar', recommended: false, numeric: true },
-  { key: 'receipt_date', label: 'Recebimento', recommended: false },
-  { key: 'paid_in_date', label: 'Pago em', recommended: false },
-  { key: 'paid_in_brl', label: 'Pago em Real', recommended: false, numeric: true },
-  { key: 'incident', label: 'Incidente', recommended: false },
-  { key: 'video_sent', label: 'Video enviado', recommended: false },
-  { key: 'video_date', label: 'DATA VÍDEO', recommended: false },
-  { key: 'status', label: 'STATUS', recommended: true },
-  { key: 'status_date', label: 'Data Status', recommended: false },
-  { key: 'dhl_date', label: 'Data DHL', recommended: false },
-  { key: 'etd_date', label: 'Data embarque ETD', recommended: false },
-  { key: 'eta_date', label: 'Data da chegada ETA', recommended: true },
-  { key: 'dhl_number', label: 'DHL Nº', recommended: false },
-  { key: 'observations', label: 'Observações', recommended: false },
-];
-
-const DEFAULT_VISIBLE = ALL_COLUMNS.filter((c) => c.recommended).map((c) => c.key);
-
 const page = usePage();
-const storageKey = computed(() => `jrspice_contract_columns_${page.props.auth?.user?.id || 'guest'}`);
-const visibleKeys = ref(new Set(DEFAULT_VISIBLE));
+const storageKey = computed(() => contractColumnsStorageKey(page.props.auth?.user?.id));
 
-onMounted(() => {
-  try {
-    const saved = localStorage.getItem(storageKey.value);
-    if (saved) visibleKeys.value = new Set(JSON.parse(saved));
-  } catch { /* ignore corrupted preference */ }
-});
+const {
+  orderedColumns,
+  visibleColumns,
+  fixedColumns,
+  toggleableColumns,
+  hiddenCount,
+  isVisible,
+  toggle,
+  reset,
+  move,
+  reorder,
+} = useContractColumns(storageKey.value);
 
-const saveToStorage = () => {
-  try { localStorage.setItem(storageKey.value, JSON.stringify([...visibleKeys.value])); } catch { /* quota */ }
+// ── Reordenação por arrastar (HTML5 DnD nativo, sem dependência) ────────────
+const dragKey = ref(null);
+const dropTargetKey = ref(null);
+
+const startDrag = (key) => { dragKey.value = key; };
+const endDrag = () => { dragKey.value = null; dropTargetKey.value = null; };
+
+const overDrag = (key) => {
+  if (dragKey.value && dragKey.value !== key) dropTargetKey.value = key;
 };
 
-const isVisible = (key) => visibleKeys.value.has(key);
-
-const toggleColumn = (key) => {
-  const column = ALL_COLUMNS.find((c) => c.key === key);
-  if (column?.fixed) return;
-  const next = new Set(visibleKeys.value);
-  next.has(key) ? next.delete(key) : next.add(key);
-  visibleKeys.value = next;
-  saveToStorage();
+const dropOn = (key) => {
+  if (dragKey.value) reorder(dragKey.value, key);
+  endDrag();
 };
-
-const resetToDefault = () => {
-  visibleKeys.value = new Set(DEFAULT_VISIBLE);
-  saveToStorage();
-};
-
-const visibleColumns = computed(() => ALL_COLUMNS.filter((c) => visibleKeys.value.has(c.key)));
-const toggleableColumns = computed(() => ALL_COLUMNS.filter((c) => !c.fixed));
-const hiddenCount = computed(() => toggleableColumns.value.filter((c) => !visibleKeys.value.has(c.key)).length);
-const toggleableVisibleCount = computed(() => toggleableColumns.value.filter((c) => visibleKeys.value.has(c.key)).length);
 
 const showColumnConfig = ref(false);
 const configBtn = ref(null);
@@ -217,7 +196,6 @@ const closeStatusSelector = () => {
 const selectStatus = (contractId, status) => {
   router.patch(route('contracts.status', contractId), {
     status,
-    status_date: new Date().toISOString().slice(0, 10),
   }, {
     preserveScroll: true,
     preserveState: true,
@@ -243,7 +221,26 @@ onUnmounted(() => {
 
 const changePage = (url) => {
   if (!url) return;
-  router.visit(url, { preserveState: true, preserveScroll: true });
+  router.visit(url, { preserveState: true, preserveScroll: true, only: ['rows'] });
+};
+
+const PER_PAGE_OPTIONS = [
+  { value: '25', label: '25' },
+  { value: '50', label: '50' },
+  { value: '100', label: '100' },
+  { value: '200', label: '200' },
+  { value: '500', label: '500' },
+  { value: 'all', label: 'Todos' },
+];
+
+const perPage = computed(() => String(props.filters?.per_page || '50'));
+
+const changePerPage = (value) => {
+  router.get(
+    route('admin.clients.index'),
+    { ...listParams(), per_page: value },
+    listOptions,
+  );
 };
 
 const getStatusConfig = (status) => {
@@ -274,7 +271,7 @@ const formatCurrency = (value, symbol = 'US$') => {
 };
 
 const cellValue = (row, key) => {
-  const column = ALL_COLUMNS.find((c) => c.key === key);
+  const column = contractColumn(key);
   const value = row[key];
 
   if (key === 'video_sent') return value ? 'Sim' : '—';
@@ -286,7 +283,6 @@ const cellValue = (row, key) => {
     case 'receipt_date':
     case 'paid_in_date':
     case 'video_date':
-    case 'status_date':
     case 'dhl_date':
     case 'etd_date':
     case 'eta_date':
@@ -303,7 +299,7 @@ const cellValue = (row, key) => {
 };
 
 const numericClass = (key) =>
-  ALL_COLUMNS.find((c) => c.key === key)?.numeric ? 'text-right tabular-nums' : '';
+  contractColumn(key)?.numeric ? 'text-right tabular-nums' : '';
 </script>
 
 <template>
@@ -347,7 +343,7 @@ const numericClass = (key) =>
               </p>
             </div>
             <button
-              @click="resetToDefault"
+              @click="reset"
               class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-wider transition-colors"
             >
               <RotateCcw class="w-3 h-3" />
@@ -356,28 +352,96 @@ const numericClass = (key) =>
           </div>
 
           <div class="py-2 max-h-96 overflow-y-auto">
+            <!-- Colunas da identidade do contrato: sempre presentes -->
+            <div
+              v-for="col in fixedColumns"
+              :key="col.key"
+              :data-column-key="col.key"
+              class="flex items-center justify-between px-4 py-2.5 bg-slate-50/70 border-b border-slate-100"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-5 h-5 rounded-md bg-blue-600 border-2 border-blue-600 flex items-center justify-center shrink-0">
+                  <Check class="w-3 h-3 text-white stroke-[3]" />
+                </div>
+                <span class="text-sm font-semibold text-slate-700 truncate">{{ col.label }}</span>
+              </div>
+              <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">
+                <Lock class="w-3 h-3" />
+                Sempre
+              </span>
+            </div>
+
+            <p class="px-4 pt-3 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
+              Arraste para reordenar
+            </p>
+
             <div
               v-for="col in toggleableColumns"
               :key="col.key"
-              @click="toggleColumn(col.key)"
-              class="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 cursor-pointer group transition-colors"
+              :data-column-key="col.key"
+              draggable="true"
+              @dragstart="startDrag(col.key)"
+              @dragover.prevent="overDrag(col.key)"
+              @drop.prevent="dropOn(col.key)"
+              @dragend="endDrag"
+              class="flex items-center justify-between gap-2 px-3 py-2 hover:bg-slate-50 group transition-colors border-t-2"
+              :class="[
+                dragKey === col.key ? 'opacity-40' : '',
+                dropTargetKey === col.key ? 'border-blue-500 bg-blue-50/60' : 'border-transparent',
+              ]"
             >
-              <div class="flex items-center gap-3">
-                <div
-                  class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0"
-                  :class="isVisible(col.key)
-                    ? 'bg-blue-600 border-blue-600'
-                    : 'border-slate-300 group-hover:border-blue-400'"
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <span
+                  class="cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-slate-500 shrink-0"
+                  :title="`Reordenar ${col.label}`"
                 >
-                  <Check v-if="isVisible(col.key)" class="w-3 h-3 text-white stroke-[3]" />
-                </div>
-                <span class="text-sm font-semibold text-slate-700">{{ col.label }}</span>
+                  <GripVertical class="w-4 h-4" />
+                </span>
+
+                <button
+                  type="button"
+                  @click.stop="toggle(col.key)"
+                  :data-column-toggle="col.key"
+                  class="flex items-center gap-3 min-w-0 text-left"
+                >
+                  <span
+                    class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0"
+                    :class="isVisible(col.key)
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'border-slate-300 group-hover:border-blue-400'"
+                  >
+                    <Check v-if="isVisible(col.key)" class="w-3 h-3 text-white stroke-[3]" />
+                  </span>
+                  <span
+                    class="text-sm font-semibold truncate"
+                    :class="isVisible(col.key) ? 'text-slate-700' : 'text-slate-400'"
+                  >{{ col.label }}</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  @click.stop="move(col.key, -1)"
+                  :title="`Subir ${col.label}`"
+                  class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                >
+                  <ArrowUp class="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  @click.stop="move(col.key, 1)"
+                  :title="`Descer ${col.label}`"
+                  class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                >
+                  <ArrowDown class="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </div>
 
           <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
-            <p class="text-[10px] font-medium text-slate-400">Configuração salva por usuário</p>
+            <p class="text-[10px] font-medium text-slate-400">Ordem e visibilidade salvas por usuário</p>
           </div>
         </div>
       </Transition>
@@ -483,7 +547,7 @@ const numericClass = (key) =>
                 col.key === 'sales_usd' || col.key === 'quantity_tons' ? 'font-bold text-slate-800' : '',
                 col.key === 'commission_usd' ? 'font-bold text-emerald-700' : '',
                 col.key === 'cumulative_sales_usd' || col.key === 'cumulative_commission_usd' ? 'text-slate-400 tabular-nums' : '',
-                ['date', 'register_number', 'estimated_receipt_date', 'receipt_date', 'paid_in_date', 'video_date', 'status_date', 'dhl_date', 'etd_date', 'eta_date'].includes(col.key) ? 'text-slate-500 tabular-nums' : '',
+                ['date', 'register_number', 'estimated_receipt_date', 'receipt_date', 'paid_in_date', 'video_date', 'dhl_date', 'etd_date', 'eta_date'].includes(col.key) ? 'text-slate-500 tabular-nums' : '',
                 ['exporter', 'importer', 'seller', 'product', 'country', 'dhl_number'].includes(col.key) ? 'font-semibold text-slate-800' : '',
                 ['incident', 'observations'].includes(col.key) ? 'max-w-[220px] truncate text-slate-500' : '',
               ]"
@@ -573,12 +637,29 @@ const numericClass = (key) =>
       </table>
     </div>
 
-    <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4 rounded-b-3xl">
-      <p class="text-xs font-bold text-slate-500">
-        Exibindo
-        <span class="text-blue-600 font-black">{{ rows.from || 0 }}</span>–<span class="text-blue-600 font-black">{{ rows.to || 0 }}</span>
-        de <span class="text-slate-700 font-black">{{ rows.total || 0 }}</span> itens
-      </p>
+    <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4 rounded-b-3xl">
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+        <p class="text-xs font-bold text-slate-500">
+          Exibindo
+          <span class="text-blue-600 font-black">{{ rows.from || 0 }}</span>–<span class="text-blue-600 font-black">{{ rows.to || 0 }}</span>
+          de <span class="text-slate-700 font-black">{{ rows.total || 0 }}</span> itens
+        </p>
+
+        <div class="flex items-center gap-2">
+          <label for="contracts-per-page" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exibir</label>
+          <select
+            id="contracts-per-page"
+            :value="perPage"
+            @change="changePerPage($event.target.value)"
+            class="text-xs font-bold rounded-xl border-slate-200 bg-white py-1.5 pl-3 pr-8 text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 cursor-pointer"
+          >
+            <option v-for="option in PER_PAGE_OPTIONS" :key="option.value" :value="option.value">
+              {{ option.label }}{{ option.value === 'all' ? '' : ' por página' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div v-if="rows.links?.length > 3" class="flex items-center gap-1">
         <template v-for="(link, i) in rows.links" :key="i">
           <button

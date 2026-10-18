@@ -45,7 +45,7 @@ persistidos, o que elimina a corrupção das cadeias de fórmula da planilha.
 
 ### 2.3 Overrides por item
 
-`etd_date`, `eta_date`, `dhl_number`, `status_date`, `video_date`, `video_reference` e
+`etd_date`, `eta_date`, `dhl_number`, `video_date`, `video_reference` e
 `observations` existem tanto no contrato quanto no item. Na listagem o valor exibido é
 `COALESCE(item, contrato)` — igual à planilha, onde a coluna só é mesclada quando o valor é igual.
 
@@ -55,7 +55,7 @@ persistidos, o que elimina a corrupção das cadeias de fórmula da planilha.
 `Quantidade` · `Preço Ton US$` · `Venda US$` · `Venda Anual US$` · `Comissão US$` ·
 `TT Comissão US$` · `Taxa de Câmbio` · `Estimado em Euro` · `Data Estimada Recebimento` ·
 `Vendedor` · `A pagar` · `Recebimento` · `Pago em` · `Pago em Real` · `Incidente` ·
-`Video enviado` · `DATA VÍDEO` · `STATUS` · `Data Status` · `Data DHL` · `Data embarque ETD` ·
+`Video enviado` · `DATA VÍDEO` · `STATUS` · `Data DHL` · `Data embarque ETD` ·
 `Data da chegada ETA` · `DHL Nº` · `Observações`
 
 ## 4. STATUS
@@ -93,7 +93,7 @@ POST   /admin/contracts/bulk-delete      contracts.bulk-delete
 POST   /admin/contracts/bulk-sync-users  contracts.bulk-sync-users
 ```
 
-**Regra importante:** `contracts.status` altera apenas `status`/`status_date` e **nunca** toca nos
+**Regra importante:** `contracts.status` altera apenas `status` e **nunca** toca nos
 vínculos de usuários. `contracts.update` só substitui os vínculos quando `user_ids` é enviado.
 
 ## 6. Importação da planilha
@@ -138,7 +138,27 @@ Regras de saneamento (`ValueNormalizer`):
   cálculos automáticos e overrides logísticos por item.
 - **Portal** (`MyProducts/*`) — lista contratos vinculados ao usuário e detalha itens/documentos.
 
-## 8. Validação pós-importação
+## 8. Coluna `Data Status` removida
+
+A planilha tem `Data Status` (col. Z) e `Data embarque ETD` (col. AB). O sistema
+**não tem mais o campo Data Status** — ele foi eliminado do back e do front.
+
+**Regra de importação:** `Data embarque ETD = Data Status` quando existir; caso
+contrário mantém a coluna `Data embarque ETD` original.
+
+| Situação na planilha | Linhas | Resultado |
+|---|---:|---|
+| só `Data Status` | 74 | ETD recebe o valor dele |
+| só `Data embarque ETD` | 677 | mantido como estava |
+| os dois, com datas diferentes | 42 | **`Data Status` prevalece**; o ETD original é sobrescrito |
+
+Os 42 conflitos são listados em `storage/logs/contracts-import-report.json`
+(`etd_from_data_status`) — nada é descartado em silêncio.
+
+A migração `2026_10_16_140000_remove_status_date_from_contracts` aplica a mesma
+regra sobre os dados já existentes **antes** de remover as colunas.
+
+## 9. Validação pós-importação
 
 Dois verificadores permanentes para rodar sempre que a planilha for reimportada:
 
@@ -157,10 +177,10 @@ php scripts/validate_contract_payload.php
 
 Regras de saneamento aplicadas a datas (`ValueNormalizer::date`): janela de serial Excel
 20000–60000 **e** ano entre 1990–2100, em qualquer tipo de entrada — assim artefatos de
-fórmula como `=Data Status - 7` sobre célula vazia (1899-12-23, 1900-01-07) nunca chegam ao
+fórmula como `=Z - 7` sobre célula vazia (1899-12-23, 1900-01-07) nunca chegam ao
 banco, mesmo quando o driver devolve um `DateTime` em vez de um número.
 
-## 9. Ordenação
+## 10. Ordenação
 
 A listagem aceita ordenação por **`date`** (lista branca em `ContractQueryService::SORTABLE`;
 qualquer outra coluna é ignorada e cai no padrão `desc`). O estado vai na URL
@@ -170,7 +190,7 @@ Os acumulados `Venda Anual US$` e `TT Comissão US$` continuam calculados na ord
 cronológica (`SUM() OVER (ORDER BY date, contract_id, position)`), independentemente da
 ordem de exibição — são uma propriedade da linha no tempo, não da tela.
 
-## 10. Checklist de aceite
+## 11. Checklist de aceite
 
 - [x] Nenhum campo da aba "Painel de info Vendas" sem representação no sistema.
 - [x] Rótulos idênticos aos cabeçalhos da planilha.

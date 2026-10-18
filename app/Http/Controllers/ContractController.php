@@ -14,6 +14,7 @@ use App\Services\Contracts\ContractSaver;
 use App\Services\Contracts\ContractSummaryService;
 use App\Support\ContractStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -27,10 +28,27 @@ class ContractController extends Controller
 
     public function index(Request $request)
     {
+        $hasExplicitFilters = $this->query->activeFilters($request) !== []
+            || $request->has('clear_filters')
+            || $request->has('sort_by')
+            || $request->has('per_page');
+
+        if ($hasExplicitFilters) {
+            $this->rememberFilters($request);
+        } else {
+            // First visit of the session: restore what this user last used so
+            // the address bar, the pagination links and shared URLs all agree.
+            $saved = $this->savedFilters($request);
+
+            if ($saved !== []) {
+                return redirect()->route('admin.clients.index', $saved);
+            }
+        }
+
         $activeFilters = $this->query->activeFilters($request);
 
         return Inertia::render('Admin/Clients/Index', [
-            'rows' => $this->query->paginate($request, perPage: 50),
+            'rows' => $this->query->paginate($request, perPage: $this->query->perPage($request)),
             'clients' => Client::query()->orderBy('name')->get(['id', 'name', 'type', 'country']),
             'sellers' => User::query()->orderBy('name')->get(['id', 'name']),
             'contractProducts' => ContractProduct::query()->orderBy('name')->get(['id', 'name']),
@@ -41,6 +59,7 @@ class ContractController extends Controller
                 'active_count' => count($activeFilters),
                 'sort_by' => $this->query->sortField($request),
                 'sort_dir' => $this->query->sortDirection($request),
+                'per_page' => $this->query->perPageOption($request),
             ]),
             'activeFilters' => $activeFilters,
             'summary' => $this->summary->overview(),
@@ -49,7 +68,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $contract->load(['items', 'users:id']);
+        $contract->load(['items', 'users:id', 'documents.uploader:id,name']);
 
         return response()->json([
             'id' => $contract->id,
@@ -60,7 +79,6 @@ class ContractController extends Controller
             'country' => $contract->country,
             'seller_id' => $contract->seller_id,
             'status' => $contract->status,
-            'status_date' => $contract->status_date?->toDateString(),
             'dhl_date' => $contract->dhl_date?->toDateString(),
             'dhl_number' => $contract->dhl_number,
             'etd_date' => $contract->etd_date?->toDateString(),
@@ -78,6 +96,7 @@ class ContractController extends Controller
             'shipping_company' => $contract->shipping_company,
             'container_number' => $contract->container_number,
             'user_ids' => $contract->users->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            'documents' => $contract->documents->map(fn (\App\Models\ContractDocument $document) => $document->toApiArray())->values(),
             'items' => $contract->items->map(fn ($item) => [
                 'id' => $item->id,
                 'register_number' => $item->register_number,
@@ -92,7 +111,6 @@ class ContractController extends Controller
                 'etd_date' => $item->etd_date?->toDateString(),
                 'eta_date' => $item->eta_date?->toDateString(),
                 'dhl_number' => $item->dhl_number,
-                'status_date' => $item->status_date?->toDateString(),
                 'video_date' => $item->video_date?->toDateString(),
                 'video_reference' => $item->video_reference,
                 'observations' => $item->observations,
@@ -178,6 +196,81 @@ class ContractController extends Controller
     /**
      * @return \Illuminate\Support\Collection<int, object>
      */
+    /**
+     * Filters remembered for the authenticated user, in a single HttpOnly cookie
+     * keyed by user id so different accounts on the same browser stay apart.
+     *
+     * @return array<string, mixed>
+     */
+    private function savedFilters(Request $request): array
+    {
+        $all = json_decode((string) $request->cookie('contract_filters', '{}'), true);
+
+        if (! is_array($all)) {
+            return [];
+        }
+
+        $saved = $all[(string) ($request->user()?->id ?? '')] ?? null;
+
+        if (! is_array($saved)) {
+            return [];
+        }
+
+        $allowed = array_merge(ContractQueryService::FILTER_KEYS, ['sort_by', 'sort_dir', 'per_page']);
+
+        return array_intersect_key($saved, array_flip($allowed));
+    }
+
+    private function rememberFilters(Request $request): void
+    {
+        $key = (string) ($request->user()?->id ?? '');
+        if ($key === '') {
+            return;
+        }
+
+        $all = json_decode((string) $request->cookie('contract_filters', '{}'), true);
+        if (! is_array($all)) {
+            $all = [];
+        }
+
+        $active = $this->query->activeFilters($request);
+        $clearing = $request->has('clear_filters') || $active === [];
+
+        if ($clearing) {
+            // "Limpar filtros" zera os filtros, mas a densidade da tabela é
+            // preferência de visualização e deve sobreviver.
+            unset($all[$key]);
+
+            if ($request->filled('per_page')) {
+                $option = $this->query->perPageOption($request);
+
+                if ($option !== (string) ContractQueryService::DEFAULT_PER_PAGE) {
+                    $all[$key] = ['per_page' => $option];
+                }
+            }
+        } else {
+            if ($request->filled('sort_by')) {
+                $active['sort_by'] = $this->query->sortField($request);
+            }
+            if ($request->filled('sort_dir')) {
+                $active['sort_dir'] = $this->query->sortDirection($request);
+            }
+            if ($request->filled('per_page')) {
+                $active['per_page'] = $this->query->perPageOption($request);
+            }
+
+            $all[$key] = $active;
+        }
+
+        // Negative lifetime expires the cookie in the browser instead of
+        // leaving an empty value behind.
+        Cookie::queue(
+            'contract_filters',
+            json_encode($all, JSON_UNESCAPED_UNICODE),
+            isset($all[$key]) ? 60 * 60 * 24 * 365 : -1,
+        );
+    }
+
     /**
      * Every account can be linked to a contract. Masters are included on
      * purpose: the client portal filters contracts by the pivot, so a master

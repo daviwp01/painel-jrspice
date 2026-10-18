@@ -42,6 +42,18 @@ const props = defineProps({
     clearable: {
         type: Boolean,
         default: false
+    },
+    /**
+     * Renders a "Todos" row at the top of the list so a filter can be released
+     * without clearing the other filters.
+     */
+    showAll: {
+        type: Boolean,
+        default: false
+    },
+    allLabel: {
+        type: String,
+        default: 'Todos'
     }
 });
 
@@ -142,6 +154,18 @@ const selectOption = (option) => {
 const selectedOption = computed(() => {
     return props.options.find(opt => opt.id == props.modelValue);
 });
+
+const hasValue = computed(() => {
+    const value = props.modelValue;
+    return value !== null && value !== undefined && value !== '';
+});
+
+const selectAll = () => {
+    emit('update:modelValue', null);
+    emit('change', null);
+    emit('clear');
+    closeDropdown();
+};
 
 const normalize = (str) => 
     str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -268,6 +292,18 @@ const clearOption = (e) => {
 
             <!-- Options List -->
             <div :style="{ maxHeight: listMaxHeight + 'px' }" :class="['overflow-y-auto p-1 scrollbar-thin', variant === 'dark' ? 'scrollbar-thumb-slate-800' : 'scrollbar-thumb-slate-200']">
+                <div
+                    v-if="showAll && !searchQuery"
+                    @click="selectAll"
+                    class="flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all group mb-0.5 border"
+                    :class="hasValue
+                        ? 'border-transparent text-slate-500 hover:bg-blue-50 hover:text-blue-700'
+                        : 'bg-blue-600 text-white shadow-md'"
+                >
+                    <span class="text-xs font-bold uppercase tracking-wide">{{ allLabel }}</span>
+                    <Check v-if="!hasValue" class="w-3.5 h-3.5 text-white stroke-[3]" />
+                </div>
+
                 <div 
                     v-for="option in filteredOptions" 
                     :key="option.id"

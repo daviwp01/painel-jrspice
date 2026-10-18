@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\DashboardService;
-use App\Services\PriceDataService;
-use App\Services\ExportService;
-use App\Services\ContactService;
-use App\Services\UserActivityService;
 use App\Models\DashboardPage;
+use App\Services\ContactService;
+use App\Services\DashboardService;
+use App\Services\ExportService;
+use App\Services\PriceDataService;
+use App\Services\UserActivityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Cache;
@@ -40,14 +40,14 @@ class InternalDashboardController extends Controller
                 ->get();
         });
 
-        $allowedPages = $pages->filter(fn($page) => $user->canAccessPage($page->slug));
+        $allowedPages = $pages->filter(fn ($page) => $user->canAccessPage($page->slug));
 
         if ($allowedPages->isEmpty()) {
             return Inertia::render('Dashboard/Empty');
         }
 
         return redirect()->route('dashboard.page', [
-            'slug' => $allowedPages->first()->slug
+            'slug' => $allowedPages->first()->slug,
         ]);
     }
 
@@ -59,12 +59,12 @@ class InternalDashboardController extends Controller
             return DashboardPage::where('slug', $slug)->firstOrFail();
         });
 
-        if (!$user->canAccessPage($currentPage->slug)) {
+        if (! $user->canAccessPage($currentPage->slug)) {
             abort(403);
         }
 
-        if ($request->has("clear_filters")) {
-            session()->forget(["current_filter_country_id", "current_filter_product_id", "current_filter_supplier_id", "current_filter_date_range"]);
+        if ($request->has('clear_filters')) {
+            session()->forget(['current_filter_country_id', 'current_filter_product_id', 'current_filter_supplier_id', 'current_filter_date_range']);
         }
 
         $latestPriceCreated = Cache::remember('last_prices_update', 300, function () {
@@ -82,8 +82,8 @@ class InternalDashboardController extends Controller
                 'sort_direction' => $request->query('sort_direction'),
             ],
             'settings' => $this->dashboardService->getSettings(),
-            'last_prices_update' => $latestPriceCreated 
-                ? Carbon::parse($latestPriceCreated)->toIso8601String() 
+            'last_prices_update' => $latestPriceCreated
+                ? Carbon::parse($latestPriceCreated)->toIso8601String()
                 : null,
         ];
 
@@ -131,14 +131,14 @@ class InternalDashboardController extends Controller
             : (json_decode($settings['default_filter_product_ids'] ?? '[]', true) ?: []);
 
         $countries = $this->dashboardService->getCountriesWithLatestUpdate($currentWeekStart, $currentWeekEnd);
-        $isFirstVisit = !$request->hasAny(['country_id', 'product_id', 'supplier_id', 'date_range']);
+        $isFirstVisit = ! $request->hasAny(['country_id', 'product_id', 'supplier_id', 'date_range']);
 
         $countryId = $viewData['filters']['country_id'] ?: session('current_filter_country_id');
         $productId = $viewData['filters']['product_id'] ?: session('current_filter_product_id');
         $supplierId = $viewData['filters']['supplier_id'] ?: session('current_filter_supplier_id');
         $dateRange = $viewData['filters']['date_range'] ?: session('current_filter_date_range');
 
-        if ($isFirstVisit && $defaultCountryId && !$countryId) {
+        if ($isFirstVisit && $defaultCountryId && ! $countryId) {
             $countryId = $defaultCountryId;
         }
 
@@ -147,24 +147,24 @@ class InternalDashboardController extends Controller
             $productId = $defaultProductIds[0] ?? null;
         }
 
-        if (!$countryId && $countries->isNotEmpty()) {
+        if (! $countryId && $countries->isNotEmpty()) {
             $countryId = $countries->first()->id;
         }
 
         $productsSidebar = $this->dashboardService->getProductsSidebar($countryId);
 
-        if ($productId && !$productsSidebar->contains('id', (int) $productId)) {
+        if ($productId && ! $productsSidebar->contains('id', (int) $productId)) {
             $productId = null;
         }
 
-        if (!$productId && (string) $countryId === (string) $defaultCountryId && !empty($defaultProductIds)) {
-            $target = $productsSidebar->first(fn($p) => in_array($p->id, $defaultProductIds));
+        if (! $productId && (string) $countryId === (string) $defaultCountryId && ! empty($defaultProductIds)) {
+            $target = $productsSidebar->first(fn ($p) => in_array($p->id, $defaultProductIds));
             if ($target) {
                 $productId = $target->id;
             }
         }
 
-        if (!$productId && $productsSidebar->isNotEmpty()) {
+        if (! $productId && $productsSidebar->isNotEmpty()) {
             $productId = $productsSidebar->first()->id;
         }
 
@@ -217,7 +217,7 @@ class InternalDashboardController extends Controller
             $viewData['pricesData'] = $this->priceDataService->getContinuousData(
                 $countryId, $productId, $supplierId, $range
             );
-            
+
             if (auth()->user() && auth()->user()->is_master) {
                 $viewData['recentBestPrices'] = $this->priceDataService->getRecentBestPrices($productId, $range);
             } else {
@@ -239,10 +239,12 @@ class InternalDashboardController extends Controller
     private function logFilters(array $filters, string $pageContext, bool $isRehydrating = false): void
     {
         $user = auth()->user();
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         $filterMap = [
-            'country_id'  => ['type' => 'country',  'model' => \App\Models\Country::class,  'field' => 'name'],
+            'country_id' => ['type' => 'country',  'model' => \App\Models\Country::class,  'field' => 'name'],
             'supplier_id' => ['type' => 'supplier', 'model' => \App\Models\Supplier::class, 'field' => 'name'],
         ];
 
@@ -254,12 +256,16 @@ class InternalDashboardController extends Controller
 
         foreach ($filterMap as $param => $config) {
             $id = $filters[$param] ?? null;
-            if (!$id) continue;
+            if (! $id) {
+                continue;
+            }
 
             session()->put("current_filter_{$param}", $id);
 
             $record = $config['model']::find($id);
-            if (!$record) continue;
+            if (! $record) {
+                continue;
+            }
 
             $this->activityService->logSearch(
                 $user,
@@ -273,7 +279,7 @@ class InternalDashboardController extends Controller
         // Log date range as-is (it's already a human-readable string)
         $dateRange = $filters['date_range'] ?? null;
         if ($dateRange && $dateRange !== 'Todos') {
-            session()->put("current_filter_date_range", $dateRange);
+            session()->put('current_filter_date_range', $dateRange);
             $this->activityService->logSearch($user, 'date_range', $dateRange, $pageContext, $isRehydrating);
         }
     }
@@ -305,7 +311,7 @@ class InternalDashboardController extends Controller
     {
         try {
             $countryIds = $request->input('country_ids');
-            
+
             if ($countryIds && $countryIds !== 'all') {
                 $countryIds = is_array($countryIds) ? $countryIds : explode(',', $countryIds);
             } else {
@@ -319,22 +325,24 @@ class InternalDashboardController extends Controller
                 $exportLabel = 'Todos os Países';
                 if ($countryIds) {
                     $names = \App\Models\Country::whereIn('id', $countryIds)->pluck('name')->implode(', ');
-                    if ($names) $exportLabel = $names;
+                    if ($names) {
+                        $exportLabel = $names;
+                    }
                 }
 
                 $this->activityService->logSearch(
                     auth()->user(),
                     'export',
-                    'PDF: ' . $exportLabel,
+                    'PDF: '.$exportLabel,
                     'Tabela de Preços'
                 );
             }
 
-            return $pdf->download('tabela-de-precos-jrspice-' . now()->format('d-m-Y') . '.pdf');
+            return $pdf->download('tabela-de-precos-jrspice-'.now()->format('d-m-Y').'.pdf');
         } catch (\Exception $e) {
             return response()->json([
                 'is_error' => true,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 200, ['Content-Type' => 'application/json']);
         }
     }

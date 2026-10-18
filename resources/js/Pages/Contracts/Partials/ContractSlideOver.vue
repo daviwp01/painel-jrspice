@@ -1,11 +1,13 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { ref, watch, computed, onMounted } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 import {
   X, Loader2, FileText, DollarSign, Truck, Trash2,
   CheckCircle, Plus, Package, ChevronDown,
 } from 'lucide-vue-next';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { contractUploads, csrfToken, formatSize } from '@/Stores/ContractUploadStore';
+import { ContractDocumentRules } from '@/Utils/contractDocuments';
 import MultiSearchableSelect from '@/Components/MultiSearchableSelect.vue';
 
 const props = defineProps({
@@ -39,7 +41,6 @@ const blankItem = () => ({
   etd_date: '',
   eta_date: '',
   dhl_number: '',
-  status_date: '',
   video_date: '',
   video_reference: '',
   observations: '',
@@ -53,7 +54,6 @@ const form = useForm({
   country: '',
   seller_id: '',
   status: '',
-  status_date: '',
   dhl_date: '',
   dhl_number: '',
   etd_date: '',
@@ -75,6 +75,122 @@ const form = useForm({
 });
 
 const isEditing = computed(() => Boolean(props.contractId));
+
+// ─── Documentos ──────────────────────────────────────────────────────────────
+const documents = ref([]);
+const fileInput = ref(null);
+const documentAccept = ContractDocumentRules.ACCEPT;
+
+const pendingUploads = computed(() =>
+  props.contractId ? contractUploads.forContract(props.contractId) : []);
+
+const loadDocuments = async () => {
+  if (!props.contractId) {
+    documents.value = [];
+    return;
+  }
+
+  const response = await fetch(route('contracts.show', props.contractId), {
+    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+  });
+
+  if (!response.ok) return;
+
+  documents.value = (await response.json()).documents || [];
+};
+
+const handleFiles = (event) => {
+  if (!props.contractId) return;
+
+  const contract = { id: props.contractId, contract_number: form.contract_number };
+  [...event.target.files].forEach((file) => contractUploads.start(contract, file));
+  event.target.value = '';
+};
+
+const deleteDocument = async (document) => {
+  if (!confirm(`Excluir "${document.name}"?`)) return;
+
+  await fetch(route('contracts.documents.destroy', document.id), {
+    method: 'DELETE',
+    headers: {
+      'X-XSRF-TOKEN': csrfToken(),
+      'X-Requested-With': 'XMLHttpRequest',
+      Accept: 'application/json',
+    },
+  });
+
+  await loadDocuments();
+};
+
+// Um envio continua rodando mesmo que o usuário navegue; ao voltar, o card
+// já reflete o progresso salvo no store global.
+watch(() => contractUploads.revision, async () => {
+  if (props.contractId && contractUploads.lastContractId === Number(props.contractId)) {
+    await loadDocuments();
+  }
+});
+
+watch(isEditing, (editing) => {
+  if (!editing) documents.value = [];
+});
+
+onMounted(loadDocuments);
+
+// ─── Rascunho local (contrato novo) ──────────────────────────────────────────
+// Fechar o modal não pode perder o que o funcionário já digitou.
+const page = usePage();
+const draftKey = `jrspice_contract_draft_${page.props.auth?.user?.id ?? 'guest'}`;
+
+const readDraft = () => {
+  try {
+    return JSON.parse(localStorage.getItem(draftKey) || 'null');
+  } catch {
+    return null;
+  }
+};
+
+const writeDraft = () => {
+  try {
+    localStorage.setItem(draftKey, JSON.stringify(form.data()));
+  } catch {
+    /* quota */
+  }
+};
+
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(draftKey);
+  } catch {
+    /* quota */
+  }
+};
+
+const restoreDraft = () => {
+  const draft = readDraft();
+  if (!draft) return false;
+
+  Object.keys(form.data()).forEach((key) => {
+    if (key === 'items' || key === 'user_ids') return;
+    if (!(key in draft)) return;
+    form[key] = draft[key];
+  });
+
+  if (Array.isArray(draft.items) && draft.items.length) {
+    form.items = draft.items.map((item) => ({ ...blankItem(), ...item }));
+  }
+
+  if (Array.isArray(draft.user_ids)) {
+    form.user_ids = draft.user_ids;
+  }
+
+  return true;
+};
+
+// Persiste enquanto o formulário de um contrato NOVO estiver aberto.
+watch(form, () => {
+  if (props.contractId) return;
+  writeDraft();
+}, { deep: true });
 
 const countryOptions = computed(() => {
   const names = new Set();
@@ -121,7 +237,6 @@ const hydrate = (payload) => {
     etd_date: toDateInput(item.etd_date),
     eta_date: toDateInput(item.eta_date),
     dhl_number: item.dhl_number ?? '',
-    status_date: toDateInput(item.status_date),
     video_date: toDateInput(item.video_date),
     video_reference: item.video_reference ?? '',
     observations: item.observations ?? '',
@@ -133,13 +248,23 @@ watch(() => props.isOpen, async (open) => {
   expandedItem.value = null;
   loadError.value = null;
 
-  if (!open) return;
+  if (!open) {
+    // envios concluídos/errados não precisam sobreviver ao fechamento;
+    // os que estão rodando continuam no store global.
+    if (props.contractId) contractUploads.clearContract(props.contractId);
+    return;
+  }
 
   if (!props.contractId) {
     form.reset();
     form.clearErrors();
     form.items = [blankItem()];
     form.user_ids = [];
+
+    if (restoreDraft()) {
+      currentTab.value = 'general';
+    }
+
     return;
   }
 
@@ -149,7 +274,9 @@ watch(() => props.isOpen, async (open) => {
       headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
     });
     if (!response.ok) throw new Error('Não foi possível carregar o contrato.');
-    hydrate(await response.json());
+    const payload = await response.json();
+    documents.value = payload.documents || [];
+    hydrate(payload);
   } catch (error) {
     loadError.value = error.message || 'Erro ao carregar o contrato.';
   } finally {
@@ -228,6 +355,7 @@ const submit = () => {
   const options = {
     preserveScroll: true,
     onSuccess: () => {
+      if (!props.contractId) clearDraft();
       form.reset();
       emit('close');
     },
@@ -444,8 +572,7 @@ const money = (value) => (value === '' || value === null || value === undefined
                           <input type="text" v-model="item.dhl_number" :class="fieldClass + ' mt-0.5'" placeholder="DHL0000000000" />
                         </div>
                         <div>
-                          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Status</label>
-                          <input type="date" v-model="item.status_date" :class="fieldClass + ' mt-0.5'" />
+  
                         </div>
                         <div>
                           <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">DATA VÍDEO</label>
@@ -482,6 +609,7 @@ const money = (value) => (value === '' || value === null || value === undefined
                   :options="users"
                   placeholder="Selecione os usuários da plataforma..."
                 />
+
               </div>
             </template>
 
@@ -541,46 +669,45 @@ const money = (value) => (value === '' || value === null || value === undefined
             <!-- ── LOGÍSTICA & STATUS ───────────────────────── -->
             <template v-if="currentTab === 'logistics'">
               <div :class="cardClass">
-                <h3 :class="sectionTitleClass">STATUS</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label :class="labelClass">STATUS</label>
-                    <SearchableSelect v-model="form.status" :options="statusOptions" placeholder="Selecione..." class="mt-1.5" />
-                    <p v-if="form.errors.status" class="mt-2 text-xs font-semibold text-rose-600">{{ form.errors.status }}</p>
-                  </div>
-                  <div>
-                    <label :class="labelClass">Data Status</label>
-                    <input type="date" v-model="form.status_date" :class="fieldClass" />
-                  </div>
-                </div>
-              </div>
+                <h3 :class="sectionTitleClass">Status, Embarque &amp; DHL</h3>
 
-              <div :class="cardClass">
-                <h3 :class="sectionTitleClass">Embarque & DHL</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label :class="labelClass">Data embarque ETD</label>
-                    <input type="date" v-model="form.etd_date" :class="fieldClass" />
+                <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label :class="labelClass">STATUS</label>
+                      <SearchableSelect v-model="form.status" :options="statusOptions" placeholder="Selecione..." class="mt-1.5" />
+                      <p v-if="form.errors.status" class="mt-2 text-xs font-semibold text-rose-600">{{ form.errors.status }}</p>
+                    </div>
+                    <div>
+                      <label :class="labelClass">Data embarque ETD</label>
+                      <input type="date" v-model="form.etd_date" :class="fieldClass" />
+                    </div>
+                    <div>
+                      <label :class="labelClass">Data da chegada ETA</label>
+                      <input type="date" v-model="form.eta_date" :class="fieldClass" />
+                    </div>
                   </div>
-                  <div>
-                    <label :class="labelClass">Data da chegada ETA</label>
-                    <input type="date" v-model="form.eta_date" :class="fieldClass" />
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                    <div>
+                      <label :class="labelClass">DHL Nº</label>
+                      <input type="text" v-model="form.dhl_number" :class="fieldClass" placeholder="DHL0000000000" />
+                    </div>
+                    <div>
+                      <label :class="labelClass">Data DHL</label>
+                      <input type="date" v-model="form.dhl_date" :class="fieldClass" />
+                    </div>
                   </div>
-                  <div>
-                    <label :class="labelClass">DHL Nº</label>
-                    <input type="text" v-model="form.dhl_number" :class="fieldClass" placeholder="DHL0000000000" />
-                  </div>
-                  <div>
-                    <label :class="labelClass">Data DHL</label>
-                    <input type="date" v-model="form.dhl_date" :class="fieldClass" />
-                  </div>
-                  <div>
-                    <label :class="labelClass">Transportadora</label>
-                    <SearchableSelect v-model="form.shipping_company" :options="shippingCompanyOptions" placeholder="Selecione..." class="mt-1.5" />
-                  </div>
-                  <div>
-                    <label :class="labelClass">Container / Booking Nº</label>
-                    <input type="text" v-model="form.container_number" :class="fieldClass" placeholder="Ex: MSMU8204910" />
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                    <div>
+                      <label :class="labelClass">Transportadora</label>
+                      <SearchableSelect v-model="form.shipping_company" :options="shippingCompanyOptions" placeholder="Selecione..." class="mt-1.5" />
+                    </div>
+                    <div>
+                      <label :class="labelClass">Container / Booking Nº</label>
+                      <input type="text" v-model="form.container_number" :class="fieldClass" placeholder="Ex: MSMU8204910" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -611,6 +738,118 @@ const money = (value) => (value === '' || value === null || value === undefined
                   </div>
                 </div>
               </div>
+
+              <!-- ── DOCUMENTOS ─────────────────────────────────── -->
+              <div v-if="isEditing" :class="cardClass">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 gap-4">
+                  <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Documentos</h3>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    até {{ ContractDocumentRules.HUMAN_MAX_SIZE }} por arquivo
+                  </span>
+                </div>
+
+                <div class="space-y-4">
+                  <label for="contract-document-input" class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 rounded-2xl px-4 py-6 cursor-pointer transition-all text-center">
+                    <input
+                      ref="fileInput"
+                      id="contract-document-input"
+                      type="file"
+                      multiple
+                      :accept="documentAccept"
+                      class="hidden"
+                      @change="handleFiles"
+                    />
+                    <Package class="w-7 h-7 text-slate-300" />
+                    <span class="text-xs font-bold text-slate-600">Enviar arquivos para o cliente</span>
+                    <span class="text-[10px] font-medium text-slate-400">
+                      vídeo, PDF, DOC, XLS, JPG ou PNG — máximo 5 GB
+                    </span>
+                  </label>
+
+                  <div v-if="pendingUploads.length" class="space-y-2">
+                    <div
+                      v-for="item in pendingUploads"
+                      :key="item.key"
+                      class="rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3"
+                    >
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="text-xs font-bold text-slate-700 truncate">{{ item.name }}</p>
+                          <p class="text-[10px] font-semibold text-slate-400">
+                            {{ formatSize(item.size) }}
+                            <template v-if="item.state === 'uploading'">· {{ item.progress }}%</template>
+                            <template v-else-if="item.state === 'done'">· concluído</template>
+                          </p>
+                        </div>
+                        <button
+                          v-if="item.state === 'uploading'"
+                          type="button"
+                          @click="contractUploads.cancel(item.key)"
+                          class="text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:text-rose-700 shrink-0"
+                        >Cancelar</button>
+                      </div>
+
+                      <div class="mt-2 h-1.5 rounded-full bg-blue-100 overflow-hidden">
+                        <div
+                          class="h-full bg-blue-600 transition-all duration-300"
+                          :style="{ width: item.progress + '%' }"
+                        ></div>
+                      </div>
+
+                      <p v-if="item.state === 'error'" class="mt-2 text-[11px] font-semibold text-rose-600">
+                        {{ item.message }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div v-if="documents.length" class="divide-y divide-slate-100 rounded-xl border border-slate-100 overflow-hidden">
+                    <div
+                      v-for="doc in documents"
+                      :key="doc.id"
+                      class="flex items-center gap-3 px-4 py-3 bg-white hover:bg-slate-50 transition-colors"
+                    >
+                      <div class="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                        <FileText
+                          class="w-4 h-4"
+                          :class="doc.file_type === 'video' ? 'text-purple-500' : doc.file_type === 'image' ? 'text-emerald-500' : 'text-blue-500'"
+                        />
+                      </div>
+
+                      <div class="min-w-0 flex-1">
+                        <a
+                          :href="route('my-products.preview-document', doc.id)"
+                          target="_blank"
+                          class="text-xs font-bold text-slate-800 hover:text-blue-600 transition-colors truncate block"
+                          :title="doc.name"
+                        >{{ doc.name }}</a>
+                        <p class="text-[10px] font-semibold text-slate-400">
+                          {{ formatSize(doc.size_bytes) }}
+                          <template v-if="doc.uploader">· por {{ doc.uploader }}</template>
+                        </p>
+                      </div>
+
+                      <a
+                        :href="route('my-products.download-document', doc.id)"
+                        class="text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors shrink-0"
+                      >Baixar</a>
+
+                      <button
+                        type="button"
+                        @click="deleteDocument(doc)"
+                        class="p-1.5 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+                        title="Excluir"
+                      >
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <p v-else class="text-xs font-medium text-slate-400 text-center py-4">
+                    Nenhum documento anexado a este contrato ainda.
+                  </p>
+                </div>
+              </div>
+
             </template>
           </template>
         </div>

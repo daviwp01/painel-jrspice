@@ -157,7 +157,8 @@ const clearAll = () => {
   Object.assign(draft, normalize({}));
   clearTimeout(applyTimeout);
   appliedSignature = JSON.stringify({});
-  router.get(route(props.routeName), sortParams(), {
+  // clear_filters tells the server to forget the remembered filters too.
+  router.get(route(props.routeName), { ...sortParams(), clear_filters: 1 }, {
     preserveState: true,
     preserveScroll: true,
     replace: true,
@@ -348,6 +349,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                   v-model="draft.exporter_id"
                   :options="exporters"
                   placeholder="Todos"
+                  show-all
                   clearable
                   @change="onFieldChange"
                 />
@@ -360,6 +362,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                   v-model="draft.importer_id"
                   :options="importers"
                   placeholder="Todos"
+                  show-all
                   clearable
                   @change="onFieldChange"
                 />
@@ -372,6 +375,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                   v-model="draft.seller_id"
                   :options="sellers"
                   placeholder="Todos"
+                  show-all
                   clearable
                   @change="onFieldChange"
                 />
@@ -392,6 +396,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                   v-model="draft.product_id"
                   :options="contractProducts"
                   placeholder="Todos"
+                  show-all
                   clearable
                   @change="onFieldChange"
                 />
@@ -404,6 +409,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                   v-model="draft.country"
                   :options="countries"
                   placeholder="Todos"
+                  show-all
                   clearable
                   @change="onFieldChange"
                 />

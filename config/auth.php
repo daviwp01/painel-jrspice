@@ -112,4 +112,23 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Rate Limits
+    |--------------------------------------------------------------------------
+    |
+    | Hard limits applied at the route level, before any controller work. They
+    | sit on top of the per-account lockout already enforced by the login form
+    | request, so a single IP cannot spray many accounts either.
+    |
+    */
+
+    'throttle' => [
+        'login_by_ip_per_minute' => (int) env('AUTH_LOGIN_PER_MINUTE_BY_IP', 10),
+        'register_by_ip_per_minute' => (int) env('AUTH_REGISTER_PER_MINUTE_BY_IP', 5),
+        'register_by_ip_per_day' => (int) env('AUTH_REGISTER_PER_DAY_BY_IP', 20),
+        'register_by_email_per_minute' => (int) env('AUTH_REGISTER_PER_MINUTE_BY_EMAIL', 3),
+        'confirm_by_ip_per_minute' => (int) env('AUTH_CONFIRM_PER_MINUTE_BY_IP', 10),
+    ],
+
 ];

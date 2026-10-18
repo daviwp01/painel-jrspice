@@ -6,9 +6,18 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import PasswordInput from '@/Components/PasswordInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { ArrowRight, ArrowLeft } from 'lucide-vue-next';
+import { useRecaptcha } from '@/Composables/useRecaptcha';
 const props = defineProps({
+    recaptchaSiteKey: {
+        type: String,
+        default: '',
+    },
+    recaptchaType: {
+        type: String,
+        default: 'v2',
+    },
     importExperienceOptions: {
         type: Array,
         default: () => []
@@ -37,6 +46,7 @@ const form = useForm({
     decision_role: '',
     password: '',
     password_confirmation: '',
+    g_recaptcha: '',
 });
 
 const placeholderText = computed(() => {
@@ -117,7 +127,7 @@ watch(() => form.errors, (errors) => {
     if (errors && Object.keys(errors).length > 0) {
         const step1Fields = ['name', 'email', 'password', 'password_confirmation'];
         const step2Fields = ['phone', 'company_name', 'cargo'];
-        const step3Fields = ['import_experience', 'import_volume', 'decision_role'];
+        const step3Fields = ['import_experience', 'import_volume', 'decision_role', 'g_recaptcha'];
         
         const firstErrorKey = Object.keys(errors)[0];
         
@@ -206,12 +216,43 @@ const prevStep = () => {
     }
 };
 
-const submit = () => {
-    if (validateStep(3)) {
-        form.post(route('register'), {
-            onFinish: () => form.reset('password', 'password_confirmation'),
-        });
+const { render: renderRecaptcha, token: recaptchaToken, reset: resetRecaptcha } = useRecaptcha(
+    props.recaptchaSiteKey,
+    props.recaptchaType,
+);
+
+const recaptchaContainer = ref(null);
+const isV2 = () => props.recaptchaType === 'v2' && !!props.recaptchaSiteKey;
+
+// A caixinha só existe na última etapa; montar o widget dentro de um bloco
+// escondido faria o iframe do Google nascer sem tamanho.
+watch(
+    () => currentStep.value,
+    async (step) => {
+        if (step !== 3 || !isV2()) return;
+        await nextTick();
+        if (recaptchaContainer.value) await renderRecaptcha(recaptchaContainer.value);
+    },
+);
+
+const submit = async () => {
+    if (!validateStep(3)) return;
+
+    form.clearErrors('g_recaptcha');
+    form.g_recaptcha = await recaptchaToken('register');
+
+    if (isV2() && !form.g_recaptcha) {
+        form.setError('g_recaptcha', 'Confirme que você não é um robô.');
+        return;
     }
+
+    form.post(route('register'), {
+        onFinish: () => {
+            form.reset('password', 'password_confirmation');
+            // O token já foi gasto: libera uma nova tentativa.
+            resetRecaptcha();
+        },
+    });
 };
 </script>
 
@@ -448,8 +489,18 @@ const submit = () => {
                 </div>
             </div>
 
+            <div v-if="currentStep === 3 && isV2()" class="mt-5 flex justify-center">
+                <div ref="recaptchaContainer"></div>
+            </div>
+
+            <InputError class="mt-4" :message="form.errors.g_recaptcha" />
+
+            <p v-if="recaptchaSiteKey && recaptchaType === 'v3'" class="mt-3 text-center text-[10px] text-gray-400">
+                Este site é protegido pelo reCAPTCHA.
+            </p>
+
             <!-- Form Navigation Actions -->
-            <div class="mt-8 flex items-center gap-4">
+            <div class="mt-6 flex items-center gap-4">
                 <button
                     v-if="currentStep > 1"
                     type="button"

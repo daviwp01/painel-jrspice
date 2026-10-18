@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
 import {
-  FileText, Upload, Download, Trash2, Loader2, Calendar, Info,
+  FileText, Download, Calendar, Info,
   FileImage, FileVideo, Ship, MapPin, ArrowRight, Navigation,
   DollarSign, Tag, UserCheck, Truck, AlertCircle, Eye
 } from 'lucide-vue-next';
@@ -21,13 +20,6 @@ const remainingDays = computed(() => getRemainingDays(props.process || {}));
 
 const emit = defineEmits(['go-tracking']);
 
-const page = usePage();
-const user = computed(() => page.props.auth.user);
-
-const fileForm = useForm({ file: null });
-const isUploading = ref(false);
-const fileInput = ref(null);
-
 // ─── Modal Preview State ──────────────────────────────────────────────────────
 const showPreviewModal = ref(false);
 const previewFile = ref(null);
@@ -35,28 +27,6 @@ const previewFile = ref(null);
 const openPreview = (file) => {
   previewFile.value = file;
   showPreviewModal.value = true;
-};
-
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  fileForm.file = file;
-  isUploading.value = true;
-  fileForm.post(route('my-products.upload-document', props.process.id), {
-    preserveScroll: true,
-    onSuccess: () => {
-      fileForm.reset();
-      isUploading.value = false;
-      if (fileInput.value) fileInput.value.value = '';
-    },
-    onError: () => { isUploading.value = false; }
-  });
-};
-
-const deleteDocument = (docId) => {
-  if (confirm('Tem certeza que deseja excluir este documento?')) {
-    useForm({}).delete(route('my-products.delete-document', docId), { preserveScroll: true });
-  }
 };
 
 const getFileIcon = (type) => {
@@ -88,6 +58,7 @@ const getStatusConfig = (status) => {
 };
 
 // Documentos reais enviados para este contrato (nenhum dado fictício).
+// O portal é somente leitura: enviar e excluir é responsabilidade do admin.
 const allDocuments = computed(() =>
   (props.process.documents || []).map((doc) => ({
     ...doc,
@@ -95,6 +66,19 @@ const allDocuments = computed(() =>
     downloadUrl: route('my-products.download-document', doc.id),
   })),
 );
+
+const formatSize = (bytes) => {
+  const size = Number(bytes);
+  if (!Number.isFinite(size) || size <= 0) return '—';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let value = size;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
+};
 </script>
 
 <template>
@@ -288,29 +272,13 @@ const allDocuments = computed(() =>
       <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col max-h-[720px]">
         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4 shrink-0">Central de Documentações</h2>
 
-        <!-- Upload area -->
-        <div class="mb-5 shrink-0">
-          <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Anexar Documento</label>
-          <div
-            @click="fileInput.click()"
-            class="border-2 border-dashed border-slate-200 hover:border-blue-400 hover:bg-blue-50/10 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center gap-2 group relative"
-            :class="{ 'opacity-60 cursor-wait pointer-events-none': isUploading }"
-          >
-            <input type="file" ref="fileInput" @change="handleFileUpload" class="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4,.mov,.avi" />
-            <div class="w-9 h-9 rounded-xl bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
-              <Loader2 v-if="isUploading" class="w-4 h-4 text-blue-600 animate-spin" />
-              <Upload v-else class="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
-            </div>
-            <div>
-              <p class="text-xs font-bold text-slate-600 group-hover:text-blue-600 transition-colors">Escolher arquivo para upload</p>
-              <p class="text-[10px] text-slate-400 mt-0.5">PDF, Word, Imagens e Vídeos até 20MB</p>
-            </div>
-          </div>
-        </div>
-
         <!-- File list with Visualizer Buttons -->
         <div class="flex-1 overflow-y-auto space-y-3 pr-1">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mb-2">Arquivos & Mídias Anexadas</p>
+
+          <p v-if="!allDocuments.length" class="text-xs font-medium text-slate-400 text-center py-8">
+            Nenhum documento enviado até o momento.
+          </p>
 
           <div
             v-for="doc in allDocuments"
@@ -325,13 +293,14 @@ const allDocuments = computed(() =>
                 <p class="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate" :title="doc.name">
                   {{ doc.name }}
                 </p>
-                <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1">
-                  <span>Por: {{ doc.uploader?.name || 'Sistema' }}</span>
+                <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                  <span>Por: {{ doc.uploader || 'Sistema' }}</span>
+                  <span v-if="doc.size_bytes">· {{ formatSize(doc.size_bytes) }}</span>
                 </p>
               </div>
             </div>
 
-            <!-- Actions: Visualizar + Download + Delete -->
+            <!-- Actions: Visualizar + Download -->
             <div class="flex items-center gap-1 shrink-0 ml-2">
               <button
                 type="button"
@@ -350,15 +319,6 @@ const allDocuments = computed(() =>
               >
                 <Download class="w-3.5 h-3.5" />
               </a>
-
-              <button
-                v-if="doc.uploaded_by === user.id || user.is_master"
-                @click="deleteDocument(doc.id)"
-                class="p-1.5 rounded-lg bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-400 hover:text-rose-600 transition-all shadow-sm"
-                title="Excluir"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
         </div>

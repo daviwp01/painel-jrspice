@@ -28,3 +28,12 @@
     }
 }
 
+/*
+ * reCAPTCHA v3: o badge do Google é removido da tela e substituído pela
+ * atribuição "Este site é protegido pelo reCAPTCHA" exibida no formulário.
+ * A FAQ do Google permite esconder desde que a marcação continue visível.
+ * visibility (não display) é o método documentado pelo Google.
+ */
+.grecaptcha-badge {
+    visibility: hidden;
+}

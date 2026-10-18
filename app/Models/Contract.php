@@ -18,7 +18,6 @@ class Contract extends Model
         'country',
         'seller_id',
         'status',
-        'status_date',
         'dhl_date',
         'dhl_number',
         'etd_date',
@@ -41,7 +40,6 @@ class Contract extends Model
 
     protected $casts = [
         'date' => 'date',
-        'status_date' => 'date',
         'dhl_date' => 'date',
         'etd_date' => 'date',
         'eta_date' => 'date',

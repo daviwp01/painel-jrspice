@@ -2,13 +2,13 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3';
 import { toast } from '@/Stores/ToastStore';
+import { ui } from '@/Stores/UiStore';
 import ToastContainer from '@/Components/ToastContainer.vue';
 import LegalModal from '@/Components/LegalModal.vue';
-import { 
-    LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon, 
-    Settings as SettingsIcon2, Database as DatabaseIcon, 
-    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2, Package, Star as StarIcon
-} from 'lucide-vue-next';
+import {
+    LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon,
+    Settings as SettingsIcon2, Database as DatabaseIcon,
+    ChartLine as ChartLineIcon, Menu as MenuIcon, X as XIcon, LogOut as LogOutIcon, Loader2, Package, Star as StarIcon} from 'lucide-vue-next';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -62,7 +62,9 @@ const navItems = computed(() => [
         <!-- 📱 SIDEBAR (LEFT) -->
         <aside :class="[
             'fixed inset-y-0 left-0 bg-[#0f172a] z-[60] flex flex-col w-[350px] md:relative transition-transform duration-300 ease-in-out shrink-0 border-r border-slate-800',
-            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            ui.focusMode
+                ? '-translate-x-full md:hidden'
+                : (isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         ]">
             <!-- Brand Logo -->
             <div class="h-16 flex items-center justify-between px-6 bg-[#1e293b]/30 shrink-0 border-b border-slate-800/50">
@@ -164,7 +166,7 @@ const navItems = computed(() => [
                     </div>
 
                     <!-- Discrete Footer -->
-                    <footer class="py-6 border-t border-slate-200 mt-auto bg-slate-50">
+                    <footer v-if="!ui.focusMode" class="py-6 border-t border-slate-200 mt-auto bg-slate-50">
                         <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {{ $t('Copyright • 2026 All rights reserved') }}

@@ -46,7 +46,6 @@ final class ContractQueryService
         'COALESCE(it.video_reference, c.video_reference) AS video_reference',
         'COALESCE(it.video_date, c.video_date) AS video_date',
         'c.status AS status',
-        'COALESCE(it.status_date, c.status_date) AS status_date',
         'c.dhl_date AS dhl_date',
         'COALESCE(it.etd_date, c.etd_date) AS etd_date',
         'COALESCE(it.eta_date, c.eta_date) AS eta_date',
@@ -95,6 +94,19 @@ final class ContractQueryService
     public const DEFAULT_DIRECTION = 'desc';
 
     /**
+     * Accepted `per_page` values. Anything else falls back to the default so a
+     * crafted query string can never ask the database for an unbounded page.
+     */
+    public const PER_PAGE_OPTIONS = ['25', '50', '100', '200', '500'];
+
+    /** Sentinel for "show everything": a hard ceiling, never an unbounded scan. */
+    public const PER_PAGE_ALL = 'all';
+
+    public const PER_PAGE_CEILING = 5000;
+
+    public const DEFAULT_PER_PAGE = 50;
+
+    /**
      * A contract is delayed when the estimated arrival is close (or past) and
      * the shipment still has no tracking number, and the process is not finished.
      *
@@ -119,7 +131,39 @@ final class ContractQueryService
             ->orWhereNull($status);
     }
 
-    public function paginate(Request $request, int $perPage = 50): LengthAwarePaginator
+    /**
+     * Resolves the requested page size, normalised to the options the UI offers.
+     */
+    public function perPage(Request $request): int
+    {
+        $raw = trim((string) $request->input('per_page', ''));
+
+        if ($raw === self::PER_PAGE_ALL) {
+            return self::PER_PAGE_CEILING;
+        }
+
+        return in_array($raw, self::PER_PAGE_OPTIONS, true)
+            ? (int) $raw
+            : self::DEFAULT_PER_PAGE;
+    }
+
+    /**
+     * The label the UI must keep selected, so `per_page=all` round-trips.
+     */
+    public function perPageOption(Request $request): string
+    {
+        $raw = trim((string) $request->input('per_page', ''));
+
+        if ($raw === self::PER_PAGE_ALL) {
+            return self::PER_PAGE_ALL;
+        }
+
+        return in_array($raw, self::PER_PAGE_OPTIONS, true)
+            ? $raw
+            : (string) self::DEFAULT_PER_PAGE;
+    }
+
+    public function paginate(Request $request, int $perPage = self::DEFAULT_PER_PAGE): LengthAwarePaginator
     {
         return DB::query()
             ->fromSub($this->baseQuery(), 'contract_rows')
@@ -321,7 +365,6 @@ final class ContractQueryService
             'video_reference' => $row->video_reference ?: null,
             'video_date' => $this->asDate($row->video_date),
             'status' => $row->status,
-            'status_date' => $this->asDate($row->status_date),
             'dhl_date' => $this->asDate($row->dhl_date),
             'etd_date' => $this->asDate($row->etd_date),
             'eta_date' => $this->asDate($row->eta_date),

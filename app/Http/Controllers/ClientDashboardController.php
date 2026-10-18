@@ -9,6 +9,7 @@ use App\Models\ContractProduct;
 use App\Models\ContractReview;
 use App\Models\User;
 use App\Services\Contracts\ClientContractService;
+use App\Services\Contracts\ContractDocumentService;
 use App\Support\ContractStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -77,7 +78,7 @@ class ClientDashboardController extends Controller
             'seller:id,name',
             'items:id,contract_id,position,register_number,product_id,quantity_tons,price_per_ton_usd,sales_usd,commission_usd,estimated_euro,etd_date,eta_date,dhl_number',
             'items.product:id,name',
-            'documents:id,contract_id,name,file_path,file_type,uploaded_by,created_at',
+            'documents:id,contract_id,name,file_path,file_type,size_bytes,uploaded_by,created_at',
             'documents.uploader:id,name',
         ]);
 
@@ -90,69 +91,22 @@ class ClientDashboardController extends Controller
         ]);
     }
 
-    public function uploadDocument(Request $request, Contract $contract)
-    {
-        $this->authorizeContractAccess($contract);
-
-        $request->validate([
-            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,jpg,jpeg,png,mp4,mov,avi',
-        ]);
-
-        $file = $request->file('file');
-        $extension = strtolower($file->getClientOriginalExtension());
-
-        $type = match (true) {
-            in_array($extension, ['jpg', 'jpeg', 'png']) => 'image',
-            in_array($extension, ['mp4', 'mov', 'avi']) => 'video',
-            default => 'document',
-        };
-
-        ContractDocument::create([
-            'contract_id' => $contract->id,
-            'name' => $file->getClientOriginalName(),
-            'file_path' => $file->store("contracts/{$contract->id}"),
-            'file_type' => $type,
-            'uploaded_by' => auth()->id(),
-        ]);
-
-        return redirect()->back()->with('success', 'Documento enviado com sucesso.');
-    }
-
-    /**
-     * Stream a document inline so it can be previewed in the browser.
-     */
     public function previewDocument(ContractDocument $document)
     {
         $this->authorizeContractAccess($document->contract);
 
-        abort_unless(Storage::exists($document->file_path), 404, 'Arquivo não encontrado.');
+        abort_unless(Storage::disk(ContractDocumentService::DISK)->exists($document->file_path), 404, 'Arquivo não encontrado.');
 
-        return Storage::response($document->file_path, $document->name);
+        return Storage::disk(ContractDocumentService::DISK)->response($document->file_path, $document->name);
     }
 
     public function downloadDocument(ContractDocument $document)
     {
         $this->authorizeContractAccess($document->contract);
 
-        abort_unless(Storage::exists($document->file_path), 404, 'Arquivo não encontrado.');
+        abort_unless(Storage::disk(ContractDocumentService::DISK)->exists($document->file_path), 404, 'Arquivo não encontrado.');
 
-        return Storage::download($document->file_path, $document->name);
+        return Storage::disk(ContractDocumentService::DISK)->download($document->file_path, $document->name);
     }
 
-    public function deleteDocument(ContractDocument $document)
-    {
-        $user = auth()->user();
-
-        if ($document->uploaded_by !== $user->id && ! $user->is_master) {
-            abort(403, 'Você não tem permissão para excluir este documento.');
-        }
-
-        if (Storage::exists($document->file_path)) {
-            Storage::delete($document->file_path);
-        }
-
-        $document->delete();
-
-        return redirect()->back()->with('success', 'Documento excluído com sucesso.');
-    }
 }

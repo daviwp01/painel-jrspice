@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import { Maximize2, Minimize2 } from 'lucide-vue-next';
+import { ui, toggleFocusMode } from '@/Stores/UiStore';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import ContractStats from '@/Pages/Contracts/Partials/ContractStats.vue';
 import ContractsTable from '@/Pages/Contracts/Partials/ContractsTable.vue';
@@ -63,8 +65,23 @@ const closeSlideOver = () => {
             Contratos, itens, embarques, comissões e acompanhamento logístico.
           </p>
         </div>
-        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
-          {{ summary?.total_contracts || 0 }} contratos · {{ rows?.total || 0 }} itens
+        <div class="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            @click="toggleFocusMode"
+            :title="ui.focusMode ? 'Sair da tela cheia' : 'Ocultar menu e usar a tela toda'"
+            class="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-black uppercase tracking-widest transition-all shadow-sm"
+            :class="ui.focusMode
+              ? 'bg-[#0f172a] text-white border-[#0f172a] hover:bg-slate-800'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600'"
+          >
+            <component :is="ui.focusMode ? Minimize2 : Maximize2" class="w-4 h-4" :class="ui.focusMode ? 'text-[#b2862e]' : ''" />
+            {{ ui.focusMode ? 'Tela normal' : 'Tela cheia' }}
+          </button>
+
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
+            {{ summary?.total_contracts || 0 }} contratos · {{ rows?.total || 0 }} itens
+          </div>
         </div>
       </div>
 

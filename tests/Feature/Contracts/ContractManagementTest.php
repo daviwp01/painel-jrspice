@@ -122,7 +122,6 @@ class ContractManagementTest extends TestCase
         $this->actingAs($this->master)
             ->patch(route('contracts.status', $contract), [
                 'status' => 'Processo FINALIZADO',
-                'status_date' => '2026-10-15',
             ])
             ->assertRedirect();
 
@@ -216,7 +215,7 @@ class ContractManagementTest extends TestCase
             'cumulative_commission_usd', 'exchange_rate', 'estimated_euro',
             'estimated_receipt_date', 'seller', 'to_pay_rate', 'to_pay_usd', 'receipt_date',
             'paid_in_date', 'paid_in_brl', 'incident', 'video_sent', 'video_reference',
-            'video_date', 'status', 'status_date', 'dhl_date', 'etd_date', 'eta_date',
+            'video_date', 'status', 'dhl_date', 'etd_date', 'eta_date',
             'dhl_number', 'observations', 'shipping_company', 'container_number',
         ], collect($row)->keys()->all());
     }
@@ -385,7 +384,6 @@ class ContractManagementTest extends TestCase
     {
         $contract = $this->makeContract([
             'contract_number' => '960',
-            'status_date' => '2026-04-02',
             'dhl_date' => '2026-04-03',
             'dhl_number' => 'DHL1234567890',
             'etd_date' => '2026-04-04',
@@ -427,7 +425,6 @@ class ContractManagementTest extends TestCase
             'etd_date' => '2026-04-06',
             'eta_date' => '2026-05-06',
             'dhl_number' => 'DHL0987654321',
-            'status_date' => '2026-04-07',
             'video_date' => '2026-04-08',
             'video_reference' => '300100/2',
             'observations' => 'Item com container próprio',
@@ -440,7 +437,7 @@ class ContractManagementTest extends TestCase
 
         $expectedContract = [
             'date' => '2026-01-10', 'contract_number' => '960', 'country' => 'China',
-            'status' => 'A embarcar dia', 'status_date' => '2026-04-02',
+            'status' => 'A embarcar dia',
             'dhl_date' => '2026-04-03', 'dhl_number' => 'DHL1234567890',
             'etd_date' => '2026-04-04', 'eta_date' => '2026-05-04',
             'video_reference' => '300100/1', 'video_date' => '2026-04-05',
@@ -465,7 +462,7 @@ class ContractManagementTest extends TestCase
             'commission_rate' => 3.0, 'commission_usd' => 675.0,
             'to_pay_rate' => 0.9, 'to_pay_usd' => 202.5,
             'etd_date' => '2026-04-06', 'eta_date' => '2026-05-06',
-            'dhl_number' => 'DHL0987654321', 'status_date' => '2026-04-07',
+            'dhl_number' => 'DHL0987654321',
             'video_date' => '2026-04-08', 'video_reference' => '300100/2',
             'observations' => 'Item com container próprio',
         ];

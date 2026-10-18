@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ReportUpdatedNotification;
 use App\Models\User;
 use App\Services\UserActivityService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ReportUpdatedNotification;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\DataImport;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
@@ -30,9 +25,9 @@ class AdminController extends Controller
 
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -49,7 +44,7 @@ class AdminController extends Controller
             'users' => $query->paginate(12)->withQueryString(),
             'filters' => $request->only(['search', 'status']),
             'total_users' => User::count(),
-            'active_users' => User::where('is_active', true)->count()
+            'active_users' => User::where('is_active', true)->count(),
         ]);
     }
 
@@ -67,8 +62,8 @@ class AdminController extends Controller
     public function activityIndex()
     {
         return \Inertia\Inertia::render('Admin/Activity/Index', [
-            'users'        => $this->activityService->getActivityOverview(),
-            'total_users'  => User::count(),
+            'users' => $this->activityService->getActivityOverview(),
+            'total_users' => User::count(),
             'online_users' => $this->activityService->countOnlineUsers(),
         ]);
     }
@@ -113,7 +108,6 @@ class AdminController extends Controller
         return response()->json(['success' => true]);
     }
 
-
     /**
      * Display the user creation page.
      */
@@ -130,7 +124,7 @@ class AdminController extends Controller
         return \Inertia\Inertia::render('Admin/Users/Create', [
             'available_pages' => $allPages,
             'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', []),
-            'clients' => \App\Models\Client::orderBy('name')->get()
+            'clients' => \App\Models\Client::orderBy('name')->get(),
         ]);
     }
 
@@ -150,8 +144,8 @@ class AdminController extends Controller
             'queue_stats' => [
                 'pending' => \DB::table('jobs')->count(),
                 'failed' => \DB::table('failed_jobs')->count(),
-                'is_running' => \Cache::has('queue_worker_active')
-            ]
+                'is_running' => \Cache::has('queue_worker_active'),
+            ],
         ]);
     }
 
@@ -240,7 +234,7 @@ class AdminController extends Controller
     {
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'is_master' => ['boolean'],
             'is_active' => ['boolean'],
             'allowed_pages' => ['nullable', 'array'],
@@ -256,13 +250,12 @@ class AdminController extends Controller
             $rules['new_password'] = ['confirmed', \Illuminate\Validation\Rules\Password::min(8)];
         }
 
-
         $request->validate($rules, [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
 
         if ($user->id === $request->user()->id) {
-            if (!$request->boolean('is_master') || !$request->boolean('is_active')) {
+            if (! $request->boolean('is_master') || ! $request->boolean('is_active')) {
                 return back()->with('error', __('You cannot remove your own master status or deactivate yourself.'));
             }
         }
@@ -292,12 +285,12 @@ class AdminController extends Controller
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
+
             return redirect()->to('/login')->with('success', __('User updated successfully. Please log in again.'));
         }
 
         return redirect()->route('admin.users.index')->with('success', __('User updated successfully.'));
     }
-
 
     /**
      * Toggle user active status.
@@ -308,7 +301,7 @@ class AdminController extends Controller
             return back()->with('error', __('You cannot deactivate yourself.'));
         }
 
-        $user->is_active = !$user->is_active;
+        $user->is_active = ! $user->is_active;
         $user->save();
 
         return back()->with('success', __('User status updated.'));
@@ -328,8 +321,8 @@ class AdminController extends Controller
         $ids = $request->ids;
         $currentUserExcluded = false;
 
-        if (!$request->is_active && in_array(auth()->id(), $ids)) {
-            $ids = array_filter($ids, fn($id) => $id != auth()->id());
+        if (! $request->is_active && in_array(auth()->id(), $ids)) {
+            $ids = array_filter($ids, fn ($id) => $id != auth()->id());
             $currentUserExcluded = true;
         }
 
@@ -338,12 +331,12 @@ class AdminController extends Controller
         }
 
         User::whereIn('id', $ids)->update([
-            'is_active' => $request->is_active
+            'is_active' => $request->is_active,
         ]);
 
         $message = __('Users updated successfully.');
         if ($currentUserExcluded) {
-            $message .= ' ' . __('Your account was not deactivated.');
+            $message .= ' '.__('Your account was not deactivated.');
         }
 
         return back()->with('success', $message);
@@ -410,9 +403,10 @@ class AdminController extends Controller
 
         try {
             Mail::to($user->email)->send(new ReportUpdatedNotification($user, $date, $time));
+
             return back()->with('success', __('Test email sent successfully to :email', ['email' => $user->email]));
         } catch (\Exception $e) {
-            return back()->with('error', __('Failed to send test email: ') . $e->getMessage());
+            return back()->with('error', __('Failed to send test email: ').$e->getMessage());
         }
     }
 
@@ -425,7 +419,7 @@ class AdminController extends Controller
             'pending' => \DB::table('jobs')->count(),
             'failed' => \DB::table('failed_jobs')->count(),
             'is_running' => \Cache::has('queue_worker_active'),
-            'last_check' => now()->toIso8601String()
+            'last_check' => now()->toIso8601String(),
         ]);
     }
 }

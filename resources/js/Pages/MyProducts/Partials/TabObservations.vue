@@ -24,7 +24,7 @@ const timelineEntries = computed(() => {
       badge: 'Alerta de Logística',
       badgeStyle: 'bg-rose-50 text-rose-700 border-rose-200',
       bulletStyle: 'bg-rose-500 border-rose-200 text-white',
-      date: p.status_date || p.date,
+      date: p.date,
       content: p.incident,
       hint: 'A equipe da JR Spice está acompanhando este ponto de atenção.',
     });
@@ -69,7 +69,7 @@ const timelineEntries = computed(() => {
       badge: 'Nota da Equipe',
       badgeStyle: 'bg-slate-100 text-slate-700 border-slate-200',
       bulletStyle: 'bg-slate-800 border-slate-200 text-white',
-      date: p.status_date || p.date,
+      date: p.date,
       content: p.observations,
       hint: null,
     });

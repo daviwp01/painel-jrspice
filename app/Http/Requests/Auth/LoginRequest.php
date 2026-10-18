@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\RecaptchaVerifier;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -41,6 +43,8 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $this->ensureRecaptchaPasses();
+
         if (! Auth::attempt($this->only('email', 'password') + ['is_active' => true], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -50,6 +54,32 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Asks reCAPTCHA for a score right before authenticating. Runs after the
+     * request budget so a known abusive address never reaches Google.
+     *
+     * @throws ValidationException
+     */
+    private function ensureRecaptchaPasses(): void
+    {
+        $outcome = app(RecaptchaVerifier::class)->verify($this->input('g_recaptcha'), 'login');
+
+        if ($outcome->passed) {
+            return;
+        }
+
+        Log::warning('recaptcha.rejected', [
+            'action' => 'login',
+            'reason' => $outcome->reason,
+            'score' => $outcome->score,
+            'ip' => $this->ip(),
+        ]);
+
+        throw ValidationException::withMessages([
+            'g_recaptcha' => 'Não foi possível confirmar que você não é um robô. Atualize a página e tente novamente.',
+        ]);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Services\Contracts;
 
 use App\Models\Contract;
+use App\Models\ContractDocument;
 use App\Models\User;
 use App\Support\ContractStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -141,7 +142,6 @@ final class ClientContractService
             'register_number' => $firstItem?->register_number,
             'country' => $contract->country,
             'status' => $contract->status,
-            'status_date' => $contract->status_date?->toDateString(),
             'etd_date' => $contract->etd_date?->toDateString(),
             'eta_date' => $contract->eta_date?->toDateString(),
             'dhl_date' => $contract->dhl_date?->toDateString(),
@@ -164,7 +164,9 @@ final class ClientContractService
             'commission_usd' => $items->sum('commission_usd'),
             'estimated_euro' => $items->sum('estimated_euro'),
             'product' => $firstItem?->product,
-            'documents' => $withItems && $contract->relationLoaded('documents') ? $contract->documents : null,
+            'documents' => $withItems && $contract->relationLoaded('documents')
+                ? $contract->documents->map(fn (ContractDocument $document) => $document->toApiArray())->values()
+                : null,
             'items' => $withItems ? $items->values() : null,
         ];
     }

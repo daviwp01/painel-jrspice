@@ -120,10 +120,10 @@ final class ContractSpreadsheetImporter
             'country' => $country,
             'seller_id' => $seller,
             'status' => $this->normalizer->status($header[ContractSpreadsheetReader::COL_STATUS], $sourceRow),
-            'status_date' => $this->normalizer->date($header[ContractSpreadsheetReader::COL_STATUS_DATE]),
             'dhl_date' => $this->normalizer->dhlDate($header[ContractSpreadsheetReader::COL_DHL_DATE]),
             'dhl_number' => $this->firstText($items, 'dhl_number') ?? $this->normalizer->text($header[ContractSpreadsheetReader::COL_DHL_NUMBER]),
-            'etd_date' => $this->firstDate($items, 'etd_date') ?? $this->normalizer->date($header[ContractSpreadsheetReader::COL_ETD]),
+            // "Data Status" foi promovido a "Data embarque ETD": é ele que manda.
+            'etd_date' => $this->firstDate($items, 'etd_date') ?? $this->etdFromSheet($header),
             'eta_date' => $this->firstDate($items, 'eta_date') ?? $this->normalizer->date($header[ContractSpreadsheetReader::COL_ETA]),
             'video_sent' => $video['sent'],
             'video_reference' => $video['reference'] ?? $this->firstText($items, 'video_reference'),
@@ -208,14 +208,13 @@ final class ContractSpreadsheetImporter
                 'estimated_euro' => $this->estimatedEuro($commission, $exchangeRate, $sheetEuro),
                 'to_pay_rate' => $toPayRate,
                 'to_pay_usd' => $toPay,
-                'etd_date' => $this->normalizer->date($values[ContractSpreadsheetReader::COL_ETD]),
+                'etd_date' => $this->etdFromSheet($values),
                 'eta_date' => $this->normalizer->date($values[ContractSpreadsheetReader::COL_ETA]),
                 'dhl_number' => $this->normalizer->trackingCode(
                     $values[ContractSpreadsheetReader::COL_DHL_NUMBER],
                     'DHL Nº',
                     $row['source_row']
                 ),
-                'status_date' => $this->normalizer->date($values[ContractSpreadsheetReader::COL_STATUS_DATE]),
                 'video_date' => $video['date'],
                 'video_reference' => $video['reference'],
                 'observations' => $this->normalizer->text($values[ContractSpreadsheetReader::COL_OBSERVATIONS]),
@@ -224,6 +223,26 @@ final class ContractSpreadsheetImporter
         }
 
         return $items;
+    }
+
+    /**
+     * "Data Status" is the source of truth for the departure date now; the
+     * original "Data embarque ETD" column is only a fallback so nothing is lost.
+     * Rows carrying both with different values are reported.
+     *
+     * @param  array<int, mixed>  $values
+     */
+    private function etdFromSheet(array $values): ?string
+    {
+        $fromStatus = $this->normalizer->date($values[ContractSpreadsheetReader::COL_STATUS_DATE] ?? null);
+        $fromEtd = $this->normalizer->date($values[ContractSpreadsheetReader::COL_ETD] ?? null);
+
+        if ($fromStatus !== null && $fromEtd !== null && $fromStatus !== $fromEtd) {
+            $this->report['etd_from_data_status'][] =
+                'Data Status '.$fromStatus.' sobrescreveu o ETD original '.$fromEtd;
+        }
+
+        return $fromStatus ?? $fromEtd;
     }
 
     private function estimatedEuro(?float $commission, ?float $exchangeRate, ?float $sheetEuro): ?float
@@ -270,7 +289,6 @@ final class ContractSpreadsheetImporter
                 'etd_date' => $this->override($item['etd_date'], $attributes['etd_date']),
                 'eta_date' => $this->override($item['eta_date'], $attributes['eta_date']),
                 'dhl_number' => $this->override($item['dhl_number'], $attributes['dhl_number']),
-                'status_date' => $this->override($item['status_date'], $attributes['status_date']),
                 'video_date' => $this->override($item['video_date'], $attributes['video_date']),
                 'video_reference' => $this->override($item['video_reference'], $attributes['video_reference']),
                 'observations' => $this->override($item['observations'], $attributes['observations']),

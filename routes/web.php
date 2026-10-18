@@ -25,11 +25,9 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
     // Portal do Cliente ("Meus Produtos")
     Route::get('/meus-produtos', [\App\Http\Controllers\ClientDashboardController::class, 'myProducts'])->name('my-products.index');
     Route::get('/meus-produtos/{contract}', [\App\Http\Controllers\ClientDashboardController::class, 'showContract'])->name('my-products.show');
-    Route::post('/meus-produtos/{contract}/documentos', [\App\Http\Controllers\ClientDashboardController::class, 'uploadDocument'])->name('my-products.upload-document');
     Route::get('/documentos-contrato/{document}/preview', [\App\Http\Controllers\ClientDashboardController::class, 'previewDocument'])
         ->name('my-products.preview-document');
     Route::get('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'downloadDocument'])->name('my-products.download-document');
-    Route::delete('/documentos-contrato/{document}', [\App\Http\Controllers\ClientDashboardController::class, 'deleteDocument'])->name('my-products.delete-document');
 
     // Avaliações de contratos (cliente)
     Route::post('/meus-produtos/{contract}/avaliacoes', [\App\Http\Controllers\ContractReviewController::class, 'store'])->name('reviews.store');
@@ -43,6 +41,18 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
         ->name('tracking.show');
 });
 
+// Textos legais públicos: o checkbox de consentimento do formulário de
+// cadastro precisa apontar para algo legível antes do login.
+Route::get('/privacidade', [\App\Http\Controllers\PublicPolicyController::class, 'privacy'])
+    ->name('public.privacy');
+Route::get('/termos', [\App\Http\Controllers\PublicPolicyController::class, 'terms'])
+    ->name('public.terms');
+
+// Formulário público de cadastro (embed nas landing pages). Passa pela
+// aplicação para receber os cabeçalhos de segurança e o token de formulário.
+Route::get('/external-form-snippet.html', [\App\Http\Controllers\EmbedFormController::class, 'show'])
+    ->name('embed.register.show');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
@@ -55,6 +65,8 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::get('/clients', [\App\Http\Controllers\ContractController::class, 'index'])->name('admin.clients.index');
 
     Route::get('/contracts/{contract}', [\App\Http\Controllers\ContractController::class, 'show'])->name('contracts.show');
+    Route::post('/contracts/{contract}/documentos', [\App\Http\Controllers\ContractDocumentController::class, 'store'])->name('contracts.documents.store');
+    Route::delete('/contracts/documentos/{document}', [\App\Http\Controllers\ContractDocumentController::class, 'destroy'])->name('contracts.documents.destroy');
     Route::get('/contracts/{contract}/rastreamento', [\App\Http\Controllers\Api\ContainerTrackingController::class, 'forContract'])
         ->middleware('throttle:30,1')
         ->name('contracts.tracking');

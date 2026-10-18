@@ -19,9 +19,9 @@ RESIDUE_COLS = (23, 24, 26)  # DATA VÍDEO, STATUS, Data DHL
 
 def db_dump():
     sql = (
-        "select c.source_row, c.status_date, c.dhl_date, c.etd_date, c.eta_date, "
+        "select c.source_row, c.dhl_date, c.etd_date, c.eta_date, "
         "c.dhl_number, c.video_reference, c.video_date, c.observations, "
-        "ci.source_row, ci.status_date, ci.etd_date, ci.eta_date, ci.dhl_number, "
+        "ci.source_row, ci.etd_date, ci.eta_date, ci.dhl_number, "
         "ci.video_reference, ci.video_date, ci.observations "
         "from contracts c left join contract_items ci on ci.contract_id=c.id "
         "order by c.source_row, ci.position"
@@ -41,16 +41,16 @@ def load_db():
     contract, items = {}, {}
     for line in db_dump().splitlines():
         p = line.split('\t')
-        if len(p) < 17:
+        if len(p) < 15:
             continue
         if p[0] not in ('NULL', ''):
             contract[int(p[0])] = dict(zip(
-                ['status_date', 'dhl_date', 'etd_date', 'eta_date',
-                 'dhl_number', 'video_reference', 'video_date', 'observations'], p[1:9]))
-        if p[9] not in ('NULL', ''):
-            items[int(p[9])] = dict(zip(
-                ['status_date', 'etd_date', 'eta_date', 'dhl_number',
-                 'video_reference', 'video_date', 'observations'], p[10:17]))
+                ['dhl_date', 'etd_date', 'eta_date', 'dhl_number',
+                 'video_reference', 'video_date', 'observations'], p[1:8]))
+        if p[8] not in ('NULL', ''):
+            items[int(p[8])] = dict(zip(
+                ['etd_date', 'eta_date', 'dhl_number',
+                 'video_reference', 'video_date', 'observations'], p[9:15]))
     return contract, items
 
 
@@ -139,10 +139,13 @@ def main():
             video_date_from_ref = to_date(row[22])
             video_reference = None if video_date_from_ref else norm_text(row[22])
 
+            # "Data Status" (col. Z) foi promovido a "Data embarque ETD": ele
+            # tem prioridade sobre a coluna AB original.
+            expected_etd = to_date(row[25]) or to_date(row[27])
+
             checks = [
-                ('status_date', to_date(row[25]), effective('status_date')),
                 ('dhl_date', to_date(row[26]), effective('dhl_date')),
-                ('etd_date', to_date(row[27]), effective('etd_date')),
+                ('etd_date', expected_etd, effective('etd_date')),
                 ('eta_date', to_date(row[28]), effective('eta_date')),
                 ('dhl_number', to_tracking(row[29]), effective('dhl_number')),
                 ('observations', norm_text(row[30]), effective('observations')),

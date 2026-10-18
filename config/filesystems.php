@@ -30,6 +30,34 @@ return [
 
     'disks' => [
 
+        /*
+         * Contratos e documentos anexados.
+         *
+         * Um único disco dedicado: hoje salva em disco local; para migrar para
+         * S3 basta trocar CONTRACTS_DISK=s3 e preencher as credenciais AWS —
+         * nenhum código precisa mudar.
+         */
+        'contracts' => env('CONTRACTS_DISK', 'local') === 's3' ? [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'root' => env('CONTRACTS_S3_ROOT', 'contracts'),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ] : [
+            'driver' => 'local',
+            'root' => storage_path('app/contracts'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

@@ -56,6 +56,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Google Tag Manager
+    |--------------------------------------------------------------------------
+    |
+    | ID público do contêiner injetado na raiz de todas as páginas. O script
+    | só é renderizado quando a aplicação roda em produção — em desenvolvimento
+    | o snippet não é emitido e nada é contabilizado.
+    |
+    */
+    'gtm_container_id' => env('GTM_CONTAINER_ID', 'GTM-5BTMPRFS'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

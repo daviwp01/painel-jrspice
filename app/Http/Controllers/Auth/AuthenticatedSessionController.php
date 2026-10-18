@@ -19,6 +19,8 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response
     {
         return Inertia::render('Auth/Login', [
+            'recaptchaSiteKey' => (string) config('recaptcha.site_key', ''),
+            'recaptchaType' => (string) config('recaptcha.type', 'v2'),
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);
