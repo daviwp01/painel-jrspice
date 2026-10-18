@@ -57,6 +57,46 @@ class ExternalRegistrationSecurityTest extends TestCase
         $this->assertSame(0, User::count());
     }
 
+    public function test_a_wildcard_origin_allows_any_subdomain(): void
+    {
+        Config::set('embed.allowed_origins', [self::ORIGIN, 'https://*.xpice.pt']);
+
+        $this->withHeader('Origin', 'https://lp.xpice.pt')
+            ->postJson(route('api.external.register'), $this->payload())
+            ->assertCreated();
+    }
+
+    public function test_a_wildcard_never_covers_the_apex_domain(): void
+    {
+        Config::set('embed.allowed_origins', ['https://*.xpice.pt']);
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->postJson(route('api.external.register'), $this->payload())
+            ->assertForbidden();
+    }
+
+    public function test_the_apex_domain_can_be_allowed_explicitly(): void
+    {
+        Config::set('embed.allowed_origins', ['https://*.xpice.pt', 'https://xpice.pt']);
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->postJson(route('api.external.register'), $this->payload())
+            ->assertCreated();
+
+        $this->withHeader('Origin', 'https://www.xpice.pt')
+            ->postJson(route('api.external.register'), $this->payload())
+            ->assertCreated();
+    }
+
+    public function test_an_unlisted_origin_is_refused_even_with_wildcards(): void
+    {
+        Config::set('embed.allowed_origins', ['https://*.xpice.pt']);
+
+        $this->withHeader('Origin', 'https://xpice.pt.evil.example')
+            ->postJson(route('api.external.register'), $this->payload())
+            ->assertForbidden();
+    }
+
     public function test_submission_from_another_origin_is_refused(): void
     {
         $this->withHeader('Origin', 'https://evil.example')

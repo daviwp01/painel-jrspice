@@ -112,35 +112,66 @@ class ExternalRegisterRequest extends FormRequest
      * The browser sends `Origin` on every POST (same-origin included). When a
      * client strips it we fall back to `Referer`; when both are gone the
      * request is not coming from the form page and is refused.
+     *
+     * Configured origins accept wildcards on the host ("https://*.xpice.pt"
+     * covers every subdomain, never the apex itself), so one entry can protect
+     * a whole family of landing pages.
      */
     private function originIsAllowed(): bool
     {
-        $allowed = (array) config('embed.allowed_origins', []);
-        $allowedHosts = array_map(
-            static fn (string $origin): string => strtolower((string) parse_url($origin, PHP_URL_HOST)),
-            $allowed,
-        );
+        $host = $this->originHost();
 
-        $requestOrigin = $this->headers->get('Origin');
-
-        if (is_string($requestOrigin) && $requestOrigin !== '' && $requestOrigin !== 'null') {
-            if (in_array(rtrim(strtolower($requestOrigin), '/'), array_map('rtrim', array_map('strtolower', $allowed)), true)) {
-                return true;
-            }
-
-            $host = strtolower((string) parse_url($requestOrigin, PHP_URL_HOST));
-
-            return in_array($host, $allowedHosts, true) || $host === $this->host();
-        }
-
-        $referer = $this->headers->get('Referer');
-
-        if (! is_string($referer) || $referer === '') {
+        if ($host === null) {
             return false;
         }
 
-        $host = strtolower((string) parse_url($referer, PHP_URL_HOST));
+        foreach ((array) config('embed.allowed_origins', []) as $pattern) {
+            if ($this->hostMatches($host, (string) $pattern)) {
+                return true;
+            }
+        }
 
-        return $host !== '' && (in_array($host, $allowedHosts, true) || $host === $this->host());
+        // Same-origin is always legitimate: the form runs on our own domain.
+        return strtolower($host) === strtolower($this->host());
+    }
+
+    private function originHost(): ?string
+    {
+        foreach (['Origin', 'Referer'] as $header) {
+            $value = $this->headers->get($header);
+
+            if (! is_string($value) || $value === '' || $value === 'null') {
+                continue;
+            }
+
+            $host = parse_url($value, PHP_URL_HOST);
+
+            if (is_string($host) && $host !== '') {
+                return strtolower($host);
+            }
+        }
+
+        return null;
+    }
+
+    private function hostMatches(string $host, string $pattern): bool
+    {
+        $expected = strtolower((string) (parse_url($pattern, PHP_URL_HOST) ?: trim($pattern)));
+
+        if ($expected === '') {
+            return false;
+        }
+
+        if ($host === $expected) {
+            return true;
+        }
+
+        if (str_starts_with($expected, '*.')) {
+            $suffix = substr($expected, 1);
+
+            return str_ends_with($host, $suffix) && strlen($host) > strlen($suffix);
+        }
+
+        return false;
     }
 }
