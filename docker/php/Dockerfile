@@ -1,4 +1,7 @@
-FROM php:8.4-fpm-alpine
+# Versão travada por causa das falhas críticas de RCE de 21/10/2026
+# (CVE-2026-109618 / CVE-2026-109619), corrigidas a partir do 8.4.27.
+# Atualizar para o próximo patch assim que sair.
+FROM php:8.4.27-fpm-alpine
 
 # Instalar dependências do sistema
 RUN apk update && apk add --no-cache \
