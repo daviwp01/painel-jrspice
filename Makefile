@@ -1,4 +1,4 @@
-.PHONY: dev prod stop build-dev shell logs restart
+.PHONY: dev prod stop build-dev shell logs restart deploy-prod
 
 # Inicia o ambiente de desenvolvimento local
 dev:
@@ -28,6 +28,15 @@ logs:
 # Reinicia o ambiente de desenvolvimento
 restart:
 	docker-compose -f docker-compose-dev.yml restart
+
+# ── Produção (roda apenas no servidor) ───────────────────────────────────────
+# Sequência segura de deploy. O restart do web NÃO é opcional: o nginx resolve
+# o IP do upstream (app) uma única vez ao subir, e recriar o container do app
+# muda esse IP — sem reiniciar o nginx o site passa a responder 502.
+deploy-prod:
+	docker compose -f docker-compose.yml build app worker
+	docker compose -f docker-compose.yml up -d app worker
+	docker compose -f docker-compose.yml restart web
 
 # Baixar banco de dados
 scp "root@143.110.205.180:/srv/painel-jrspice/backup_*.sql.gz" ./
