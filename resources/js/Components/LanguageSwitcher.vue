@@ -1,90 +1,117 @@
 <script setup>
-import { loadLanguageAsync } from 'laravel-vue-i18n';
-import { computed, ref, onMounted } from 'vue';
-import { getActiveLanguage } from 'laravel-vue-i18n';
+import { computed, onMounted, ref } from 'vue';
+import { getActiveLanguage, loadLanguageAsync } from 'laravel-vue-i18n';
 import Dropdown from '@/Components/Dropdown.vue';
-import { ChevronDown, Check } from 'lucide-vue-next';
+import { Check, ChevronDown, Languages } from 'lucide-vue-next';
 
-const getLocaleCookie = () => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; app_locale=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-};
+const props = defineProps({
+    variant: {
+        type: String,
+        default: 'light',
+        validator: (value) => ['light', 'dark'].includes(value),
+    },
+    compact: {
+        type: Boolean,
+        default: false,
+    },
+});
 
-const currentLang = ref('en');
-
-const items = [
-    { value: 'en', label: 'United States', flag: '🇺🇸' },
-    { value: 'pt_BR', label: 'Brasil', flag: '🇧🇷' },
-    { value: 'pt_PT', label: 'Portugal', flag: '🇵🇹' },
-    { value: 'es', label: 'España', flag: '🇪🇸' },
+const languages = [
+    { value: 'en', label: 'English', flag: '🇺🇸' },
+    { value: 'pt_BR', label: 'Português (BR)', flag: '🇧🇷' },
+    { value: 'es', label: 'Español', flag: '🇪🇸' },
 ];
 
+const readLocaleCookie = () => {
+    const match = document.cookie.match(/(?:^|;\s*)app_locale=([^;]+)/);
+    return match ? match[1] : null;
+};
+
+const currentLang = ref('pt_BR');
+
 onMounted(() => {
-    currentLang.value = getActiveLanguage() || getLocaleCookie() || 'en';
+    const active = getActiveLanguage() || readLocaleCookie() || 'pt_BR';
+    const matched = languages.find((lang) => lang.value === active)
+        || languages.find((lang) => active.startsWith(lang.value.split('_')[0]));
+    currentLang.value = matched ? matched.value : 'pt_BR';
 });
 
-const currentLabel = computed(() => {
-    const found = items.find(i => i.value === currentLang.value) ||
-                  items.find(i => currentLang.value.startsWith(i.value.split('_')[0]));
-    return found ? found.label : 'United States';
-});
+const current = computed(
+    () => languages.find((lang) => lang.value === currentLang.value) || languages[0],
+);
 
-const currentFlag = computed(() => {
-    const found = items.find(i => i.value === currentLang.value) ||
-                  items.find(i => currentLang.value.startsWith(i.value.split('_')[0]));
-    return found ? found.flag : '🇺🇸';
-});
+const changeLanguage = (value) => {
+    if (value === currentLang.value) return;
 
-const changeLanguage = (lang) => {
-    currentLang.value = lang;
-    loadLanguageAsync(lang);
-    const d = new Date();
-    d.setTime(d.getTime() + (365*24*60*60*1000));
-    document.cookie = "app_locale=" + lang + ";expires="+ d.toUTCString() + ";path=/";
+    currentLang.value = value;
+    loadLanguageAsync(value);
+
+    const expires = new Date();
+    expires.setTime(expires.getTime() + 365 * 24 * 60 * 60 * 1000);
+    document.cookie = `app_locale=${value};expires=${expires.toUTCString()};path=/`;
 };
 </script>
 
 <template>
-    <div class="relative z-50">
-        <!--
-            Fixing the 'double' visual issue:
-            We pass the styling classes to the Dropdown component via content-classes instead of nesting a styled div.
-        -->
-        <Dropdown
-            align="right"
-            width="48"
-            content-classes="py-1 bg-white rounded-xl border border-gray-100 shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden"
-        >
-            <template #trigger>
-                <button
-                    type="button"
-                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-bold rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-50 focus:outline-none transition-all duration-200 ease-in-out gap-x-2"
-                >
-                    <span class="text-lg leading-none shadow-sm rounded-full overflow-hidden">{{ currentFlag }}</span>
-                    <span class="hidden sm:inline-block tracking-wide">{{ currentLabel }}</span>
-                    <ChevronDown class="-me-0.5 h-4 w-4 text-gray-400" />
-                </button>
-            </template>
+    <Dropdown
+        align="right"
+        width="56"
+        content-classes="py-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-2xl shadow-slate-900/10 overflow-hidden"
+    >
+        <template #trigger>
+            <button
+                type="button"
+                class="group inline-flex items-center gap-2 rounded-xl border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+                :class="[
+                    compact
+                        ? 'px-2 py-1.5'
+                        : 'px-3 py-2',
+                    variant === 'dark'
+                        ? 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10 hover:text-white'
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900',
+                ]"
+                :aria-label="$t('Change language')"
+                :title="$t('Change language')"
+            >
+                <span class="text-base leading-none">{{ current.flag }}</span>
+                <span
+                    v-if="!compact"
+                    class="text-xs font-bold tracking-wide"
+                >{{ current.label }}</span>
+                <ChevronDown
+                    class="h-3.5 w-3.5 opacity-50 transition-transform duration-200 group-hover:opacity-80"
+                />
+            </button>
+        </template>
 
-            <template #content>
-                <!-- Direct button list, no extra wrapping div to avoid double borders -->
-                <button
-                    v-for="item in items"
-                    :key="item.value"
-                    @click="changeLanguage(item.value)"
-                    class="group flex w-full items-center px-4 py-3 text-sm font-medium transition-all duration-200 hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                    :class="item.value === currentLang ? 'bg-indigo-50/50 text-indigo-700' : 'text-gray-600'"
-                >
-                    <span class="mr-3 text-lg leading-none shadow-sm rounded-full w-6 h-6 flex items-center justify-center bg-gray-50 border border-gray-100 group-hover:border-gray-200 transition-colors">{{ item.flag }}</span>
-                    <span class="flex-1 text-left">{{ item.label }}</span>
+        <template #content>
+            <p
+                class="px-4 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400"
+            >
+                <Languages class="mr-1.5 inline h-3 w-3 align-[-2px]" />
+                {{ $t('Language') }}
+            </p>
 
-                    <span v-if="item.value === currentLang" class="text-indigo-600">
-                        <Check class="h-4 w-4" stroke-width="3" />
-                    </span>
-                </button>
-            </template>
-        </Dropdown>
-    </div>
+            <button
+                v-for="lang in languages"
+                :key="lang.value"
+                type="button"
+                class="group flex w-full items-center gap-3 px-4 py-2.5 text-sm font-semibold transition-colors"
+                :class="lang.value === currentLang
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                @click="changeLanguage(lang.value)"
+            >
+                <span
+                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm leading-none shadow-sm transition-colors group-hover:border-slate-300"
+                >{{ lang.flag }}</span>
+                <span class="flex-1 text-left">{{ lang.label }}</span>
+                <Check
+                    v-if="lang.value === currentLang"
+                    class="h-4 w-4 text-blue-600"
+                    :stroke-width="3"
+                />
+            </button>
+        </template>
+    </Dropdown>
 </template>

@@ -78,7 +78,7 @@ class LoginRequest extends FormRequest
         ]);
 
         throw ValidationException::withMessages([
-            'g_recaptcha' => 'Não foi possível confirmar que você não é um robô. Atualize a página e tente novamente.',
+            'g_recaptcha' => __('We could not confirm that you are not a robot. Refresh the page and try again.'),
         ]);
     }
 

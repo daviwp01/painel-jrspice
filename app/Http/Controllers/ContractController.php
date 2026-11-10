@@ -53,7 +53,6 @@ class ContractController extends Controller
             'sellers' => User::query()->orderBy('name')->get(['id', 'name']),
             'contractProducts' => ContractProduct::query()->orderBy('name')->get(['id', 'name']),
             'countries' => $this->countries(),
-            'users' => $this->linkableUsers(),
             'statusOptions' => ContractStatus::options(),
             'filters' => array_merge($request->only(ContractQueryService::FILTER_KEYS), [
                 'active_count' => count($activeFilters),
@@ -68,7 +67,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $contract->load(['items', 'users:id', 'documents.uploader:id,name']);
+        $contract->load(['items', 'documents.uploader:id,name']);
 
         return response()->json([
             'id' => $contract->id,
@@ -95,7 +94,6 @@ class ContractController extends Controller
             'observations' => $contract->observations,
             'shipping_company' => $contract->shipping_company,
             'container_number' => $contract->container_number,
-            'user_ids' => $contract->users->pluck('id')->map(fn ($id) => (int) $id)->all(),
             'documents' => $contract->documents->map(fn (\App\Models\ContractDocument $document) => $document->toApiArray())->values(),
             'items' => $contract->items->map(fn ($item) => [
                 'id' => $item->id,
@@ -120,23 +118,23 @@ class ContractController extends Controller
 
     public function store(StoreContractRequest $request)
     {
-        $contract = $this->saver->create($request->validated(), $request->validated('user_ids', []));
+        $contract = $this->saver->create($request->validated());
 
-        return back()->with('success', "Contrato {$contract->contract_number} criado com sucesso.");
+        return back()->with('success', __('Contract :number created successfully.', ['number' => $contract->contract_number]));
     }
 
     public function update(UpdateContractRequest $request, Contract $contract)
     {
-        $this->saver->update($contract, $request->validated(), $request->validated('user_ids'));
+        $this->saver->update($contract, $request->validated());
 
-        return back()->with('success', 'Contrato atualizado com sucesso.');
+        return back()->with('success', __('Contract updated successfully.'));
     }
 
     public function updateStatus(UpdateContractStatusRequest $request, Contract $contract)
     {
         $this->saver->updateStatus($contract, $request->validated());
 
-        return back()->with('success', 'Status atualizado.');
+        return back()->with('success', __('Status updated.'));
     }
 
     public function destroy(Contract $contract)
@@ -144,7 +142,7 @@ class ContractController extends Controller
         $number = $contract->contract_number;
         $contract->delete();
 
-        return back()->with('success', "Contrato {$number} excluído.");
+        return back()->with('success', __('Contract :number deleted.', ['number' => $number]));
     }
 
     public function bulkDestroy(Request $request)
@@ -156,24 +154,7 @@ class ContractController extends Controller
 
         $deleted = Contract::query()->whereKey($request->input('ids'))->delete();
 
-        return back()->with('success', "{$deleted} contratos excluídos com sucesso.");
-    }
-
-    public function bulkSyncUsers(Request $request)
-    {
-        $request->validate([
-            'ids' => ['required', 'array', 'min:1'],
-            'ids.*' => ['integer', 'exists:contracts,id'],
-            'user_ids' => ['array'],
-            'user_ids.*' => ['integer', 'exists:users,id'],
-        ]);
-
-        $userIds = array_values(array_unique(array_map('intval', $request->input('user_ids', []))));
-
-        Contract::query()->whereKey($request->input('ids'))->get()
-            ->each(fn (Contract $contract) => $contract->users()->syncWithoutDetaching($userIds));
-
-        return back()->with('success', 'Usuários vinculados aos contratos selecionados.');
+        return back()->with('success', __(':count contracts deleted successfully.', ['count' => $deleted]));
     }
 
     /**
@@ -269,27 +250,5 @@ class ContractController extends Controller
             json_encode($all, JSON_UNESCAPED_UNICODE),
             isset($all[$key]) ? 60 * 60 * 24 * 365 : -1,
         );
-    }
-
-    /**
-     * Every account can be linked to a contract. Masters are included on
-     * purpose: the client portal filters contracts by the pivot, so a master
-     * only sees contracts he was explicitly linked to.
-     *
-     * @return \Illuminate\Support\Collection<int, object>
-     */
-    private function linkableUsers()
-    {
-        return User::query()
-            ->orderBy('name')
-            ->get(['id', 'name', 'email', 'phone', 'company_name', 'client_id', 'is_master'])
-            ->map(static fn (User $user) => (object) [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email ?: '',
-                'phone' => $user->phone ?: '',
-                'company_name' => $user->company_name ?: '',
-                'type' => $user->is_master ? 'Master' : 'Usuário',
-            ]);
     }
 }

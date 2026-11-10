@@ -7,6 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import PasswordInput from '@/Components/PasswordInput.vue';
 import Checkbox from '@/Components/Checkbox.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import {
@@ -173,7 +174,7 @@ const isFormValid = computed(() => {
                                     v-model="form.email"
                                     required
                                     autocomplete="off"
-                                    placeholder="user@example.com"
+                                    :placeholder="$t('user@example.com')"
                                 />
                                 <InputError :message="form.errors.email" />
                             </div>
@@ -215,6 +216,33 @@ const isFormValid = computed(() => {
                         </div>
                     </div>
 
+                    <!-- Section: Linked Company -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
+                        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-3">
+                            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                <Building2 class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Linked Company') }}</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('This user will see products and contracts of the linked company.') }}</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="max-w-xl">
+                                <SearchableSelect
+                                    v-model="form.client_id"
+                                    :options="clients"
+                                    placeholder="Search company..."
+                                    :clearable="true"
+                                    direction="down"
+                                    @change="(v) => { form.client_id = v ?? null; }"
+                                    @clear="() => { form.client_id = null; }"
+                                />
+                                <InputError class="mt-2" :message="form.errors.client_id" />
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Section: Lead Information -->
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all hover:shadow-md">
                         <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-3">
@@ -222,32 +250,32 @@ const isFormValid = computed(() => {
                                 <FileText class="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-slate-800 tracking-tight">Informações de Lead</h3>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Respostas do cadastro e perfil profissional</p>
+                                <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Lead Information') }}</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('Registration answers and professional profile') }}</p>
                             </div>
                         </div>
 
                         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
-                                <InputLabel for="cargo" value="Cargo" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="cargo" :value="$t('Job Title')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <TextInput
                                     id="cargo"
                                     type="text"
                                     class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold"
                                     v-model="form.cargo"
-                                    placeholder="Ex: Gerente de Compras"
+                                    :placeholder="$t('e.g. Purchasing Manager')"
                                 />
                                 <InputError :message="form.errors.cargo" />
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="import_experience" value="Sua empresa já importa insumos alimentícios?" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="import_experience" :value="$t('Does your company already import food ingredients?')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <select
                                     id="import_experience"
                                     v-model="form.import_experience"
                                     class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
                                 >
-                                    <option value="">Selecione uma opção...</option>
+                                    <option value="">{{ $t('Select an option...') }}</option>
                                     <option v-for="option in importExperienceOptions" :key="option" :value="option">
                                         {{ option }}
                                     </option>
@@ -256,13 +284,13 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="import_volume" value="Volume aproximado por embarque" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="import_volume" :value="$t('Approximate volume per shipment')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <select
                                     id="import_volume"
                                     v-model="form.import_volume"
                                     class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
                                 >
-                                    <option value="">Selecione uma opção...</option>
+                                    <option value="">{{ $t('Select an option...') }}</option>
                                     <option v-for="option in importVolumeOptions" :key="option" :value="option">
                                         {{ option }}
                                     </option>
@@ -271,13 +299,13 @@ const isFormValid = computed(() => {
                             </div>
 
                             <div class="space-y-2">
-                                <InputLabel for="decision_role" value="Seu papel na decisão de compra" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
+                                <InputLabel for="decision_role" :value="$t('Your role in the purchase decision')" class="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1" />
                                 <select
                                     id="decision_role"
                                     v-model="form.decision_role"
                                     class="block w-full py-3 px-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 cursor-pointer h-[48px]"
                                 >
-                                    <option value="">Selecione uma opção...</option>
+                                    <option value="">{{ $t('Select an option...') }}</option>
                                     <option v-for="option in decisionRoleOptions" :key="option" :value="option">
                                         {{ option }}
                                     </option>
@@ -397,8 +425,8 @@ const isFormValid = computed(() => {
                                             <Layout class="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Relatórios Permitidos') }}</h4>
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $t('Define o acesso específico deste usuário aos Dashboards.') }}</p>
+                                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Allowed Reports') }}</h4>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $t('Define the specific access of this user to the Dashboards.') }}</p>
                                         </div>
                                     </div>
                                     
@@ -440,7 +468,7 @@ const isFormValid = computed(() => {
                                         </div>
                                         
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1 truncate">{{ page.title }}</h4>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1 truncate">{{ $t(page.title) }}</h4>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{{ page.slug }}</p>
                                         </div>
 

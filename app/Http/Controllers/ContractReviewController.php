@@ -19,7 +19,7 @@ class ContractReviewController extends Controller
         ]);
 
         if (! str_contains(strtolower($contract->status ?? ''), 'finalizado')) {
-            return back()->with('error', 'A avaliação só está disponível após o processo ser finalizado.');
+            return back()->with('error', __('The review is only available after the process has been completed.'));
         }
 
         ContractReview::updateOrCreate(
@@ -33,12 +33,12 @@ class ContractReviewController extends Controller
             ]
         );
 
-        return back()->with('success', 'Avaliação enviada com sucesso! Obrigado pelo seu feedback.');
+        return back()->with('success', __('Review submitted successfully! Thank you for your feedback.'));
     }
 
     public function reply(Request $request, ContractReview $review)
     {
-        abort_unless(auth()->user()?->is_master, 403, 'Acesso negado.');
+        abort_unless(auth()->user()?->is_master, 403, __('Access denied.'));
 
         $validated = $request->validate([
             'admin_reply' => 'required|string|max:3000',
@@ -50,7 +50,7 @@ class ContractReviewController extends Controller
             'replied_at' => now(),
         ]);
 
-        return back()->with('success', 'Resposta enviada ao cliente.');
+        return back()->with('success', __('Reply sent to the client.'));
     }
 
     public function adminIndex(Request $request)
@@ -135,12 +135,6 @@ class ContractReviewController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->is_master) {
-            return;
-        }
-
-        if (! $contract->users()->where('users.id', $user->id)->exists()) {
-            abort(403, 'Você não tem acesso a este contrato.');
-        }
+        abort_unless($user?->canAccessContract($contract) ?? false, 403, __('You do not have access to this contract.'));
     }
 }

@@ -19,14 +19,14 @@ const timelineEntries = computed(() => {
   if (p.incident) {
     list.push({
       id: 'incident',
-      title: 'Ocorrência Reportada pela Plataforma',
+      title: 'Incident Reported by the Platform',
       type: 'incident',
-      badge: 'Alerta de Logística',
+      badge: 'Logistics Alert',
       badgeStyle: 'bg-rose-50 text-rose-700 border-rose-200',
       bulletStyle: 'bg-rose-500 border-rose-200 text-white',
       date: p.date,
       content: p.incident,
-      hint: 'A equipe da JR Spice está acompanhando este ponto de atenção.',
+      hint: 'The JR Spice team is monitoring this point of attention.',
     });
   }
 
@@ -34,14 +34,14 @@ const timelineEntries = computed(() => {
   if (p.video_sent || p.video_date) {
     list.push({
       id: 'video',
-      title: 'Vídeo de Inspeção & Estufagem da Carga',
+      title: 'Cargo Inspection & Stuffing Video',
       type: 'video',
-      badge: 'Inspeção em Vídeo',
+      badge: 'Video Inspection',
       badgeStyle: 'bg-purple-50 text-purple-700 border-purple-200',
       bulletStyle: 'bg-purple-600 border-purple-200 text-white',
       date: p.video_date || p.date,
-      content: 'Gravação em vídeo do carregamento, acondicionamento dos sacos no container e verificação dos lacres de segurança.',
-      hint: 'Vídeo gravado e validado pelo controle de qualidade.',
+      content: 'Video recording of the loading, stowing of the bags into the container and verification of the security seals.',
+      hint: 'Video recorded and validated by quality control.',
     });
   }
 
@@ -49,14 +49,15 @@ const timelineEntries = computed(() => {
   if (p.dhl_number) {
     list.push({
       id: 'dhl',
-      title: 'Envio de Documentos Físicos (DHL)',
+      title: 'Physical Documents Dispatch (DHL)',
       type: 'dhl',
-      badge: 'Documentação Solicitada/Enviada',
+      badge: 'Documentation Requested/Sent',
       badgeStyle: 'bg-blue-50 text-blue-700 border-blue-200',
       bulletStyle: 'bg-blue-600 border-blue-200 text-white',
       date: p.dhl_date || p.date,
-      content: `Os documentos originais de exportação foram despachados via DHL sob o código de rastreamento ${p.dhl_number}.`,
-      hint: 'Você pode acompanhar o rastreio diretamente no site da DHL.',
+      content: 'The original export documents were dispatched via DHL under tracking code :code.',
+      contentParams: { code: p.dhl_number },
+      hint: 'You can follow the tracking directly on the DHL website.',
     });
   }
 
@@ -64,9 +65,9 @@ const timelineEntries = computed(() => {
   if (p.observations) {
     list.push({
       id: 'obs',
-      title: 'Observações & Atualizações do Administrador',
+      title: 'Administrator Observations & Updates',
       type: 'observation',
-      badge: 'Nota da Equipe',
+      badge: 'Team Note',
       badgeStyle: 'bg-slate-100 text-slate-700 border-slate-200',
       bulletStyle: 'bg-slate-800 border-slate-200 text-white',
       date: p.date,
@@ -78,14 +79,14 @@ const timelineEntries = computed(() => {
   // 5. Document Request Sample/Example Entry to showcase requested documents
   list.push({
     id: 'doc_request',
-    title: 'Solicitação de Envio de Documentos',
+    title: 'Document Submission Request',
     type: 'doc_request',
-    badge: 'Documento Solicitado',
+    badge: 'Requested Document',
     badgeStyle: 'bg-sky-50 text-sky-700 border-sky-200',
     bulletStyle: 'bg-sky-500 border-sky-200 text-white',
     date: p.date,
-    content: 'Por favor, realize o envio do Comprovante de Pagamento e Licença de Importação (LI) para prosseguirmos com a emissão do Bill of Lading (B/L).',
-    hint: 'Envie os arquivos anexando diretamente na aba Detalhes & Documentação.',
+    content: 'Please send the Payment Proof and Import License (LI) so we can proceed with issuing the Bill of Lading (B/L).',
+    hint: 'Send the files by attaching them directly in the Details & Documentation tab.',
   });
 
   return list;
@@ -101,14 +102,14 @@ const timelineEntries = computed(() => {
         <div>
           <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <MessageSquare class="w-4 h-4 text-blue-600" />
-            Observações & Ocorrências do Processo
+            {{ $t('Process Observations & Incidents') }}
           </h2>
           <p class="text-xs font-medium text-slate-500 mt-1">
-            Histórico cronológico de comunicações, solicitações de vídeos/documentos e notas enviadas pelo administrador.
+            {{ $t('Chronological history of communications, video/document requests and notes sent by the administrator.') }}
           </p>
         </div>
         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 shrink-0">
-          {{ timelineEntries.length }} Registros
+          {{ $t(':count records', { count: timelineEntries.length }) }}
         </span>
       </div>
 
@@ -139,9 +140,9 @@ const timelineEntries = computed(() => {
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
               <div class="flex items-center gap-2.5">
                 <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider" :class="item.badgeStyle">
-                  {{ item.badge }}
+                  {{ $t(item.badge) }}
                 </span>
-                <h3 class="text-xs sm:text-sm font-black text-slate-800">{{ item.title }}</h3>
+                <h3 class="text-xs sm:text-sm font-black text-slate-800">{{ $t(item.title) }}</h3>
               </div>
 
               <!-- Date Badge -->
@@ -153,13 +154,13 @@ const timelineEntries = computed(() => {
 
             <!-- Content text -->
             <p class="text-xs sm:text-sm font-semibold text-slate-600 leading-relaxed whitespace-pre-line">
-              {{ item.content }}
+              {{ item.contentParams ? $t(item.content, item.contentParams) : $t(item.content) }}
             </p>
 
             <!-- Action Hint -->
             <div v-if="item.hint" class="bg-white rounded-xl p-3 border border-slate-200/60 text-[11px] font-bold text-slate-500 flex items-center gap-2">
               <Info class="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span>{{ item.hint }}</span>
+              <span>{{ $t(item.hint) }}</span>
             </div>
           </div>
 
@@ -173,8 +174,8 @@ const timelineEntries = computed(() => {
           <MessageSquare class="w-7 h-7 text-slate-300" />
         </div>
         <div>
-          <p class="text-sm font-bold text-slate-500">Nenhuma observação registrada</p>
-          <p class="text-xs text-slate-400 mt-1">Quando houver atualizações ou solicitações do administrador, elas aparecerão aqui.</p>
+          <p class="text-sm font-bold text-slate-500">{{ $t('No observations recorded') }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('When there are updates or requests from the administrator, they will appear here.') }}</p>
         </div>
       </div>
 

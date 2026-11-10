@@ -1,4 +1,5 @@
 <script setup>
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -26,12 +27,12 @@ const situationItems = ['active', 'incident'];
 
 const getOperationSigla = (process) => {
   if (user.value?.client_id && process.importer_id === user.value.client_id) {
-    return { sigla: 'IMP', label: 'Importação', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    return { sigla: 'IMP', label: 'Import', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   }
   if (user.value?.client_id && process.exporter_id === user.value.client_id) {
-    return { sigla: 'EXP', label: 'Exportação', class: 'bg-blue-50 text-blue-700 border-blue-200' };
+    return { sigla: 'EXP', label: 'Export', class: 'bg-blue-50 text-blue-700 border-blue-200' };
   }
-  return { sigla: 'IMP', label: 'Importação', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  return { sigla: 'IMP', label: 'Import', class: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
 };
 
 const isEtaOverdue = (process) => {
@@ -52,20 +53,20 @@ const changePage = (url) => {
 </script>
 
 <template>
-  <Head title="Meus Contratos" />
+  <Head :title="$t('My Contracts')" />
 
   <DashboardLayout>
     <div class="px-6 py-7 md:px-8 w-full max-w-none space-y-6">
 
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Meus Contratos</h1>
+          <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">{{ $t('My Contracts') }}</h1>
           <p class="text-sm font-medium text-slate-500 mt-1">
-            Acompanhe a fabricação, envio, status de embarque e documentos das suas encomendas.
+            {{ $t('Track the manufacturing, shipping, shipment status and documents of your orders.') }}
           </p>
         </div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
-          {{ summary?.total_contracts || 0 }} contratos · {{ exportProcesses?.total || 0 }} itens
+          {{ $t(':count contracts', { count: summary?.total_contracts || 0 }) }} · {{ $t(':count items', { count: exportProcesses?.total || 0 }) }}
         </div>
       </div>
 
@@ -76,7 +77,7 @@ const changePage = (url) => {
             <Package class="w-5 h-5 text-blue-600" />
           </div>
           <div class="relative z-10 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Total de Contratos</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Total Contracts') }}</p>
             <span class="text-xl font-black text-slate-800 tabular-nums leading-none">{{ summary.total_contracts || 0 }}</span>
           </div>
         </div>
@@ -87,12 +88,12 @@ const changePage = (url) => {
             <TrendingUp class="w-5 h-5 text-emerald-600" />
           </div>
           <div class="relative z-10 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Volume Total Contratado</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Total Contracted Volume') }}</p>
             <div class="flex items-baseline gap-1.5 whitespace-nowrap">
               <span class="text-xl font-black text-slate-800 tabular-nums leading-none">
-                {{ Number(summary.total_tons || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) }}
+                {{ Number(summary.total_tons || 0).toLocaleString(getBcp47Locale(), { maximumFractionDigits: 3 }) }}
               </span>
-              <span class="text-[11px] font-bold text-slate-400 uppercase">ton</span>
+              <span class="text-[11px] font-bold text-slate-400 uppercase">{{ $t('ton') }}</span>
             </div>
           </div>
         </div>
@@ -103,7 +104,7 @@ const changePage = (url) => {
             <Ship class="w-5 h-5 text-violet-600" />
           </div>
           <div class="relative z-10 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Contratos em Andamento</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Contracts In Progress') }}</p>
             <span class="text-xl font-black text-slate-800 tabular-nums leading-none">{{ summary.active_shipments || 0 }}</span>
           </div>
         </div>
@@ -124,15 +125,15 @@ const changePage = (url) => {
           <table class="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr class="border-b border-slate-100 bg-slate-50">
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Data</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Nº Contrato</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Tipo</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Produto</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Quantidade</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Preço Ton US$</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">STATUS</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">ETD</th>
-                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">ETA</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('Date') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('Contract No.') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">{{ $t('Type') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('Product') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">{{ $t('Quantity') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">{{ $t('Price/ton US$') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('STATUS') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('ETD') }}</th>
+                <th class="px-4 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('ETA') }}</th>
                 <th class="w-14"></th>
               </tr>
             </thead>
@@ -158,7 +159,7 @@ const changePage = (url) => {
                   <span
                     class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider border"
                     :class="getOperationSigla(contract).class"
-                    :title="getOperationSigla(contract).label"
+                    :title="$t(getOperationSigla(contract).label)"
                   >{{ getOperationSigla(contract).sigla }}</span>
                 </td>
 
@@ -167,11 +168,11 @@ const changePage = (url) => {
                 </td>
 
                 <td class="px-4 py-2.5 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
-                  {{ contract.quantity_tons ? Number(contract.quantity_tons).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '—' }}
+                  {{ contract.quantity_tons ? Number(contract.quantity_tons).toLocaleString(getBcp47Locale(), { maximumFractionDigits: 3 }) : '—' }}
                 </td>
 
                 <td class="px-4 py-2.5 text-sm font-bold text-slate-800 text-right tabular-nums whitespace-nowrap">
-                  {{ contract.price_per_ton_usd ? `$ ${Number(contract.price_per_ton_usd).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' }}
+                  {{ contract.price_per_ton_usd ? `$ ${Number(contract.price_per_ton_usd).toLocaleString(getBcp47Locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' }}
                 </td>
 
                 <td class="px-4 py-2.5 whitespace-nowrap">
@@ -181,7 +182,7 @@ const changePage = (url) => {
                     :class="getStatusConfig(contract.status).class"
                   >
                     <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getStatusConfig(contract.status).dot"></span>
-                    {{ contract.status }}
+                    {{ $t(contract.status) }}
                   </span>
                   <span v-else class="text-sm text-slate-300 font-medium">—</span>
                 </td>
@@ -200,7 +201,7 @@ const changePage = (url) => {
                 <td class="px-3 py-2.5 text-right whitespace-nowrap">
                   <button
                     class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 rounded-xl hover:bg-blue-100 text-blue-500"
-                    title="Ver Detalhes"
+                    :title="$t('View Details')"
                   >
                     <ArrowUpRight class="w-4 h-4" />
                   </button>
@@ -214,8 +215,8 @@ const changePage = (url) => {
                       <Package class="w-8 h-8 text-slate-400" />
                     </div>
                     <div>
-                      <p class="text-sm font-bold text-slate-500">Nenhum contrato encontrado</p>
-                      <p class="text-xs text-slate-400 mt-1">Ajuste os filtros ou aguarde o registro dos seus contratos.</p>
+                      <p class="text-sm font-bold text-slate-500">{{ $t('No contracts found') }}</p>
+                      <p class="text-xs text-slate-400 mt-1">{{ $t('Adjust the filters or wait for your contracts to be registered.') }}</p>
                     </div>
                   </div>
                 </td>
@@ -229,9 +230,9 @@ const changePage = (url) => {
           class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4"
         >
           <p class="text-xs font-bold text-slate-500">
-            Exibindo
+            {{ $t('Showing') }}
             <span class="text-blue-600 font-black">{{ exportProcesses.from || 0 }}</span>–<span class="text-blue-600 font-black">{{ exportProcesses.to || 0 }}</span>
-            de <span class="text-slate-700 font-black">{{ exportProcesses.total || 0 }}</span> itens
+            {{ $t('of') }} <span class="text-slate-700 font-black">{{ exportProcesses.total || 0 }}</span> {{ $t('items') }}
           </p>
 
           <div class="flex items-center gap-1">

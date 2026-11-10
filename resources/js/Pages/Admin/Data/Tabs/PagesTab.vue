@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { PencilIcon, TrashIcon, XIcon, LayoutDashboardIcon } from 'lucide-vue-next';
 import Pagination from '@/Components/Pagination.vue';
 import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     pages: Object,
@@ -60,8 +61,8 @@ const changePage = (url) => {
 };
 
 const formatLabel = (label) => {
-    if (label.toLowerCase().includes('previous') || label.toLowerCase().includes('anterior')) return 'Anterior';
-    if (label.toLowerCase().includes('next') || label.toLowerCase().includes('proximo')) return 'Próximo';
+    if (label.toLowerCase().includes('previous') || label.toLowerCase().includes('anterior')) return trans('Previous');
+    if (label.toLowerCase().includes('next') || label.toLowerCase().includes('proximo')) return trans('Next');
     return label;
 };
 </script>
@@ -73,31 +74,31 @@ const formatLabel = (label) => {
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-6 self-start shadow-sm shadow-slate-200/50">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-                    {{ editingPage ? 'Editando Página' : 'Adicionar Página' }}
+                    {{ editingPage ? $t('Editing Page') : $t('Add Page') }}
                 </h3>
                 <form @submit.prevent="submitPage" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Título da Página</label>
-                        <input v-model="pageForm.title" type="text" placeholder="Ex: Relatório de Vendas" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Page Title') }}</label>
+                        <input v-model="pageForm.title" type="text" :placeholder="$t('e.g. Sales Report')" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modelo de Layout</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Layout Model') }}</label>
                         <select v-model="pageForm.component" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value="Dashboard/Show">Modelo: Dashboard com Gráficos</option>
-                            <option value="Dashboard/Demo">Modelo: Dashboard com Gráfico Demo</option>
-                            <option value="Dashboard/PriceTable">Modelo: Listagem de Preços Semanais</option>
-                            <option value="Dashboard/Contact">Modelo: Página de Contatos</option>
-                            <option value="Dashboard/HistoricalData">Modelo: Consulta de Histórico</option>
-                            <option value="MyProducts/Index">Modelo: Meus Contratos / Acompanhamento</option>
+                            <option value="Dashboard/Show">{{ $t('Template: Dashboard with Charts') }}</option>
+                            <option value="Dashboard/Demo">{{ $t('Template: Dashboard with Demo Chart') }}</option>
+                            <option value="Dashboard/PriceTable">{{ $t('Template: Weekly Price Listing') }}</option>
+                            <option value="Dashboard/Contact">{{ $t('Template: Contact Page') }}</option>
+                            <option value="Dashboard/HistoricalData">{{ $t('Template: History Lookup') }}</option>
+                            <option value="MyProducts/Index">{{ $t('Template: My Contracts / Tracking') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Ordem (Posição)</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Order (Position)') }}</label>
                         <input v-model="pageForm.order" type="number" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div class="pt-4 flex items-center gap-3">
                         <button type="submit" :disabled="pageForm.processing" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20">
-                            {{ editingPage ? 'Atualizar' : 'Adicionar' }}
+                            {{ editingPage ? $t('Update') : $t('Add') }}
                         </button>
                         <button v-if="editingPage" type="button" @click="cancelPageEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
                             <XIcon class="w-4 h-4" />
@@ -109,19 +110,19 @@ const formatLabel = (label) => {
             <div class="w-full xl:w-2/3 border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[700px]">
                 <!-- Header Tool Bar -->
                 <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Estrutura de Páginas e Menus</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">{{ $t('Page and Menu Structure') }}</p>
                     <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                        {{ pages.total }} registros encontrados
+                        {{ $t(':count records found', { count: pages.total }) }}
                     </span>
                 </div>
                 <div class="overflow-y-auto flex-1 relative">
                     <table class="w-full text-sm text-left text-slate-600">
                         <thead class="text-xs text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-wider sticky top-0 z-10">
                         <tr>
-                            <th class="px-6 py-4">Título</th>
-                            <th class="px-6 py-4">Slug</th>
-                            <th class="px-6 py-4 text-center">Ordem</th>
-                            <th class="px-6 py-4 text-right">Ações</th>
+                            <th class="px-6 py-4">{{ $t('Title') }}</th>
+                            <th class="px-6 py-4">{{ $t('Slug') }}</th>
+                            <th class="px-6 py-4 text-center">{{ $t('Order') }}</th>
+                            <th class="px-6 py-4 text-right">{{ $t('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -135,7 +136,7 @@ const formatLabel = (label) => {
                             </td>
                         </tr>
                         <tr v-if="!pages.data?.length">
-                            <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">Nenhuma página cadastrada.</td>
+                            <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">{{ $t('No pages registered.') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -145,7 +146,7 @@ const formatLabel = (label) => {
             <!-- Pagination for Pages -->
             <div v-if="pages.links?.length > 3" class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-slate-100">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Exibindo <span class="font-bold text-blue-600">{{ pages.from }}</span> até <span class="font-bold text-blue-600">{{ pages.to }}</span> de <span class="font-bold text-slate-900">{{ pages.total }}</span> páginas
+                    {{ $t('Displaying') }} <span class="font-bold text-blue-600">{{ pages.from }}</span> {{ $t('to') }} <span class="font-bold text-blue-600">{{ pages.to }}</span> {{ $t('of') }} <span class="font-bold text-slate-900">{{ pages.total }}</span> {{ $t('pages') }}
                 </p>
                 <div class="flex gap-1">
                     <button v-for="(link, i) in pages.links" :key="i" v-html="formatLabel(link.label)" @click="changePage(link.url)" :disabled="!link.url"
@@ -156,9 +157,9 @@ const formatLabel = (label) => {
 
         <ConfirmationModal
             :show="isConfirmModalOpen"
-            title="Excluir Página"
-            :message="`Tem certeza que deseja excluir '${pageToDelete?.title}'? Esta ação removerá o acesso a este dashboard para todos os usuários.`"
-            confirm-text="Excluir Página"
+            :title="$t('Delete Page')"
+            :message="$t(`Are you sure you want to delete ':title'? This action will remove access to this dashboard for all users.`, { title: pageToDelete?.title ?? '' })"
+            :confirm-text="$t('Delete Page')"
             @close="isConfirmModalOpen = false"
             @confirm="confirmDeletePage"
         />

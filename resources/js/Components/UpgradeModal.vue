@@ -10,11 +10,11 @@ const props = defineProps({
     },
     title: {
         type: String,
-        default: 'Recurso Premium',
+        default: 'Premium Feature',
     },
     message: {
         type: String,
-        default: 'Para visualizar os detalhes completos por produto, fale com nosso consultor.',
+        default: 'To view the full product details, contact our consultant.',
     },
 });
 
@@ -42,10 +42,10 @@ const emit = defineEmits(['close']);
 
                     <div class="space-y-2">
                         <h3 class="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
-                            {{ title }}
+                            {{ $t(title) }}
                         </h3>
                         <p class="text-sm text-slate-500 font-medium px-4">
-                            {{ message }}
+                            {{ $t(message) }}
                         </p>
                     </div>
 
@@ -54,7 +54,7 @@ const emit = defineEmits(['close']);
                             @click="emit('close')" 
                             class="w-full sm:flex-1 px-6 py-4 rounded-2xl text-xs font-bold text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all"
                         >
-                            Fechar
+                            {{ $t('Close') }}
                         </button>
                         
                         <Link 
@@ -62,7 +62,7 @@ const emit = defineEmits(['close']);
                             class="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-2xl text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2 shadow-lg shadow-blue-200 group transform hover:-translate-y-1 whitespace-nowrap"
                         >
                             <MessageSquare class="w-4 h-4 group-hover:scale-110 transition-transform" />
-                            Entrar em contato
+                            {{ $t('Contact us') }}
                         </Link>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ const emit = defineEmits(['close']);
             
             <div class="bg-slate-50 p-4 border-t border-slate-100/50 flex justify-center">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    JRSPICE PLATAFORMA DE PREÇOS
+                    {{ $t('JRSPICE PRICE PLATFORM') }}
                 </p>
             </div>
         </div>

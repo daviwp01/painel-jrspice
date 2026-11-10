@@ -5,6 +5,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import { Link } from '@inertiajs/vue3';
 import { ChevronDown, Menu, X } from 'lucide-vue-next';
 
@@ -38,25 +39,27 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard') || route().current('dashboard.page')"
                                 >
-                                    Dashboard
+                                    {{ $t('Dashboards') }}
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user.is_master"
                                     :href="route('admin.data.index')"
                                     :active="route().current('admin.data.index')"
                                 >
-                                    Gerenciar Dados
+                                    {{ $t('Data Management') }}
                                 </NavLink>
                                 <NavLink
                                     :href="route('admin.clients.index')"
                                     :active="route().current('admin.clients.*')"
                                 >
-                                    Gestão de Clientes
+                                    {{ $t('Client Management') }}
                                 </NavLink>
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden sm:ms-6 sm:flex sm:items-center sm:gap-3">
+                            <LanguageSwitcher />
+                            <!-- Settings Dropdown -->
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
@@ -77,14 +80,14 @@ const showingNavigationDropdown = ref(false);
                                         <DropdownLink
                                             :href="route('profile.edit')"
                                         >
-                                            Profile
+                                            {{ $t('Profile') }}
                                         </DropdownLink>
                                         <DropdownLink
                                             :href="route('logout')"
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            {{ $t('Log Out') }}
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
@@ -126,20 +129,20 @@ const showingNavigationDropdown = ref(false);
                             :href="route('dashboard')"
                             :active="route().current('dashboard') || route().current('dashboard.page')"
                         >
-                            Dashboard
+                            {{ $t('Dashboards') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             v-if="$page.props.auth.user.is_master"
                             :href="route('admin.data.index')"
                             :active="route().current('admin.data.index')"
                         >
-                            Gerenciar Dados
+                            {{ $t('Data Management') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('admin.clients.index')"
                             :active="route().current('admin.clients.*')"
                         >
-                            Gestão de Clientes
+                            {{ $t('Client Management') }}
                         </ResponsiveNavLink>
                     </div>
 
@@ -147,6 +150,12 @@ const showingNavigationDropdown = ref(false);
                     <div
                         class="border-t border-gray-200 pb-1 pt-4"
                     >
+                        <div class="flex items-center justify-between px-4 pb-3">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                {{ $t('Language') }}
+                            </span>
+                            <LanguageSwitcher />
+                        </div>
                         <div class="px-4">
                             <div
                                 class="text-base font-medium text-gray-800"
@@ -160,14 +169,14 @@ const showingNavigationDropdown = ref(false);
 
                         <div class="mt-3 space-y-1">
                             <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
+                                {{ $t('Profile') }}
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 :href="route('logout')"
                                 method="post"
                                 as="button"
                             >
-                                Log Out
+                                {{ $t('Log Out') }}
                             </ResponsiveNavLink>
                         </div>
                     </div>

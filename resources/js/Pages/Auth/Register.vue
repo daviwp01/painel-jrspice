@@ -9,6 +9,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, watch, computed, nextTick } from 'vue';
 import { ArrowRight, ArrowLeft } from 'lucide-vue-next';
 import { useRecaptcha } from '@/Composables/useRecaptcha';
+import { trans } from 'laravel-vue-i18n';
 const props = defineProps({
     recaptchaSiteKey: {
         type: String,
@@ -57,7 +58,7 @@ const placeholderText = computed(() => {
     } else if (countryCode.value === '+351') {
         return '912 345 678';
     } else {
-        return 'Digite seu número';
+        return trans('Enter your number');
     }
 });
 
@@ -411,27 +412,27 @@ const submit = async () => {
                 </div>
 
                 <div>
-                    <InputLabel for="company_name" value="Empresa" class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2" />
+                    <InputLabel for="company_name" :value="$t('Company')" class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2" />
                     <TextInput
                         id="company_name"
                         type="text"
                         class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm placeholder-gray-300 transition-all font-medium"
                         v-model="form.company_name"
                         @input="form.company_name = form.company_name.replace(/[0-9@]/g, '')"
-                        placeholder="Nome da Empresa"
+                        :placeholder="$t('Company Name')"
                         required
                     />
                     <InputError class="mt-2" :message="form.errors.company_name" />
                 </div>
 
                 <div>
-                    <InputLabel for="cargo" value="Cargo" class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2" />
+                    <InputLabel for="cargo" :value="$t('Role')" class="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2" />
                     <TextInput
                         id="cargo"
                         type="text"
                         class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm placeholder-gray-300 transition-all font-medium"
                         v-model="form.cargo"
-                        placeholder="Ex: Gerente de Compras, Diretor, etc."
+                        :placeholder="$t('E.g. Purchasing Manager, Director, etc.')"
                         required
                     />
                     <InputError class="mt-2" :message="form.errors.cargo" />
@@ -441,14 +442,14 @@ const submit = async () => {
             <!-- Passo 3: Perfil de Importação -->
             <div v-show="currentStep === 3" class="space-y-5 animate-in fade-in duration-300">
                 <div>
-                    <InputLabel for="import_experience" value="Sua empresa já importa insumos alimentícios?" class="text-xs font-bold text-gray-500 mb-2" />
+                    <InputLabel for="import_experience" :value="$t('Does your company already import food ingredients?')" class="text-xs font-bold text-gray-500 mb-2" />
                     <select
                         id="import_experience"
                         v-model="form.import_experience"
                         class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm transition-all font-medium text-gray-700 shadow-sm cursor-pointer"
                         required
                     >
-                        <option value="" disabled selected>Selecione uma opção...</option>
+                        <option value="" disabled selected>{{ $t('Select an option...') }}</option>
                         <option v-for="option in importExperienceOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -457,14 +458,14 @@ const submit = async () => {
                 </div>
 
                 <div>
-                    <InputLabel for="import_volume" value="Volume aproximado por embarque" class="text-xs font-bold text-gray-500 mb-2" />
+                    <InputLabel for="import_volume" :value="$t('Approximate volume per shipment')" class="text-xs font-bold text-gray-500 mb-2" />
                     <select
                         id="import_volume"
                         v-model="form.import_volume"
                         class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm transition-all font-medium text-gray-700 shadow-sm cursor-pointer"
                         required
                     >
-                        <option value="" disabled selected>Selecione uma opção...</option>
+                        <option value="" disabled selected>{{ $t('Select an option...') }}</option>
                         <option v-for="option in importVolumeOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -473,14 +474,14 @@ const submit = async () => {
                 </div>
 
                 <div>
-                    <InputLabel for="decision_role" value="Seu papel na decisão de compra" class="text-xs font-bold text-gray-500 mb-2" />
+                    <InputLabel for="decision_role" :value="$t('Your role in the purchasing decision')" class="text-xs font-bold text-gray-500 mb-2" />
                     <select
                         id="decision_role"
                         v-model="form.decision_role"
                         class="mt-1 block w-full px-4 py-3 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl text-sm transition-all font-medium text-gray-700 shadow-sm cursor-pointer"
                         required
                     >
-                        <option value="" disabled selected>Selecione uma opção...</option>
+                        <option value="" disabled selected>{{ $t('Select an option...') }}</option>
                         <option v-for="option in decisionRoleOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -496,7 +497,7 @@ const submit = async () => {
             <InputError class="mt-4" :message="form.errors.g_recaptcha" />
 
             <p v-if="recaptchaSiteKey && recaptchaType === 'v3'" class="mt-3 text-center text-[10px] text-gray-400">
-                Este site é protegido pelo reCAPTCHA.
+                {{ $t('This site is protected by reCAPTCHA.') }}
             </p>
 
             <!-- Form Navigation Actions -->

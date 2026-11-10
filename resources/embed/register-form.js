@@ -15,6 +15,46 @@
 
     var ENDPOINT = form.getAttribute('data-endpoint');
     var TOKEN = form.getAttribute('data-token');
+    var FORM_SOURCE = form.getAttribute('data-form-source') || 'system';
+
+    var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
+    function parseQuery(query) {
+        var out = {};
+        if (!query) return out;
+        var pairs = query.replace(/^\?/, '').split('&');
+        for (var i = 0; i < pairs.length; i++) {
+            if (!pairs[i]) continue;
+            var idx = pairs[i].indexOf('=');
+            var key = idx === -1 ? pairs[i] : pairs[i].slice(0, idx);
+            var val = idx === -1 ? '' : pairs[i].slice(idx + 1);
+            try { key = decodeURIComponent(key.replace(/\+/g, ' ')); } catch (e) { continue; }
+            try { val = decodeURIComponent(val.replace(/\+/g, ' ')); } catch (e) { val = ''; }
+            out[key] = val;
+        }
+        return out;
+    }
+
+    function captureUtm() {
+        var utm = {};
+        var i;
+        var fromLocation = parseQuery(window.location.search);
+        for (i = 0; i < UTM_KEYS.length; i++) {
+            if (fromLocation[UTM_KEYS[i]]) utm[UTM_KEYS[i]] = fromLocation[UTM_KEYS[i]];
+        }
+        // Fallback: a landing page em iframe pode não repassar a query.
+        if (!utm.utm_source && document.referrer) {
+            try {
+                var fromRef = parseQuery(new URL(document.referrer).search);
+                for (i = 0; i < UTM_KEYS.length; i++) {
+                    if (fromRef[UTM_KEYS[i]]) utm[UTM_KEYS[i]] = fromRef[UTM_KEYS[i]];
+                }
+            } catch (e) { /* referrer inválido */ }
+        }
+        return utm;
+    }
+
+    var UTM = captureUtm();
     var RECAPTCHA_SITE_KEY = form.getAttribute('data-recaptcha-site-key') || '';
     var RECAPTCHA_TYPE = form.getAttribute('data-recaptcha-type') || 'v2';
     var recaptchaWidgetId = null;
@@ -234,7 +274,13 @@
             g_recaptcha: '',
             terms: document.getElementById('terms').checked ? '1' : '0',
             form_token: TOKEN,
-            honeypot: value('jr-company-site')
+            honeypot: value('jr-company-site'),
+            form_source: FORM_SOURCE,
+            utm_source: UTM.utm_source || '',
+            utm_medium: UTM.utm_medium || '',
+            utm_campaign: UTM.utm_campaign || '',
+            utm_content: UTM.utm_content || '',
+            utm_term: UTM.utm_term || ''
         };
     }
 
@@ -349,6 +395,16 @@
 
                 if (status === 201 || status === 200) {
                     showAlert('success', body.message || 'Cadastro recebido com sucesso!');
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                        event: 'form_registration_success',
+                        form_source: FORM_SOURCE,
+                        utm_source: UTM.utm_source || '',
+                        utm_medium: UTM.utm_medium || '',
+                        utm_campaign: UTM.utm_campaign || '',
+                        utm_content: UTM.utm_content || '',
+                        utm_term: UTM.utm_term || ''
+                    });
                     form.reset();
                     currentStep = 1;
                     updateUI();

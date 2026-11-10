@@ -1,4 +1,5 @@
 <script setup>
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed } from 'vue';
 import {
   FileText, Download, Calendar, Info,
@@ -38,12 +39,12 @@ const getFileIcon = (type) => {
 const formatDate = (d) => {
   if (!d) return '—';
   const date = new Date(d);
-  return isNaN(date.getTime()) ? d : date.toLocaleDateString('pt-BR');
+  return isNaN(date.getTime()) ? d : date.toLocaleDateString(getBcp47Locale());
 };
 
 const formatCurrency = (val) => {
   if (!val && val !== 0) return '—';
-  return `$${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${Number(val).toLocaleString(getBcp47Locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const getStatusConfig = (status) => {
@@ -93,10 +94,10 @@ const formatSize = (bytes) => {
         <!-- Header with Status Badge -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Informações do Contrato</h2>
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Contract Information') }}</h2>
             <p class="text-xs font-semibold text-slate-500 mt-0.5">
-              Contrato nº <span class="font-bold text-slate-800 font-mono">{{ process.contract_number }}</span>
-              <span v-if="process.register_number"> · Reg: <span class="font-mono text-slate-700">{{ process.register_number }}</span></span>
+              {{ $t('Contract No.') }} <span class="font-bold text-slate-800 font-mono">{{ process.contract_number }}</span>
+              <span v-if="process.register_number"> · {{ $t('Reg') }}: <span class="font-mono text-slate-700">{{ process.register_number }}</span></span>
             </p>
           </div>
 
@@ -107,7 +108,7 @@ const formatSize = (bytes) => {
               :class="getStatusConfig(process.status).class"
             >
               <span class="w-2 h-2 rounded-full animate-pulse" :class="getStatusConfig(process.status).dot"></span>
-              {{ process.status || 'Status não definido' }}
+              {{ $t(process.status || 'Status not defined') }}
             </span>
           </div>
         </div>
@@ -116,25 +117,25 @@ const formatSize = (bytes) => {
         <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-150/80 grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div class="sm:col-span-2">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <Tag class="w-3 h-3 text-slate-400" /> Produto
+              <Tag class="w-3 h-3 text-slate-400" /> {{ $t('Product') }}
             </p>
             <p class="text-base font-black text-slate-800 mt-1 leading-snug">{{ process.product?.name || '—' }}</p>
           </div>
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quantidade</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Quantity') }}</p>
             <p class="text-sm font-bold text-slate-800 mt-1">
-              {{ process.quantity_tons ? Number(process.quantity_tons).toLocaleString('pt-BR') : '—' }} Tons
+              {{ process.quantity_tons ? Number(process.quantity_tons).toLocaleString(getBcp47Locale()) : '—' }} {{ $t('Tons') }}
             </p>
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <DollarSign class="w-3 h-3 text-emerald-500" /> Valor Total
+              <DollarSign class="w-3 h-3 text-emerald-500" /> {{ $t('Total Value') }}
             </p>
             <p class="text-sm font-black text-emerald-700 mt-1">
               {{ formatCurrency(process.sales_usd) }}
             </p>
             <p v-if="process.price_per_ton_usd" class="text-[10px] text-slate-400 mt-0.5">
-              {{ formatCurrency(process.price_per_ton_usd) }} / Ton
+              {{ formatCurrency(process.price_per_ton_usd) }} / {{ $t('Ton') }}
             </p>
           </div>
         </div>
@@ -142,23 +143,23 @@ const formatSize = (bytes) => {
         <!-- 2. Grid de Detalhes Completo -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-1">
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Exportador</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Exporter') }}</p>
             <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ process.exporter?.name || '—' }}</p>
           </div>
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Importador</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Importer') }}</p>
             <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ process.importer?.name || '—' }}</p>
           </div>
 
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Previsão de Embarque (ETD)</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Scheduled Departure (ETD)') }}</p>
             <p class="text-sm font-bold text-slate-700 mt-0.5 flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-blue-500" />
               {{ formatDate(process.etd_date) }}
             </p>
           </div>
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Previsão de Chegada (ETA)</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Scheduled Arrival (ETA)') }}</p>
             <p class="text-sm font-bold text-slate-700 mt-0.5 flex items-center gap-1.5">
               <Calendar class="w-4 h-4 text-emerald-500" />
               {{ formatDate(process.eta_date) }}
@@ -166,12 +167,12 @@ const formatSize = (bytes) => {
           </div>
 
           <div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data do Contrato</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ $t('Contract Date') }}</p>
             <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ formatDate(process.date) }}</p>
           </div>
           <div v-if="process.seller">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <UserCheck class="w-3 h-3 text-slate-400" /> Vendedor Responsável
+              <UserCheck class="w-3 h-3 text-slate-400" /> {{ $t('Responsible Seller') }}
             </p>
             <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ process.seller.name }}</p>
           </div>
@@ -182,9 +183,9 @@ const formatSize = (bytes) => {
           <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-center gap-3 max-w-sm">
             <Truck class="w-5 h-5 text-blue-600 shrink-0" />
             <div>
-              <p class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Rastreio Documentos DHL</p>
+              <p class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">{{ $t('DHL Document Tracking') }}</p>
               <p class="text-xs font-bold text-blue-900 font-mono mt-0.5">{{ process.dhl_number }}</p>
-              <p v-if="process.dhl_date" class="text-[9px] text-blue-400">Enviado em {{ formatDate(process.dhl_date) }}</p>
+              <p v-if="process.dhl_date" class="text-[9px] text-blue-400">{{ $t('Sent on') }} {{ formatDate(process.dhl_date) }}</p>
             </div>
           </div>
         </div>
@@ -193,7 +194,7 @@ const formatSize = (bytes) => {
         <div v-if="process.incident" class="bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
             <AlertCircle class="w-4 h-4 text-amber-600" />
-            Ocorrência / Alerta de Processo
+            {{ $t('Incident / Process Alert') }}
           </p>
           <p class="text-sm font-semibold text-amber-900 mt-1.5 leading-relaxed whitespace-pre-line">{{ process.incident }}</p>
         </div>
@@ -202,7 +203,7 @@ const formatSize = (bytes) => {
         <div v-if="process.observations" class="bg-slate-50 rounded-2xl p-4 border border-slate-150">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <Info class="w-3.5 h-3.5 text-slate-400" />
-            Observações do Processo
+            {{ $t('Process Observations') }}
           </p>
           <p class="text-sm font-semibold text-slate-600 mt-1.5 leading-relaxed whitespace-pre-line">{{ process.observations }}</p>
         </div>
@@ -217,22 +218,22 @@ const formatSize = (bytes) => {
           <div class="flex justify-between items-center pb-3 border-b border-slate-800/80">
             <div class="flex items-center gap-2">
               <Ship class="w-4 h-4 text-blue-400" />
-              <span class="text-xs font-bold uppercase tracking-widest text-slate-350">Status do Rastreamento</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-slate-350">{{ $t('Tracking Status') }}</span>
             </div>
             <button type="button" @click="$emit('go-tracking')" class="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest flex items-center gap-1.5">
-              Ver Mais <ArrowRight class="w-3.5 h-3.5" />
+              {{ $t('See More') }} <ArrowRight class="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div class="flex justify-between items-start gap-4">
             <div>
-              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 uppercase tracking-wider">Origem</span>
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 uppercase tracking-wider">{{ $t('Origin') }}</span>
               <h4 class="text-xs font-bold text-slate-200 mt-1 flex items-center gap-1.5">
                 <MapPin class="w-3.5 h-3.5 text-blue-400 shrink-0" />{{ originLabel }}
               </h4>
             </div>
             <div class="text-right">
-              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black text-emerald-400 uppercase tracking-wider">Destino</span>
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[8px] font-black text-emerald-400 uppercase tracking-wider">{{ $t('Destination') }}</span>
               <h4 class="text-xs font-bold text-slate-200 mt-1 flex items-center gap-1.5 justify-end">
                 {{ destinationLabel }}<MapPin class="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               </h4>
@@ -256,11 +257,11 @@ const formatSize = (bytes) => {
           <div class="flex justify-between items-center pt-3 border-t border-slate-800/80 text-[10px] text-slate-400 uppercase font-bold tracking-wider">
             <div class="flex items-center gap-1.5">
               <Navigation class="w-3.5 h-3.5 text-blue-400" />
-              Status: <span class="text-slate-200 ml-1 font-bold">{{ process.status || 'Sem status' }}</span>
+              {{ $t('Status') }}: <span class="text-slate-200 ml-1 font-bold">{{ $t(process.status || 'No status') }}</span>
             </div>
             <div class="flex items-center gap-1.5 font-mono">
               <Calendar class="w-3.5 h-3.5 text-rose-400" />
-              <span>{{ remainingDays === null ? '—' : `${remainingDays} dias até a ETA` }}</span>
+              <span>{{ remainingDays === null ? '—' : $t(':count days until ETA', { count: remainingDays }) }}</span>
             </div>
           </div>
         </div>
@@ -270,14 +271,14 @@ const formatSize = (bytes) => {
     <!-- Right: Document Center with Interactive File Viewer -->
     <div class="space-y-6">
       <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 flex flex-col max-h-[720px]">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4 shrink-0">Central de Documentações</h2>
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-4 shrink-0">{{ $t('Documentation Center') }}</h2>
 
         <!-- File list with Visualizer Buttons -->
         <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mb-2">Arquivos & Mídias Anexadas</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mb-2">{{ $t('Attached Files & Media') }}</p>
 
           <p v-if="!allDocuments.length" class="text-xs font-medium text-slate-400 text-center py-8">
-            Nenhum documento enviado até o momento.
+            {{ $t('No documents uploaded so far.') }}
           </p>
 
           <div
@@ -294,7 +295,7 @@ const formatSize = (bytes) => {
                   {{ doc.name }}
                 </p>
                 <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1.5">
-                  <span>Por: {{ doc.uploader || 'Sistema' }}</span>
+                  <span>{{ $t('By') }}: {{ doc.uploader || $t('System') }}</span>
                   <span v-if="doc.size_bytes">· {{ formatSize(doc.size_bytes) }}</span>
                 </p>
               </div>
@@ -306,7 +307,7 @@ const formatSize = (bytes) => {
                 type="button"
                 @click="openPreview(doc)"
                 class="p-1.5 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-600 hover:text-blue-600 transition-all shadow-sm"
-                title="Visualizar PDF / Mídia"
+                :title="$t('Preview PDF / Media')"
               >
                 <Eye class="w-3.5 h-3.5" />
               </button>
@@ -315,7 +316,7 @@ const formatSize = (bytes) => {
                 :href="doc.downloadUrl"
                 target="_blank"
                 class="p-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 transition-all shadow-sm"
-                title="Baixar"
+                :title="$t('Download')"
               >
                 <Download class="w-3.5 h-3.5" />
               </a>

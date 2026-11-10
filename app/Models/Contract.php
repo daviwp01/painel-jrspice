@@ -78,6 +78,26 @@ class Contract extends Model
         return $this->belongsToMany(User::class, 'contract_users')->withTimestamps();
     }
 
+    /**
+     * Contracts the given user may see: masters see everything; everyone else
+     * only sees contracts of their linked company (exporter or importer).
+     */
+    public function scopeVisibleTo(\Illuminate\Database\Eloquent\Builder $query, User $user): \Illuminate\Database\Eloquent\Builder
+    {
+        if ($user->is_master) {
+            return $query;
+        }
+
+        if ($user->client_id === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($user) {
+            $q->where('exporter_id', $user->client_id)
+                ->orWhere('importer_id', $user->client_id);
+        });
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(ContractDocument::class, 'contract_id');

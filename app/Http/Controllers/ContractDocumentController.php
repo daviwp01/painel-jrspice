@@ -20,15 +20,13 @@ use Illuminate\Http\Request;
  */
 class ContractDocumentController extends Controller
 {
-    public function __construct(private readonly ContractDocumentService $documents)
-    {
-    }
+    public function __construct(private readonly ContractDocumentService $documents) {}
 
     public function store(StoreContractDocumentRequest $request, Contract $contract): JsonResponse|RedirectResponse
     {
         $document = $this->documents->upload($contract, $request->file('file'), $request->user());
 
-        $message = sprintf('"%s" enviado com sucesso.', $document->name);
+        $message = __(':name sent successfully.', ['name' => '"'.$document->name.'"']);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => $message, 'document' => $document->toApiArray()]);
@@ -42,7 +40,7 @@ class ContractDocumentController extends Controller
         $name = $document->name;
         $this->documents->delete($document);
 
-        $message = sprintf('"%s" excluído.', $name);
+        $message = __(':name deleted.', ['name' => '"'.$name.'"']);
 
         if ($request->expectsJson()) {
             return response()->json(['message' => $message]);

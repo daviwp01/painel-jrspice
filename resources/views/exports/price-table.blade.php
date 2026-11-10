@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Tabela de Preços - JR Spice - {{ $date }}</title>
+    <title>{{ __('Price Table') }} - JR Spice - {{ $date }}</title>
     <style>
         @page { margin: 60px 0 40px 0; }
         body {
@@ -160,7 +160,7 @@
                     <img src="{{ public_path('logo-white.png') }}">
                 </td>
                 <td style="text-align: right; vertical-align: middle; width: 60%;">
-                    <span class="brand-text">Gerado em {{ $date }}</span>
+                    <span class="brand-text">{{ __('Generated on') }} {{ $date }}</span>
                 </td>
             </tr>
         </table>
@@ -181,7 +181,7 @@
                 <table class="layout-table">
                     <tr>
                         <td class="box box-left">
-                            <span class="small-label">PAÍS DE ORIGEM</span>
+                            <span class="small-label">{{ __('COUNTRY OF ORIGIN') }}</span>
                             <div class="pais-info">
                                 @if($country->flag)
                                     <img src="{{ $country->flag }}">
@@ -191,33 +191,33 @@
                         </td>
 
                         <td class="box box-right">
-                            <span class="small-label">LEGENDA DE VARIAÇÃO</span>
+                            <span class="small-label">{{ __('VARIATION LEGEND') }}</span>
                             <table class="legenda-table">
                                 <tr>
                                     <td class="legenda-grid">
                                         <table style="width: 100%;">
                                             <tr>
                                                 <td class="legenda-item down">
-                                                    <img src="{{ $icoDown }}" class="ico"> PREÇO CAIU
+                                                    <img src="{{ $icoDown }}" class="ico"> {{ __('PRICE WENT DOWN') }}
                                                 </td>
                                                 <td class="legenda-item up">
-                                                    <img src="{{ $icoUp }}" class="ico"> PREÇO SUBIU
+                                                    <img src="{{ $icoUp }}" class="ico"> {{ __('PRICE WENT UP') }}
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td class="legenda-item neutral">
-                                                    <img src="{{ $icoNeutral }}" class="ico"> SEM ALTERAÇÕES
+                                                    <img src="{{ $icoNeutral }}" class="ico"> {{ __('NO CHANGES') }}
                                                 </td>
                                                 <td class="legenda-item new">
-                                                    <img src="{{ $icoStar }}" class="ico"> PRODUTO NOVO
+                                                    <img src="{{ $icoStar }}" class="ico"> {{ __('NEW PRODUCT') }}
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
                                     <td class="legenda-notes">
-                                        <p style="margin: 0 0 5px 0;">• EM RELAÇÃO AO PREÇO ANTERIOR</p>
-                                        <p style="margin: 0 0 5px 0;">• PREÇOS EM DÓLAR P/ TON 1XFCL 40'</p>
-                                        <p style="margin: 0;">• PREÇOS À CONFIRMAÇÃO FINAL</p>
+                                        <p style="margin: 0 0 5px 0;">• {{ __('Compared to the previous price') }}</p>
+                                        <p style="margin: 0 0 5px 0;">• {{ __("Prices in Dollars per ton 1XFCL 40'") }}</p>
+                                        <p style="margin: 0;">• {{ __('Prices subject to final confirmation') }}</p>
                                     </td>
                                 </tr>
                             </table>
@@ -228,10 +228,10 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 40%">PRODUTO</th>
-                            <th style="text-align: right; width: 23%">ÚLTIMO PREÇO</th>
-                            <th style="text-align: right; width: 17%"> ANTERIOR</th>
-                            <th style="text-align: right; width: 20%; padding-right: 5px;" colspan="2">VARIAÇÃO</th>
+                            <th style="width: 40%">{{ __('PRODUCT') }}</th>
+                            <th style="text-align: right; width: 23%">{{ __('Last Price') }}</th>
+                            <th style="text-align: right; width: 17%">{{ __('Previous') }}</th>
+                            <th style="text-align: right; width: 20%; padding-right: 5px;" colspan="2">{{ __('VARIATION') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -262,7 +262,7 @@
         @endforeach
 
             <div class="footer" style="font-size: 12px; margin-top: 50px;">
-                Gerado em {{ $date }}
+                {{ __('Generated on') }} {{ $date }}
             </div>
         </div>
     </div>

@@ -16,7 +16,7 @@ class EnsureUserIsMaster
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user() || ! $request->user()->is_master) {
-            abort(403, 'Unauthorized access - master privileges required.');
+            abort(403, __('Unauthorized access - master privileges required.'));
         }
 
         return $next($request);

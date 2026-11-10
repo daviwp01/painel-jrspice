@@ -23,9 +23,16 @@ const closeOnEscape = (e) => {
 };
 
 const widthClass = computed(() => {
-    return {
+    const known = {
+        40: 'w-40',
+        44: 'w-44',
         48: 'w-48',
-    }[props.width.toString()];
+        52: 'w-52',
+        56: 'w-56',
+        64: 'w-64',
+    };
+
+    return known[props.width.toString()] || 'w-48';
 });
 
 const alignmentClasses = computed(() => {

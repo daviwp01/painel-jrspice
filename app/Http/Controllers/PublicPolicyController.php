@@ -17,7 +17,7 @@ class PublicPolicyController extends Controller
     public function privacy(): View
     {
         return view('embed.policy', [
-            'title' => 'Política de Privacidade',
+            'title' => __('Privacy Policy'),
             'body' => (string) Setting::get('legal_privacy_policy', ''),
         ]);
     }
@@ -25,7 +25,7 @@ class PublicPolicyController extends Controller
     public function terms(): View
     {
         return view('embed.policy', [
-            'title' => 'Termos de Uso',
+            'title' => __('Terms of Use'),
             'body' => (string) Setting::get('legal_terms_of_use', ''),
         ]);
     }

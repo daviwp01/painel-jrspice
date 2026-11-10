@@ -79,7 +79,7 @@ const sendTestMail = () => {
                     <input
                         v-model="form.settings.mail_host"
                         type="text"
-                        placeholder="smtp.example.com"
+                        :placeholder="$t('smtp.example.com')"
                         class="w-full px-5 py-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
                     >
                 </div>
@@ -105,8 +105,8 @@ const sendTestMail = () => {
                         v-model="form.settings.mail_encryption"
                         class="w-full px-5 py-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
                     >
-                        <option value="tls">TLS</option>
-                        <option value="ssl">SSL</option>
+                        <option value="tls">{{ $t('TLS') }}</option>
+                        <option value="ssl">{{ $t('SSL') }}</option>
                         <option value="null">{{ $t('None') }}</option>
                     </select>
                 </div>
@@ -122,7 +122,7 @@ const sendTestMail = () => {
                     <input
                         v-model="form.settings.mail_username"
                         type="text"
-                        placeholder="user@example.com"
+                        :placeholder="$t('user@example.com')"
                         class="w-full px-5 py-4 rounded-xl bg-white border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
                     >
                 </div>
@@ -151,7 +151,7 @@ const sendTestMail = () => {
                     <input
                         v-model="form.settings.mail_from_address"
                         type="email"
-                        placeholder="notifications@jrspice.com"
+                        :placeholder="$t('notifications@jrspice.com')"
                         class="w-full px-5 py-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
                     >
                 </div>
@@ -163,7 +163,7 @@ const sendTestMail = () => {
                     <input
                         v-model="form.settings.mail_from_name"
                         type="text"
-                        placeholder="Jrspice Analytics"
+                        :placeholder="$t('Jrspice Analytics')"
                         class="w-full px-5 py-4 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all font-medium text-sm"
                     >
                 </div>

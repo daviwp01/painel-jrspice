@@ -10,11 +10,11 @@ namespace App\Support;
  */
 final class ContractDocumentRules
 {
-    /** 5 GB — the ceiling for videos and every other document. */
-    public const MAX_BYTES = 5 * 1024 * 1024 * 1024;
+    /** 15 GB — the ceiling for videos and every other document. */
+    public const MAX_BYTES = 15 * 1024 * 1024 * 1024;
 
     /** Laravel validates upload size in kilobytes. */
-    public const MAX_KILobytes = 5 * 1024 * 1024;
+    public const MAX_KILobytes = 15 * 1024 * 1024;
 
     /**
      * Formats accepted on desktop and mobile without conversion.
@@ -37,7 +37,7 @@ final class ContractDocumentRules
 
     public static function humanMaxSize(): string
     {
-        return '5 GB';
+        return '15 GB';
     }
 
     public static function typeFor(string $extension): string

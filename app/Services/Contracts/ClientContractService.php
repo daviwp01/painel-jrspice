@@ -9,7 +9,6 @@ use App\Support\ContractStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 final class ClientContractService
 {
@@ -112,15 +111,15 @@ final class ClientContractService
      */
     public function summaryForUser(User $user): array
     {
-        $row = DB::table('contracts')
-            ->join('contract_users', 'contract_users.contract_id', '=', 'contracts.id')
-            ->where('contract_users.user_id', $user->id)
+        $row = Contract::query()
+            ->visibleTo($user)
             ->leftJoin('contract_items', 'contract_items.contract_id', '=', 'contracts.id')
             ->selectRaw('
                 COUNT(DISTINCT contracts.id) AS total_contracts,
                 COUNT(DISTINCT CASE WHEN contracts.status IS NULL OR contracts.status <> ? THEN contracts.id END) AS active_shipments,
                 COALESCE(SUM(contract_items.quantity_tons), 0) AS total_tons
             ', [ContractStatus::FINISHED])
+            ->toBase()
             ->first();
 
         return [
@@ -174,7 +173,7 @@ final class ClientContractService
     private function baseQuery(User $user): Builder
     {
         return Contract::query()
-            ->whereHas('users', fn (Builder $q) => $q->where('users.id', $user->id))
+            ->visibleTo($user)
             ->with(['exporter:id,name', 'importer:id,name', 'seller:id,name'])
             ->withCount('items')
             ->withSum('items as total_quantity_tons', 'quantity_tons')

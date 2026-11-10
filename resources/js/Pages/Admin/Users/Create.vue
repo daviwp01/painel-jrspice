@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import PasswordInput from '@/Components/PasswordInput.vue';
+import SearchableSelect from '@/Components/SearchableSelect.vue';
 import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import {
@@ -147,7 +148,7 @@ const isFormValid = computed(() => {
                                     v-model="form.email"
                                     required
                                     autocomplete="username"
-                                    placeholder="user@example.com"
+                                    :placeholder="$t('user@example.com')"
                                 />
                                 <InputError :message="form.errors.email" />
                             </div>
@@ -186,6 +187,33 @@ const isFormValid = computed(() => {
                                 </div>
                                 <InputError :message="form.errors.company_name" />
                              </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Linked Company -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 transition-all hover:shadow-md">
+                        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center space-x-3">
+                            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                <Building2 class="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ $t('Linked Company') }}</h3>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{{ $t('This user will see products and contracts of the linked company.') }}</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="max-w-xl">
+                                <SearchableSelect
+                                    v-model="form.client_id"
+                                    :options="clients"
+                                    placeholder="Search company..."
+                                    :clearable="true"
+                                    direction="down"
+                                    @change="(v) => { form.client_id = v ?? null; }"
+                                    @clear="() => { form.client_id = null; }"
+                                />
+                                <InputError class="mt-2" :message="form.errors.client_id" />
+                            </div>
                         </div>
                     </div>
 
@@ -269,7 +297,7 @@ const isFormValid = computed(() => {
                                 </div>
                             </div>
 
-                            <!-- Reports Selection Grid -->
+<!-- Reports Selection Grid -->
                             <div v-if="!form.is_master" class="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
                                 <!-- Grid Section Header -->
                                 <div class="flex items-center justify-between px-1">
@@ -278,8 +306,8 @@ const isFormValid = computed(() => {
                                             <Layout class="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Relatórios Permitidos') }}</h4>
-                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $t('Define o acesso inicial deste usuário aos Dashboards.') }}</p>
+                                            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-tight">{{ $t('Allowed Reports') }}</h4>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ $t('Define the initial access of this user to the Dashboards.') }}</p>
                                         </div>
                                     </div>
                                     
@@ -317,7 +345,7 @@ const isFormValid = computed(() => {
                                         </div>
                                         
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1 truncate">{{ page.title }}</h4>
+                                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-tight leading-none mb-1 truncate">{{ $t(page.title) }}</h4>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest truncate">{{ page.slug }}</p>
                                         </div>
 

@@ -20,11 +20,27 @@ class EmbedFormController extends Controller
 {
     public function show(): Response
     {
+        return $this->render('system');
+    }
+
+    public function system(): Response
+    {
+        return $this->render('system');
+    }
+
+    public function events(): Response
+    {
+        return $this->render('events');
+    }
+
+    private function render(string $formSource): Response
+    {
         $recaptcha = app(RecaptchaVerifier::class);
 
         $response = response()->view('embed.register-form', [
             'token' => EmbedToken::issue(),
             'assetVersion' => (string) config('embed.asset_version'),
+            'formSource' => $formSource,
             // A chave é pública; nula quando a verificação está desligada, o
             // que também mantém a CSP fechada e o script do Google fora da página.
             'recaptchaSiteKey' => $recaptcha->enabled() ? (string) config('recaptcha.site_key') : null,

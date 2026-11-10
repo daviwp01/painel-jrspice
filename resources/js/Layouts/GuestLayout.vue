@@ -45,7 +45,7 @@ const openLegal = (type) => {
             <div class="relative z-10 max-w-4xl w-full">
                 <div class="mb-12 flex flex-col items-center">
                     <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8 backdrop-blur-sm">
-                        Enterprise Analytics Platform
+                        {{ $t('Enterprise Analytics Platform') }}
                     </div>
                     <Link href="/">
                         <img src="/logo-white.png" alt="XPICE" class="h-24 w-auto object-contain drop-shadow-2xl transition-transform duration-500 hover:scale-110" />
@@ -71,10 +71,10 @@ const openLegal = (type) => {
         <!-- 📝 RIGHT SIDE: FORM (40% WIDTH) -->
         <div class="flex-1 lg:w-[40%] bg-white h-screen flex flex-col relative overflow-y-auto">
 
-            <!-- Language Switcher (Fixed Position) -->
-            <!-- <div class="absolute top-8 right-8 z-50">
+            <!-- Language Switcher -->
+            <div class="absolute right-6 top-6 z-50 lg:right-8 lg:top-8">
                 <LanguageSwitcher />
-            </div> -->
+            </div>
 
             <!-- 📱 MOBILE LOGO (Visible only on < lg screens) -->
             <div class="flex lg:hidden flex-col items-center pt-10 pb-4 px-6 flex-shrink-0">
@@ -99,7 +99,7 @@ const openLegal = (type) => {
             <div class="py-8 px-12 flex-shrink-0 border-t border-slate-50 bg-white">
                 <div class="flex flex-col sm:flex-row justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest gap-4">
                     <span class="hover:text-slate-600 transition-colors cursor-default">{{ $t('Copyright • 2026 All rights reserved') }}</span>
-                    <a href="https://daviwp.dev" target="_blank" rel="noopener" title="Visite daviwp.dev - Web Designer & Developer" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase;">by daviwp._</a>
+                    <a href="https://daviwp.dev" target="_blank" rel="noopener" :title="$t('Visit daviwp.dev - Web Designer & Developer')" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase;">by daviwp._</a>
                     <!-- <div class="flex space-x-8">
                         <button
                             @click="openLegal('privacy')"

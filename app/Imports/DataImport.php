@@ -3,19 +3,19 @@
 namespace App\Imports;
 
 use App\Models\Country;
-use App\Models\Supplier;
 use App\Models\Product;
 use App\Models\ProductPrice;
+use App\Models\Supplier;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Row;
-use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
 
 class DataImport implements OnEachRow, WithHeadingRow
 {
     protected $jobId;
+
     protected $current = 0;
 
     public function __construct($jobId = null)
@@ -33,18 +33,33 @@ class DataImport implements OnEachRow, WithHeadingRow
         $harvestMonth = null;
         $countryName = null;
         $productName = null;
+        $productNameEn = null;
+        $productNameEs = null;
         $supplierName = null;
         $dateValue = null;
         $priceValue = 0;
 
         foreach ($data as $key => $val) {
             $key = mb_strtolower(trim($key));
-            
+
+            // Colunas opcionais de tradução — verificadas antes do PRODUTO
+            // genérico para não sobrescrever o nome canônico.
+            if (preg_match('/produto[_\s-]*en(?:glish)?$/u', $key) || preg_match('/product[_\s-]*en(?:glish)?$/u', $key)) {
+                $productNameEn = $val;
+
+                continue;
+            }
+            if (preg_match('/produto[_\s-]*es(?:panol|pañol)?$/u', $key) || preg_match('/product[_\s-]*es(?:panol|pañol)?$/u', $key)) {
+                $productNameEs = $val;
+
+                continue;
+            }
+
             // Lógica de Safra (Fuzzy match)
             if (str_contains($key, 'safra') || str_contains($key, 'harvest')) {
                 $harvestMonth = $val;
             }
-            
+
             // Lógica de Produto
             if (str_contains($key, 'produto') || str_contains($key, 'product')) {
                 $productName = $val;
@@ -70,22 +85,22 @@ class DataImport implements OnEachRow, WithHeadingRow
                 $priceValue = $val;
             }
         }
-        
+
         // Fallbacks adicionais se a rede de arraste falhar em chaves exatas
-        $countryName  = $countryName ?? $data['pais'] ?? $data['country'] ?? null;
-        $productName  = $productName ?? $data['produto'] ?? $data['product'] ?? null;
+        $countryName = $countryName ?? $data['pais'] ?? $data['country'] ?? null;
+        $productName = $productName ?? $data['produto'] ?? $data['product'] ?? null;
         $harvestMonth = $harvestMonth ?? $data['safra'] ?? $data['harvest'] ?? null;
-        
+
         // Advanced cleanup for currency strings in various formats
         if (is_string($priceValue)) {
             // Remove everything except numbers, dots and commas
             $priceValue = preg_replace('/[^0-9,.]/', '', $priceValue);
-            
+
             // If it's something like "1.400,00" -> remove dot, swap comma to dot
             if (str_contains($priceValue, ',') && str_contains($priceValue, '.')) {
                 $priceValue = str_replace('.', '', $priceValue);
                 $priceValue = str_replace(',', '.', $priceValue);
-            } 
+            }
             // If it's "1400,00" -> swap comma to dot
             elseif (str_contains($priceValue, ',')) {
                 $priceValue = str_replace(',', '.', $priceValue);
@@ -93,12 +108,13 @@ class DataImport implements OnEachRow, WithHeadingRow
         }
         $rawPrice = $priceValue;
         // Remove todos os tipos de espaços invisíveis (incluindo non-breaking space do Excel)
-        $cleanPrice = preg_replace('/[\p{Z}\s]/u', '', (string)$rawPrice);
+        $cleanPrice = preg_replace('/[\p{Z}\s]/u', '', (string) $rawPrice);
         $priceValue = ($cleanPrice !== '') ? floatval(str_replace(',', '.', str_replace('.', '', $cleanPrice))) : 0;
-        
+
         // Validação Absoluta: Ignora se for nulo, vazio (mesmo com espaços invisíveis), zero ou negativo
         if ($rawPrice === null || $cleanPrice === '' || $priceValue <= 0) {
             \Illuminate\Support\Facades\Log::warning("Linha ignorada no DataImport síncrono: Produto '{$productName}' está sem preço ou com valor zero.");
+
             return;
         }
 
@@ -108,9 +124,20 @@ class DataImport implements OnEachRow, WithHeadingRow
         // 2. Produto (Update para persistir a SAFRA se houver dado)
         $product = Product::firstOrCreate([
             'name' => trim($productName),
-            'country_id' => $country->id
+            'country_id' => $country->id,
         ]);
-        
+
+        $translationData = [];
+        if (is_scalar($productNameEn) && trim((string) $productNameEn) !== '') {
+            $translationData['name_en'] = mb_substr(trim((string) $productNameEn), 0, 255);
+        }
+        if (is_scalar($productNameEs) && trim((string) $productNameEs) !== '') {
+            $translationData['name_es'] = mb_substr(trim((string) $productNameEs), 0, 255);
+        }
+        if ($translationData !== []) {
+            $product->fill($translationData)->save();
+        }
+
         if ($harvestMonth) {
             $normalized = $this->normalizeHarvest($harvestMonth);
             // Atualiza apenas se o valor for diferente (case-insensitive) do que já existe no banco
@@ -129,7 +156,7 @@ class DataImport implements OnEachRow, WithHeadingRow
 
         // 4. Preço e Data
         $date = $this->transformDate($dateValue);
-        
+
         if ($date) {
             ProductPrice::updateOrCreate(
                 [
@@ -149,28 +176,36 @@ class DataImport implements OnEachRow, WithHeadingRow
                 'current' => $this->current,
                 'total' => 0,
                 'status' => 'processing',
-                'percentage' => 0
+                'percentage' => 0,
             ], 600);
         }
     }
 
-    private function normalizeHarvest($value) {
-        if (!$value) return null;
+    private function normalizeHarvest($value)
+    {
+        if (! $value) {
+            return null;
+        }
+
         return mb_strtoupper(trim($value));
     }
 
     private function transformDate($value)
     {
-        if (!$value) return null;
+        if (! $value) {
+            return null;
+        }
         try {
             if (is_numeric($value)) {
                 return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value));
             }
+
             return Carbon::parse($value);
         } catch (\Exception $e) {
             return null;
         }
     }
+
     public function headingRow(): int
     {
         return 1;

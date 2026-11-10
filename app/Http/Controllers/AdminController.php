@@ -124,7 +124,7 @@ class AdminController extends Controller
         return \Inertia\Inertia::render('Admin/Users/Create', [
             'available_pages' => $allPages,
             'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', []),
-            'clients' => \App\Models\Client::orderBy('name')->get(),
+            'clients' => \App\Models\Client::orderBy('name')->get(['id', 'name', 'type'])->values()->toArray(),
         ]);
     }
 
@@ -170,6 +170,8 @@ class AdminController extends Controller
      */
     public function storeUser(Request $request)
     {
+        $request->merge(['client_id' => $request->input('client_id') ?: null]);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
@@ -184,6 +186,7 @@ class AdminController extends Controller
             'import_experience' => ['nullable', 'string', 'max:255'],
             'import_volume' => ['nullable', 'string', 'max:255'],
             'decision_role' => ['nullable', 'string', 'max:255'],
+            'client_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('clients', 'id')],
         ], [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
         ]);
@@ -198,6 +201,7 @@ class AdminController extends Controller
             'import_experience' => $request->import_experience,
             'import_volume' => $request->import_volume,
             'decision_role' => $request->decision_role,
+            'client_id' => $request->input('client_id') ?: null,
             'is_active' => $request->boolean('is_active', true),
             'tenant_id' => $request->input('tenant_id'),
             'allowed_pages' => $request->input('allowed_pages', []),
@@ -220,7 +224,7 @@ class AdminController extends Controller
             'user' => $user,
             'available_pages' => $allPages,
             'default_allowed_pages' => \App\Models\Setting::get('default_allowed_pages', []),
-            'clients' => \App\Models\Client::orderBy('name')->get(),
+            'clients' => \App\Models\Client::orderBy('name')->get(['id', 'name', 'type'])->values()->toArray(),
             'importExperienceOptions' => User::getImportExperienceOptions(),
             'importVolumeOptions' => User::getImportVolumeOptions(),
             'decisionRoleOptions' => User::getDecisionRoleOptions(),
@@ -232,6 +236,8 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, User $user)
     {
+        $request->merge(['client_id' => $request->input('client_id') ?: null]);
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
@@ -244,6 +250,7 @@ class AdminController extends Controller
             'import_experience' => ['nullable', 'string', 'max:255'],
             'import_volume' => ['nullable', 'string', 'max:255'],
             'decision_role' => ['nullable', 'string', 'max:255'],
+            'client_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('clients', 'id')],
         ];
 
         if ($request->filled('new_password')) {
@@ -269,6 +276,7 @@ class AdminController extends Controller
             'import_experience' => $request->import_experience,
             'import_volume' => $request->import_volume,
             'decision_role' => $request->decision_role,
+            'client_id' => $request->input('client_id') ?: null,
             'allowed_pages' => $request->input('allowed_pages', []),
         ];
 

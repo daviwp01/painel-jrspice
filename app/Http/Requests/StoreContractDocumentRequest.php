@@ -35,9 +35,9 @@ class StoreContractDocumentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'file.required' => 'Nenhum arquivo enviado.',
-            'file.max' => 'O arquivo excede o limite de '.ContractDocumentRules::humanMaxSize().'.',
-            'file.mimes' => 'Formato não aceito. Envie vídeo (MP4, MOV, M4V, WEBM, AVI), documento (PDF, DOC, DOCX), planilha (XLS, XLSX) ou imagem (JPG, JPEG, PNG).',
+            'file.required' => __('No file uploaded.'),
+            'file.max' => __('The file exceeds the limit of :size.', ['size' => ContractDocumentRules::humanMaxSize()]),
+            'file.mimes' => __('Unsupported format. Send video (MP4, MOV, M4V, WEBM, AVI), document (PDF, DOC, DOCX), spreadsheet (XLS, XLSX) or image (JPG, JPEG, PNG).'),
         ];
     }
 }

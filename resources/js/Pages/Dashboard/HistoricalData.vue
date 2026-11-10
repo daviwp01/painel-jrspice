@@ -1,10 +1,13 @@
 <script setup>
+import { productName, withTranslatedProductNames } from '@/Utils/productName';
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Menu, Search, MapPin, Box, Calendar, ClockIcon, ChevronDown, Check, Truck, ArrowUpDown, Loader2, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { trans } from 'laravel-vue-i18n';
 
 const MapPinIcon = MapPin;
 const TruckIcon = Truck;
@@ -33,6 +36,7 @@ const props = defineProps({
   settings: Object,
   last_prices_update: String,
 });
+const productSelectOptions = computed(() => withTranslatedProductNames(props.products));
 
 const selectedCountry = ref(props.filters.country_id || '');
 const selectedSupplier = ref(props.filters.supplier_id || '');
@@ -40,7 +44,7 @@ const selectedProduct = ref(props.filters.product_id || '');
 const filterDateRange = ref(props.filters.date_range || 'Todos');
 
 const suppliersWithOptions = computed(() => {
-    return [{ id: '', name: 'Todos' }, ...props.suppliers];
+    return [{ id: '', name: trans('All') }, ...props.suppliers];
 });
 const isDatePickerOpen = ref(false);
 const expandedYears = ref([]);
@@ -215,10 +219,10 @@ const processedHistoricalData = computed(() => {
         const w = getWeekNumber(d);
         
         return {
-            productName: price.product?.name || '---',
+            productName: productName(price.product) || '---',
             countryName: price.product?.country?.name || '',
-            supplier: price.supplier?.name || 'Não inf.', 
-            displayDate: new Date(price.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
+            supplier: price.supplier?.name || trans('Not informed'), 
+            displayDate: new Date(price.date).toLocaleDateString(getBcp47Locale(), { timeZone: 'UTC' }),
             yearMonth: `${y}/${(d.getUTCMonth()+1).toString().padStart(2, '0')}`,
             week: w,
             priceVal: price.price
@@ -247,7 +251,7 @@ const changePage = (url) => {
 </script>
 
 <template>
-  <Head :title="currentPage.title" />
+  <Head :title="$t(currentPage.title)" />
 
   <DashboardLayout>
     <template #sidebar-filters>
@@ -255,10 +259,10 @@ const changePage = (url) => {
       <div class="border-t border-slate-800/50 pt-4">
          <div class="flex items-center justify-between mb-4 px-3">
              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> Filtros de Busca
+                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> {{ $t('Search Filters') }}
              </p>
              <div class="flex items-center gap-3">
-                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
+                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">{{ $t('Clear') }}</button>
                  <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
              </div>
          </div>
@@ -267,8 +271,8 @@ const changePage = (url) => {
             <SearchableSelect 
                v-model="selectedCountry"
                :options="countries"
-               label="País"
-               placeholder="Selecione o País"
+               :label="$t('Country')"
+               :placeholder="$t('Select the Country')"
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
@@ -279,8 +283,8 @@ const changePage = (url) => {
             <SearchableSelect 
                v-model="selectedSupplier"
                :options="suppliersWithOptions"
-               label="Fornecedor"
-               placeholder="Todos os Fornecedores"
+               :label="$t('Supplier')"
+               :placeholder="$t('All Suppliers')"
                :icon="TruckIcon"
                variant="dark"
                direction="down"
@@ -289,9 +293,9 @@ const changePage = (url) => {
 
             <SearchableSelect 
                v-model="selectedProduct"
-               :options="products"
-               label="Produto"
-               placeholder="Todos os Produtos"
+               :options="productSelectOptions"
+               :label="$t('Product')"
+               :placeholder="$t('All Products')"
                :icon="BoxIcon"
                :disabled="!selectedCountry"
                variant="dark"
@@ -301,13 +305,13 @@ const changePage = (url) => {
 
             <div class="relative px-1">
               <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 cursor-pointer">
-                  <Calendar class="w-3.5 h-3.5 text-[#b2862e]"/> Data (Ano / Semana)
+                  <Calendar class="w-3.5 h-3.5 text-[#b2862e]"/> {{ $t('Date (Year / Week)') }}
               </label>
               
               <!-- CUSTOM TREE SELECT -->
               <div class="relative group">
                 <button @click="isDatePickerOpen = !isDatePickerOpen" class="w-full bg-[#1e293b]/40 border border-slate-800 rounded-xl text-sm text-slate-300 font-bold px-3 py-3 flex items-center justify-between hover:bg-[#1e293b]/60 transition-colors uppercase">
-                  <span>{{ filterDateRange === 'Todos' ? 'Todos os Registros' : (filterDateRange.includes('-') ? filterDateRange.replace('-', ' - Sem. ') : filterDateRange) }}</span>
+                  <span>{{ filterDateRange === 'Todos' ? $t('All Records') : (filterDateRange.includes('-') ? filterDateRange.replace('-', ' - ' + $t('Week') + ' ') : filterDateRange) }}</span>
                   <ChevronDown :class="{ 'rotate-180 text-blue-500': isDatePickerOpen }" class="w-4 h-4 text-slate-500 transition-transform duration-300" />
                 </button>
 
@@ -316,7 +320,7 @@ const changePage = (url) => {
                       <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
                         <Check v-if="filterDateRange === 'Todos'" class="w-3 h-3 text-white stroke-[4]" />
                       </div>
-                      TODOS OS REGISTROS
+                      {{ $t('All Records') }}
                    </div>
 
                    <div v-for="group in availableDates" :key="group.year" class="mb-2">
@@ -337,7 +341,7 @@ const changePage = (url) => {
                            <div class="w-3.5 h-3.5 border-2 rounded flex items-center justify-center border-slate-700 transition-colors group-hover/wk:border-slate-500" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
                               <Check v-if="filterDateRange === (d.year + '-' + d.week)" class="w-2.5 h-2.5 text-white stroke-[4]" />
                            </div>
-                           SEMANA {{ d.week }}
+                           {{ $t('Week') }} {{ d.week }}
                         </div>
                       </div>
                    </div>
@@ -358,10 +362,10 @@ const changePage = (url) => {
         <!-- Page Title Region -->
         <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-slate-200 mb-8 gap-4">
             <div>
-                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ $t(currentPage.title) }}</h2>
                 <div class="flex flex-wrap items-center gap-2 mt-2">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm flex items-center gap-2">
-                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString('pt-BR') : '--' }}</span>
+                        <ClockIcon class="w-3 h-3 text-slate-400" /> {{ $t('Updated on') }}: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString(getBcp47Locale()) : '--' }}</span>
                     </p>
                 </div>
             </div>
@@ -376,7 +380,7 @@ const changePage = (url) => {
                         <tr>
                             <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-1 md:gap-2">
-                                    PRODUTO
+                                    {{ $t('Product') }}
                                     <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -384,7 +388,7 @@ const changePage = (url) => {
                             </th>
                             <th v-if="!isMobile" class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('country')">
                                 <div class="flex items-center gap-2">
-                                    PAÍS
+                                    {{ $t('Country') }}
                                     <ArrowUp v-if="filters.sort_field === 'country' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'country' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -392,7 +396,7 @@ const changePage = (url) => {
                             </th>
                             <th v-if="!isMobile" class="px-5 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('supplier')">
                                 <div class="flex items-center gap-2">
-                                    FORNECEDOR
+                                    {{ $t('Supplier') }}
                                     <ArrowUp v-if="filters.sort_field === 'supplier' && filters.sort_direction === 'asc'" class="w-4 h-4 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'supplier' && filters.sort_direction === 'desc'" class="w-4 h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -400,17 +404,17 @@ const changePage = (url) => {
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('date')">
                                 <div class="flex items-center gap-1 md:gap-2">
-                                    DATA REGISTRO
+                                    {{ $t('Record Date') }}
                                     <ArrowUp v-if="filters.sort_field === 'date' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'date' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
-                            <th v-if="!isMobile" class="px-5 py-4">ANO / MES</th>
-                            <th v-if="!isMobile" class="px-5 py-4 text-center">SEMANA</th>
+                            <th v-if="!isMobile" class="px-5 py-4">{{ $t('Year / Month') }}</th>
+                            <th v-if="!isMobile" class="px-5 py-4 text-center">{{ $t('Week') }}</th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-100/50 transition-colors group" @click="handleSort('price')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    {{ isMobile ? 'PREÇO' : 'PREÇO' }}
+                                    {{ $t('Price') }}
                                     <ArrowUp v-if="filters.sort_field === 'price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-4 md:h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -440,13 +444,13 @@ const changePage = (url) => {
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-slate-500 text-[10px] md:text-lg whitespace-normal md:whitespace-nowrap leading-tight">
                                     {{ row.displayDate }}
                                     <div v-if="isMobile" class="mt-0.5 text-slate-400 font-mono text-[9px]">
-                                        Mês: {{ row.yearMonth }} | Sem: {{ row.week }}
+                                        {{ $t('Month') }}: {{ row.yearMonth }} | {{ $t('Week') }}: {{ row.week }}
                                     </div>
                                 </td>
                                 <td v-if="!isMobile" class="px-5 py-4 text-slate-500 font-mono text-lg whitespace-nowrap">{{ row.yearMonth }}</td>
                                 <td v-if="!isMobile" class="px-5 py-4 text-slate-700 text-center font-bold text-lg whitespace-nowrap">{{ row.week }}</td>
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums font-black text-slate-900 pr-2 md:pr-8 text-sm md:text-2xl whitespace-nowrap">
-                                    {{ row.priceVal ? Number(row.priceVal).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
+                                    {{ row.priceVal ? Number(row.priceVal).toLocaleString(getBcp47Locale(), {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                             </tr>
                         </tbody>
@@ -456,7 +460,7 @@ const changePage = (url) => {
                 <!-- Pagination -->
                 <div v-if="historicalData.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">
-                         Exibindo <span class="text-blue-600">{{ historicalData.from }}</span> até <span class="text-blue-600">{{ historicalData.to }}</span> de <span class="text-slate-900">{{ historicalData.total }}</span> registros
+                         {{ $t('Showing') }} <span class="text-blue-600">{{ historicalData.from }}</span> {{ $t('to') }} <span class="text-blue-600">{{ historicalData.to }}</span> {{ $t('of') }} <span class="text-slate-900">{{ historicalData.total }}</span> {{ $t('records') }}
                     </p>
                     <div class="flex flex-wrap justify-center gap-1 md:gap-1.5">
                         <template v-for="(link, i) in historicalData.links" :key="i">

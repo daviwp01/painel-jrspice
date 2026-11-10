@@ -136,7 +136,7 @@ const submit = async () => {
             <InputError class="mt-4" :message="form.errors.g_recaptcha" />
 
             <p v-if="recaptchaSiteKey && recaptchaType === 'v3'" class="mt-3 text-center text-[10px] text-gray-400">
-                Este site é protegido pelo reCAPTCHA.
+                {{ $t('This site is protected by reCAPTCHA.') }}
             </p>
 
             <div class="mt-4">

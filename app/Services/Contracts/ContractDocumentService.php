@@ -36,7 +36,7 @@ final class ContractDocumentService
         );
 
         if ($path === false) {
-            throw new \RuntimeException('Não foi possível gravar o arquivo no disco de armazenamento.');
+            throw new \RuntimeException(__('Unable to write the file to the storage disk.'));
         }
 
         return ContractDocument::create([

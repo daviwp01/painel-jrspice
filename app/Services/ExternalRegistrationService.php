@@ -69,10 +69,23 @@ final class ExternalRegistrationService
             'is_active' => ! $requiresActivation,
             'allowed_pages' => array_values((array) Setting::get('default_allowed_pages', [])),
             'registered_via_external_form' => true,
+            'form_source' => $request->input('form_source') ?: 'system',
+            'utm_source' => $this->utm($request, 'utm_source'),
+            'utm_medium' => $this->utm($request, 'utm_medium'),
+            'utm_campaign' => $this->utm($request, 'utm_campaign'),
+            'utm_content' => $this->utm($request, 'utm_content'),
+            'utm_term' => $this->utm($request, 'utm_term'),
             'terms_accepted_at' => now(),
             // Absolute guarantee: a public form can never mint a master.
             'is_master' => false,
         ]);
+    }
+
+    private function utm(ExternalRegisterRequest $request, string $key): ?string
+    {
+        $value = trim((string) $request->input($key, ''));
+
+        return $value === '' ? null : mb_substr($value, 0, 255);
     }
 
     /**
@@ -85,7 +98,7 @@ final class ExternalRegistrationService
     {
         return [
             'status' => 201,
-            'message' => 'Cadastro recebido com sucesso! Faça login com o e-mail e a senha informados.',
+            'message' => __('Registration received successfully! Log in with the email and password you provided.'),
         ];
     }
 }

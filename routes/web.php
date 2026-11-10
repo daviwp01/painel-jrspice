@@ -1,14 +1,10 @@
 <?php
 
-use App\Http\Controllers\AdminController;
-
-use App\Http\Middleware\EnsureUserIsMaster;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-
-use App\Http\Controllers\InternalDashboardController;
 use App\Http\Controllers\Admin\DataController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\InternalDashboardController;
+use App\Http\Middleware\EnsureUserIsMaster;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -50,8 +46,13 @@ Route::get('/termos', [\App\Http\Controllers\PublicPolicyController::class, 'ter
 
 // Formulário público de cadastro (embed nas landing pages). Passa pela
 // aplicação para receber os cabeçalhos de segurança e o token de formulário.
+// /system = padrão · /events = variante das feiras (mesmos campos + UTM).
 Route::get('/external-form-snippet.html', [\App\Http\Controllers\EmbedFormController::class, 'show'])
     ->name('embed.register.show');
+Route::get('/system', [\App\Http\Controllers\EmbedFormController::class, 'system'])
+    ->name('embed.register.system');
+Route::get('/events', [\App\Http\Controllers\EmbedFormController::class, 'events'])
+    ->name('embed.register.events');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
@@ -75,7 +76,6 @@ Route::middleware(['auth', EnsureUserIsMaster::class])->prefix('admin')->group(f
     Route::patch('/contracts/{contract}/status', [\App\Http\Controllers\ContractController::class, 'updateStatus'])->name('contracts.status');
     Route::delete('/contracts/{contract}', [\App\Http\Controllers\ContractController::class, 'destroy'])->name('contracts.destroy');
     Route::post('/contracts/bulk-delete', [\App\Http\Controllers\ContractController::class, 'bulkDestroy'])->name('contracts.bulk-delete');
-    Route::post('/contracts/bulk-sync-users', [\App\Http\Controllers\ContractController::class, 'bulkSyncUsers'])->name('contracts.bulk-sync-users');
 
     Route::get('/users', [AdminController::class, 'usersIndex'])->name('admin.users.index');
     Route::get('/activity', [AdminController::class, 'activityIndex'])->name('admin.activity.index');

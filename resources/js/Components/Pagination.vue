@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -19,8 +20,8 @@ const isNext = (label) => {
 };
 
 const cleanLabel = (label) => {
-    if (isPrevious(label)) return 'Anterior';
-    if (isNext(label)) return 'Próximo';
+    if (isPrevious(label)) return trans('Previous');
+    if (isNext(label)) return trans('Next');
     return label;
 };
 </script>

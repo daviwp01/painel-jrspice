@@ -40,7 +40,10 @@ class InternalDashboardController extends Controller
                 ->get();
         });
 
-        $allowedPages = $pages->filter(fn ($page) => $user->canAccessPage($page->slug));
+        $allowedPages = $pages
+            ->filter(fn ($page) => $user->canAccessPage($page->slug))
+            ->filter(fn ($page) => $page->component !== 'MyProducts/Index' || $user->canSeeMyProducts())
+            ->values();
 
         if ($allowedPages->isEmpty()) {
             return Inertia::render('Dashboard/Empty');
@@ -86,6 +89,10 @@ class InternalDashboardController extends Controller
                 ? Carbon::parse($latestPriceCreated)->toIso8601String()
                 : null,
         ];
+
+        if ($currentPage->component === 'MyProducts/Index' && ! $user->canSeeMyProducts()) {
+            abort(403, __('You do not have permission to access this area.'));
+        }
 
         if ($currentPage->component === 'MyProducts/Index') {
             $this->activityService->logSearch(
@@ -304,7 +311,7 @@ class InternalDashboardController extends Controller
             'message' => $validated['message'],
         ], $recipient);
 
-        return redirect()->back()->with('success', 'Mensagem enviada!');
+        return redirect()->back()->with('success', __('Message sent!'));
     }
 
     public function exportPricesPdf(HttpRequest $request)
@@ -322,7 +329,7 @@ class InternalDashboardController extends Controller
 
             // Log de engajamento (Exportação de Dados)
             if (auth()->check()) {
-                $exportLabel = 'Todos os Países';
+                $exportLabel = __('All Countries');
                 if ($countryIds) {
                     $names = \App\Models\Country::whereIn('id', $countryIds)->pluck('name')->implode(', ');
                     if ($names) {
@@ -334,7 +341,7 @@ class InternalDashboardController extends Controller
                     auth()->user(),
                     'export',
                     'PDF: '.$exportLabel,
-                    'Tabela de Preços'
+                    __('Price Table')
                 );
             }
 

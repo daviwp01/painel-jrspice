@@ -1,4 +1,5 @@
 <script setup>
+import { getBcp47Locale } from '@/Utils/locale';
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { TrendingUp, DollarSign, AlertTriangle, FileStack } from 'lucide-vue-next';
@@ -31,12 +32,12 @@ const applyDelayedFilter = () => {
         <TrendingUp class="w-5 h-5 text-blue-600" />
       </div>
       <div class="relative z-10 min-w-0">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Volume Total Exportado</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Total Exported Volume') }}</p>
         <div class="flex items-baseline gap-1.5 whitespace-nowrap">
           <span class="text-xl font-black text-slate-800 tabular-nums leading-none">
-            {{ Number(summary.total_tons || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) }}
+            {{ Number(summary.total_tons || 0).toLocaleString(getBcp47Locale(), { maximumFractionDigits: 3 }) }}
           </span>
-          <span class="text-[11px] font-bold text-slate-400 uppercase">ton</span>
+          <span class="text-[11px] font-bold text-slate-400 uppercase">{{ $t('ton') }}</span>
         </div>
       </div>
     </div>
@@ -48,10 +49,10 @@ const applyDelayedFilter = () => {
         <DollarSign class="w-5 h-5 text-emerald-600" />
       </div>
       <div class="relative z-10 min-w-0">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Comissões Pendentes</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Pending Commissions') }}</p>
         <div class="flex items-baseline gap-1.5 whitespace-nowrap">
           <span class="text-xl font-black text-slate-800 tabular-nums leading-none">
-            ${{ Number(summary.pending_commissions || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+            ${{ Number(summary.pending_commissions || 0).toLocaleString(getBcp47Locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
           </span>
           <span class="text-[11px] font-bold text-slate-400 uppercase">USD</span>
         </div>
@@ -66,7 +67,7 @@ const applyDelayedFilter = () => {
       :class="isDelayedFilterActive
         ? 'border-rose-400 ring-2 ring-rose-200'
         : (summary.delayed_logistics > 0 ? 'border-rose-200 hover:border-rose-400' : 'border-slate-200 hover:border-slate-300')"
-      title="Filtrar os contratos em atraso"
+      :title="$t('Filter delayed contracts')"
     >
       <div
         class="absolute right-0 top-0 w-48 h-48 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none transition-colors"
@@ -80,14 +81,14 @@ const applyDelayedFilter = () => {
       </div>
       <div class="relative z-10 min-w-0">
         <p class="text-[10px] font-bold uppercase tracking-wider leading-none mb-1.5" :class="isDelayedFilterActive ? 'text-rose-500' : 'text-slate-400'">
-          Atrasos Logísticos<span v-if="isDelayedFilterActive"> · filtrando</span>
+          {{ $t('Logistics Delays') }}<span v-if="isDelayedFilterActive"> · {{ $t('filtering') }}</span>
         </p>
         <div class="flex items-baseline gap-1.5 whitespace-nowrap">
           <span class="text-xl font-black tabular-nums leading-none" :class="summary.delayed_logistics > 0 ? 'text-rose-600' : 'text-slate-800'">
             {{ summary.delayed_logistics || 0 }}
           </span>
           <span class="text-[11px] font-bold uppercase" :class="summary.delayed_logistics > 0 ? 'text-rose-400' : 'text-slate-400'">
-            {{ summary.delayed_logistics > 0 ? 'atenção' : 'em dia' }}
+            {{ summary.delayed_logistics > 0 ? $t('attention') : $t('on track') }}
           </span>
         </div>
       </div>
@@ -100,10 +101,10 @@ const applyDelayedFilter = () => {
         <FileStack class="w-5 h-5 text-violet-600" />
       </div>
       <div class="relative z-10 min-w-0">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">Contratos Ativos</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">{{ $t('Active Contracts') }}</p>
         <div class="flex items-baseline gap-1.5 whitespace-nowrap">
           <span class="text-xl font-black text-slate-800 tabular-nums leading-none">{{ summary.active_contracts || 0 }}</span>
-          <span class="text-[11px] font-bold text-slate-400 uppercase">de {{ summary.total_contracts || 0 }}</span>
+          <span class="text-[11px] font-bold text-slate-400 uppercase">{{ $t('of') }} {{ summary.total_contracts || 0 }}</span>
         </div>
       </div>
     </div>

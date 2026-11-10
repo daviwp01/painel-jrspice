@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\UserSession;
 use App\Models\UserSearchLog;
-use Carbon\Carbon;
+use App\Models\UserSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,12 +32,12 @@ class UserActivityService
         $this->closeStaleSessionsForUser($user);
 
         return UserSession::create([
-            'user_id'           => $user->id,
-            'ip_address'        => $request->ip(),
-            'user_agent'        => $request->userAgent(),
-            'started_at'        => now(),
+            'user_id' => $user->id,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'started_at' => now(),
             'last_heartbeat_at' => now(),
-            'is_active'         => true,
+            'is_active' => true,
         ]);
     }
 
@@ -63,10 +62,11 @@ class UserActivityService
     {
         $session = UserSession::forUser($user->id)->active()->latest('started_at')->first();
 
-        if (!$session) {
+        if (! $session) {
             // No active session found (e.g. server restarted, session was cleared).
             // Start a new one to prevent data loss.
             $this->startSession($user, $request);
+
             return;
         }
 
@@ -75,13 +75,14 @@ class UserActivityService
         if ($session->last_heartbeat_at->diffInMinutes(now()) > self::SESSION_TIMEOUT_MINUTES) {
             $this->closeSession($session);
             $this->startSession($user, $request);
+
             return;
         }
 
         // Normal heartbeat – update duration
         $session->update([
             'last_heartbeat_at' => now(),
-            'duration_seconds'  => $session->started_at->diffInSeconds(now()),
+            'duration_seconds' => $session->started_at->diffInSeconds(now()),
         ]);
     }
 
@@ -119,31 +120,31 @@ class UserActivityService
             ->paginate($perPage)
             ->through(function ($user) {
                 $totalSec = (int) $user->total_seconds;
-                $avgSec   = (int) $user->avg_seconds;
+                $avgSec = (int) $user->avg_seconds;
 
                 return [
-                    'id'             => $user->id,
-                    'name'           => $user->name,
-                    'email'          => $user->email,
-                    'is_master'      => (bool) $user->is_master,
-                    'is_online'      => $user->last_activity_at &&
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_master' => (bool) $user->is_master,
+                    'is_online' => $user->last_activity_at &&
                                         \Carbon\Carbon::parse($user->last_activity_at)
                                             ->gt(now()->subMinutes(self::ONLINE_THRESHOLD_MINUTES)),
-                    'last_login'     => $user->last_login_at
+                    'last_login' => $user->last_login_at
                                         ? \Carbon\Carbon::parse($user->last_login_at)->diffForHumans()
                                         : __('Never'),
-                    'last_activity'  => $user->last_activity_at
+                    'last_activity' => $user->last_activity_at
                                         ? \Carbon\Carbon::parse($user->last_activity_at)->diffForHumans()
                                         : __('None'),
-                    'notified_at'    => $user->email_notified_at
+                    'notified_at' => $user->email_notified_at
                                         ? \Carbon\Carbon::parse($user->email_notified_at)->diffForHumans()
                                         : null,
-                    'clicked_at'     => $user->email_clicked_at
+                    'clicked_at' => $user->email_clicked_at
                                         ? \Carbon\Carbon::parse($user->email_clicked_at)->diffForHumans()
                                         : null,
                     'total_sessions' => (int) $user->total_sessions,
-                    'total_time'     => $this->formatDuration($totalSec),
-                    'avg_time'       => $this->formatDuration($avgSec),
+                    'total_time' => $this->formatDuration($totalSec),
+                    'avg_time' => $this->formatDuration($avgSec),
                 ];
             });
     }
@@ -158,13 +159,13 @@ class UserActivityService
             ->paginate($perPage)
             ->through(function (UserSession $session) {
                 return [
-                    'id'             => $session->id,
-                    'started_at'     => $session->started_at->format('d/m/Y H:i'),
-                    'ended_at'       => $session->ended_at ? $session->ended_at->format('d/m/Y H:i') : __('Active'),
-                    'duration'       => $session->formatted_duration,
-                    'ip_address'     => $session->ip_address,
-                    'browser'        => $session->browser,
-                    'is_active'      => $session->is_active,
+                    'id' => $session->id,
+                    'started_at' => $session->started_at->format('d/m/Y H:i'),
+                    'ended_at' => $session->ended_at ? $session->ended_at->format('d/m/Y H:i') : __('Active'),
+                    'duration' => $session->formatted_duration,
+                    'ip_address' => $session->ip_address,
+                    'browser' => $session->browser,
+                    'is_active' => $session->is_active,
                 ];
             });
     }
@@ -175,10 +176,10 @@ class UserActivityService
     public function clearAllActivity(): void
     {
         User::query()->update([
-            'last_login_at'       => null,
-            'last_activity_at'    => null,
-            'email_notified_at'   => null,
-            'email_clicked_at'    => null,
+            'last_login_at' => null,
+            'last_activity_at' => null,
+            'email_notified_at' => null,
+            'email_clicked_at' => null,
         ]);
 
         UserSession::truncate();
@@ -191,7 +192,7 @@ class UserActivityService
     public function clearUserActivity(User $user): void
     {
         $user->update([
-            'last_login_at'    => null,
+            'last_login_at' => null,
             'last_activity_at' => null,
         ]);
 
@@ -211,13 +212,13 @@ class UserActivityService
         bool $isRehydrating = false
     ): void {
         if ($isRehydrating) {
-            // Se o frontend está reidratando a memória (ex: Chile), removemos o log "padrão" (ex: China) 
+            // Se o frontend está reidratando a memória (ex: Chile), removemos o log "padrão" (ex: China)
             // que o Backend acabou de criar acidentalmente há poucos segundos atrás.
             UserSearchLog::where('user_id', $user->id)
                 ->where('filter_type', $filterType)
                 ->where('searched_at', '>=', now()->subSeconds(10))
                 ->delete();
-                
+
             // Limpamos o cache e a sessão para não impedir a gravação do valor real da memória
             \Illuminate\Support\Facades\Cache::forget("search_log_{$user->id}_{$filterType}_{$filterValue}");
             session()->forget("last_search_{$filterType}");
@@ -225,7 +226,7 @@ class UserActivityService
 
         // 1. Evita requisições concorrentes e cliques duplos (trava atômica de 2 segundos)
         $cacheKey = "search_log_{$user->id}_{$filterType}_{$filterValue}";
-        if (!\Illuminate\Support\Facades\Cache::add($cacheKey, true, 2)) {
+        if (! \Illuminate\Support\Facades\Cache::add($cacheKey, true, 2)) {
             return; // Se já existir no cache (adicionado por outra requisição simultânea), bloqueia.
         }
 
@@ -240,11 +241,11 @@ class UserActivityService
         }
 
         UserSearchLog::create([
-            'user_id'      => $user->id,
-            'filter_type'  => $filterType,
+            'user_id' => $user->id,
+            'filter_type' => $filterType,
             'filter_value' => $filterValue,
             'page_context' => $pageContext,
-            'searched_at'  => now(),
+            'searched_at' => now(),
         ]);
     }
 
@@ -283,12 +284,12 @@ class UserActivityService
             ->groupBy('filter_type')
             ->map(function ($group, string $type) {
                 return [
-                    'type'       => $type,
-                    'label'      => UserSearchLog::TYPE_LABELS[$type] ?? ucfirst($type),
+                    'type' => $type,
+                    'label' => UserSearchLog::TYPE_LABELS[$type] ?? ucfirst($type),
                     'total_hits' => $group->sum('hit_count'),
-                    'items'      => $group->map(fn ($r) => [
-                        'value'     => $r->filter_value,
-                        'count'     => (int) $r->hit_count,
+                    'items' => $group->map(fn ($r) => [
+                        'value' => $r->filter_value,
+                        'count' => (int) $r->hit_count,
                         'relevance' => (int) $r->relevance,
                         'last_seen' => $r->last_seen,
                     ])->values(),
@@ -298,9 +299,9 @@ class UserActivityService
             ->values();
 
         return [
-            'total_searches'   => $total,
-            'by_type'          => $byType,
-            'engagement'       => $this->getEngagementStats($userId),
+            'total_searches' => $total,
+            'by_type' => $byType,
+            'engagement' => $this->getEngagementStats($userId),
         ];
     }
 
@@ -317,38 +318,38 @@ class UserActivityService
             ->where('user_id', $userId)
             ->where('started_at', '>=', $last30Days)
             ->pluck('started_at')
-            ->map(fn($date) => \Carbon\Carbon::parse($date));
+            ->map(fn ($date) => \Carbon\Carbon::parse($date));
 
         // 1. Dias Ativos nos últimos 30 dias
         $activeDays = $recentSessions->map->toDateString()->unique()->count();
 
         // 2. Horário de Pico
-        $hourCounts = $recentSessions->countBy(fn($d) => $d->hour);
+        $hourCounts = $recentSessions->countBy(fn ($d) => $d->hour);
         $peakHour = $hourCounts->isEmpty() ? null : $hourCounts->sortDesc()->keys()->first();
-        
+
         $peakHourLabel = 'N/A';
         if ($peakHour !== null) {
             $nextHour = ($peakHour + 1) % 24;
-            $peakHourLabel = str_pad($peakHour, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($nextHour, 2, '0', STR_PAD_LEFT) . ':00';
+            $peakHourLabel = str_pad($peakHour, 2, '0', STR_PAD_LEFT).':00 - '.str_pad($nextHour, 2, '0', STR_PAD_LEFT).':00';
         }
 
         // 3. Dia da Semana Favorito
         $dayNames = [
-            0 => 'Domingo', 1 => 'Segunda-feira', 2 => 'Terça-feira',
-            3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado'
+            0 => __('Sunday'), 1 => __('Monday'), 2 => __('Tuesday'),
+            3 => __('Wednesday'), 4 => __('Thursday'), 5 => __('Friday'), 6 => __('Saturday'),
         ];
-        $dayCounts = $recentSessions->countBy(fn($d) => $d->dayOfWeek);
+        $dayCounts = $recentSessions->countBy(fn ($d) => $d->dayOfWeek);
         $favDayId = $dayCounts->isEmpty() ? null : $dayCounts->sortDesc()->keys()->first();
         $favDayLabel = $favDayId !== null ? $dayNames[$favDayId] : 'N/A';
 
         // 4. Total de Exportações
         $exportLogs = UserSearchLog::forUser($userId)->where('filter_type', 'export')->get();
         $exportsCount = $exportLogs->count();
-        
+
         // Pega os últimos itens baixados, remove "PDF: " para mostrar os nomes de forma limpa
         $exportedItems = $exportLogs->sortByDesc('searched_at')
             ->pluck('filter_value')
-            ->map(fn($val) => str_replace('PDF: ', '', $val))
+            ->map(fn ($val) => str_replace('PDF: ', '', $val))
             ->unique()
             ->values()
             ->take(5) // Mostra os 5 itens mais recentes
@@ -360,14 +361,13 @@ class UserActivityService
 
         return [
             'active_days_last_30' => $activeDays,
-            'peak_hour'           => $peakHourLabel,
-            'favorite_day'        => $favDayLabel,
-            'total_exports'       => $exportsCount,
-            'exported_items'      => $exportedItems,
-            'health_score'        => $healthScore,
+            'peak_hour' => $peakHourLabel,
+            'favorite_day' => $favDayLabel,
+            'total_exports' => $exportsCount,
+            'exported_items' => $exportedItems,
+            'health_score' => $healthScore,
         ];
     }
-
 
     /**
      * Clear all search history for every user.
@@ -387,15 +387,14 @@ class UserActivityService
 
     // ─── Private Helpers ────────────────────────────────────────
 
-
     /**
      * Close a session, setting ended_at and final duration.
      */
     private function closeSession(UserSession $session): void
     {
         $session->update([
-            'is_active'        => false,
-            'ended_at'         => $session->last_heartbeat_at,
+            'is_active' => false,
+            'ended_at' => $session->last_heartbeat_at,
             'duration_seconds' => $session->started_at->diffInSeconds($session->last_heartbeat_at),
         ]);
     }
@@ -419,7 +418,7 @@ class UserActivityService
             return '0min';
         }
 
-        $hours   = intdiv($seconds, 3600);
+        $hours = intdiv($seconds, 3600);
         $minutes = intdiv($seconds % 3600, 60);
 
         if ($hours > 0) {
@@ -430,6 +429,6 @@ class UserActivityService
             return sprintf('%dmin', $minutes);
         }
 
-        return $seconds . 's';
+        return $seconds.'s';
     }
 }

@@ -1,4 +1,5 @@
 <script setup>
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Star, Lock, Send, CheckCircle, MessageCircle, RefreshCw } from 'lucide-vue-next';
@@ -23,7 +24,7 @@ const hasReview    = computed(() => !!props.userReview && !isEditing.value);
 const activeRating = computed(() => hoverRating.value || form.rating);
 
 const ratingLabel = (r) =>
-  ['', 'Muito Ruim', 'Ruim', 'Regular', 'Bom', 'Excelente'][r] ?? '';
+  ['', 'Very Bad', 'Bad', 'Regular', 'Good', 'Excellent'][r] ?? '';
 
 const starColor = (i) =>
   activeRating.value >= i ? 'text-amber-400' : 'text-slate-200';
@@ -57,7 +58,7 @@ const submit = () => {
       <!-- Header -->
       <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5 flex items-center gap-2">
         <Star class="w-4 h-4" />
-        Avaliação do Processo
+        {{ $t('Process Review') }}
       </h2>
 
       <!-- ─── LOCKED: not finalized ─────────────────────────────────────────── -->
@@ -66,12 +67,12 @@ const submit = () => {
           <Lock class="w-8 h-8 text-slate-300" />
         </div>
         <div class="max-w-xs">
-          <p class="text-sm font-bold text-slate-500">Avaliação Bloqueada</p>
+          <p class="text-sm font-bold text-slate-500">{{ $t('Review Blocked') }}</p>
           <p class="text-xs text-slate-400 mt-2 leading-relaxed">
-            A avaliação fica disponível apenas após o
-            <strong class="text-slate-600">recebimento e finalização do produto</strong>.
-            Quando o status for atualizado para
-            <span class="font-bold text-emerald-600">Processo Finalizado</span>, você poderá avaliar aqui.
+            {{ $t('The review becomes available only after the') }}
+            <strong class="text-slate-600">{{ $t('receipt and finalization of the product') }}</strong>.
+            {{ $t('When the status is updated to') }}
+            <span class="font-bold text-emerald-600">{{ $t('Process Finalized') }}</span>, {{ $t('you will be able to review it here.') }}
           </p>
         </div>
         <div class="flex items-center gap-2 opacity-30 pointer-events-none select-none">
@@ -96,7 +97,7 @@ const submit = () => {
                   :fill="userReview.rating >= i ? 'currentColor' : 'none'"
                 />
                 <span class="ml-2 text-sm font-bold text-amber-700">
-                  {{ ratingLabel(userReview.rating) }}
+                  {{ $t(ratingLabel(userReview.rating)) }}
                 </span>
               </div>
 
@@ -104,12 +105,12 @@ const submit = () => {
               <p v-if="userReview.comment" class="text-sm font-medium text-slate-700 leading-relaxed italic">
                 "{{ userReview.comment }}"
               </p>
-              <p v-else class="text-xs text-slate-400 italic">Nenhum comentário adicionado.</p>
+              <p v-else class="text-xs text-slate-400 italic">{{ $t('No comment added.') }}</p>
 
               <div class="flex items-center gap-1.5 pt-1">
                 <CheckCircle class="w-3.5 h-3.5 text-emerald-500" />
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Avaliação enviada em {{ new Date(userReview.created_at).toLocaleDateString('pt-BR') }}
+                  {{ $t('Review sent on') }} {{ new Date(userReview.created_at).toLocaleDateString(getBcp47Locale()) }}
                 </span>
               </div>
             </div>
@@ -121,7 +122,7 @@ const submit = () => {
               class="shrink-0 flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 bg-white border border-amber-200 hover:border-amber-300 px-3 py-2 rounded-xl transition-all"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              Reeditar
+              {{ $t('Edit again') }}
             </button>
           </div>
         </div>
@@ -133,9 +134,9 @@ const submit = () => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-              Resposta da JR Spice
+              {{ $t('JR Spice Reply') }}
               <span v-if="userReview.replied_at" class="font-normal text-blue-400 normal-case">
-                · {{ new Date(userReview.replied_at).toLocaleDateString('pt-BR') }}
+                · {{ new Date(userReview.replied_at).toLocaleDateString(getBcp47Locale()) }}
               </span>
             </p>
             <p class="text-sm font-medium text-blue-900 leading-relaxed">{{ userReview.admin_reply }}</p>
@@ -144,7 +145,7 @@ const submit = () => {
 
         <div v-else class="flex items-center gap-2 text-xs text-slate-400 px-1">
           <MessageCircle class="w-3.5 h-3.5" />
-          Aguardando resposta da equipe JR Spice.
+          {{ $t('Awaiting a reply from the JR Spice team.') }}
         </div>
 
       </div>
@@ -152,12 +153,12 @@ const submit = () => {
       <!-- ─── FORM: new review or editing ─────────────────────────────────── -->
       <div v-else class="space-y-6">
         <p class="text-sm font-semibold text-slate-600">
-          {{ userReview ? 'Edite sua avaliação abaixo.' : 'Seu pedido foi finalizado! Conte como foi a sua experiência.' }}
+          {{ userReview ? $t('Edit your review below.') : $t('Your order has been finalized! Tell us about your experience.') }}
         </p>
 
         <!-- Star Rating -->
         <div>
-          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Sua nota</p>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">{{ $t('Your score') }}</p>
           <div class="flex items-center gap-2">
             <button
               v-for="i in 5"
@@ -175,7 +176,7 @@ const submit = () => {
               />
             </button>
             <span v-if="form.rating" class="ml-2 text-sm font-bold text-amber-600 transition-all">
-              {{ ratingLabel(form.rating) }}
+              {{ $t(ratingLabel(form.rating)) }}
             </span>
           </div>
           <p v-if="form.errors.rating" class="text-xs text-rose-500 mt-1">{{ form.errors.rating }}</p>
@@ -184,12 +185,12 @@ const submit = () => {
         <!-- Comment -->
         <div>
           <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
-            Comentário <span class="normal-case font-normal text-slate-400">(opcional)</span>
+            {{ $t('Comment') }} <span class="normal-case font-normal text-slate-400">{{ $t('(optional)') }}</span>
           </label>
           <textarea
             v-model="form.comment"
             rows="5"
-            placeholder="Deixe um comentário sobre sua experiência..."
+            :placeholder="$t('Leave a comment about your experience...')"
             class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30 focus:border-amber-400 transition-all resize-none"
           />
           <p v-if="form.errors.comment" class="text-xs text-rose-500 mt-1">{{ form.errors.comment }}</p>
@@ -203,7 +204,7 @@ const submit = () => {
             @click="cancelEdit"
             class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 border border-slate-200 hover:border-slate-300 transition-all"
           >
-            Cancelar
+            {{ $t('Cancel') }}
           </button>
 
           <button
@@ -217,7 +218,7 @@ const submit = () => {
           >
             <Send v-if="!form.processing" class="w-4 h-4" />
             <RefreshCw v-else class="w-4 h-4 animate-spin" />
-            {{ form.processing ? 'Enviando...' : (isEditing ? 'Salvar Avaliação' : 'Enviar Avaliação') }}
+            {{ form.processing ? $t('Sending...') : (isEditing ? $t('Save Review') : $t('Submit Review')) }}
           </button>
         </div>
       </div>

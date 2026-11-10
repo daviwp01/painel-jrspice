@@ -145,19 +145,19 @@ class ContractManagementTest extends TestCase
         $this->assertSame(1, $contract->users()->count());
     }
 
-    public function test_update_with_explicit_user_ids_replaces_links(): void
+    public function test_user_ids_in_payload_are_ignored_and_do_not_change_legacy_links(): void
     {
         $contract = $this->makeContract();
         $old = User::factory()->create();
-        $new = User::factory()->create();
         $contract->users()->attach($old->id);
 
         $this->actingAs($this->master)
-            ->put(route('contracts.update', $contract), $this->validPayload(['user_ids' => [$new->id]]))
+            ->put(route('contracts.update', $contract), $this->validPayload(['user_ids' => [User::factory()->create()->id]]))
             ->assertRedirect();
 
-        $this->assertTrue($contract->users()->where('users.id', $new->id)->exists());
-        $this->assertFalse($contract->users()->where('users.id', $old->id)->exists());
+        // Contract-level linking was removed; company (client_id) drives access now.
+        $this->assertSame(1, $contract->users()->count());
+        $this->assertTrue($contract->users()->where('users.id', $old->id)->exists());
     }
 
     public function test_search_and_status_filter_do_not_leak_rows(): void
@@ -483,18 +483,16 @@ class ContractManagementTest extends TestCase
         $this->assertSame($product->id, $item['product_id']);
     }
 
-    public function test_show_returns_contract_with_items_and_user_ids(): void
+    public function test_show_returns_contract_with_items(): void
     {
         $contract = $this->makeContract();
-        $client = User::factory()->create();
-        $contract->users()->attach($client->id);
 
         $this->actingAs($this->master)
             ->getJson(route('contracts.show', $contract))
             ->assertOk()
             ->assertJsonPath('contract_number', '9999')
-            ->assertJsonPath('user_ids.0', $client->id)
-            ->assertJsonPath('items.0.product_id', $contract->items()->first()->product_id);
+            ->assertJsonPath('items.0.product_id', $contract->items()->first()->product_id)
+            ->assertJsonMissingPath('user_ids');
     }
 
     private function makeContract(array $overrides = []): Contract

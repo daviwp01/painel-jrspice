@@ -5,7 +5,7 @@ import { InboxIcon } from 'lucide-vue-next';
 </script>
 
 <template>
-    <Head title="Dashboards" />
+    <Head :title="$t('Dashboards')" />
 
     <DashboardLayout>
         <div class="h-full w-full flex flex-col bg-[#f8fafc] relative items-center justify-center p-6">
@@ -15,18 +15,18 @@ import { InboxIcon } from 'lucide-vue-next';
                 </div>
                 
                 <template v-if="$page.props.auth.user.is_master">
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">Configure Seu Painel</h3>
-                    <p class="text-sm text-slate-500 font-medium">Você ainda não possui painéis configurados no sistema. Crie as métricas para exibir seus gráficos internos.</p>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">{{ $t('Configure Your Panel') }}</h3>
+                    <p class="text-sm text-slate-500 font-medium">{{ $t('You do not have any panels configured in the system yet. Create the metrics to display your internal charts.') }}</p>
                     <div class="mt-8">
                         <Link :href="route('admin.data.index')" class="bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl text-xs uppercase tracking-widest transition-all">
-                            Ir para Configurações (Master)
+                            {{ $t('Go to Settings (Master)') }}
                         </Link>
                     </div>
                 </template>
 
                 <template v-else>
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">Painel em Construção</h3>
-                    <p class="text-sm text-slate-500 font-medium">Nenhum dado foi publicado pelo administrador ainda. Volte mais tarde.</p>
+                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-2">{{ $t('Panel Under Construction') }}</h3>
+                    <p class="text-sm text-slate-500 font-medium">{{ $t('No data has been published by the administrator yet. Come back later.') }}</p>
                 </template>
 
             </div>

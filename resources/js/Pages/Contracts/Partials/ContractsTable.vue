@@ -1,4 +1,5 @@
 <script setup>
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   useContractColumns,
@@ -6,9 +7,10 @@ import {
   contractColumnsStorageKey,
 } from '@/Composables/useContractColumns';
 import { router, usePage } from '@inertiajs/vue3';
+import { trans } from 'laravel-vue-i18n';
 import {
   Plus, ChevronLeft, ChevronRight, ChevronDown, Package,
-  Columns3, Check, RotateCcw, Users, Trash2, X,
+  Columns3, Check, RotateCcw, Trash2, X,
   ArrowUp, ArrowDown, ArrowUpDown, Ship,
   GripVertical, Lock,
 } from 'lucide-vue-next';
@@ -17,7 +19,6 @@ const props = defineProps({
   rows: { type: Object, required: true },
   filters: { type: Object, default: () => ({}) },
   clients: { type: Array, default: () => [] },
-  users: { type: Array, default: () => [] },
   statusOptions: { type: Array, default: () => [] },
   sellers: { type: Array, default: () => [] },
   contractProducts: { type: Array, default: () => [] },
@@ -120,46 +121,10 @@ const toggleSelect = (contractId) => {
 
 const handleBulkDelete = () => {
   if (!selectedContractIds.value.length) return;
-  if (!confirm(`Excluir definitivamente ${selectedContractIds.value.length} contrato(s) e todos os seus itens?`)) return;
+  if (!confirm(trans('Permanently delete :count contract(s) and all their items?', { count: selectedContractIds.value.length }))) return;
 
   router.post(route('contracts.bulk-delete'), { ids: selectedContractIds.value }, {
     onSuccess: () => { selectedContractIds.value = []; },
-  });
-};
-
-const isBulkModalOpen = ref(false);
-const bulkUserSearch = ref('');
-const bulkSelectedUserIds = ref([]);
-
-const filteredBulkUsers = computed(() => {
-  const term = bulkUserSearch.value.toLowerCase().trim();
-  if (!term) return props.users;
-  return props.users.filter((u) =>
-    [u.name, u.email, u.phone, u.company_name].some((v) => (v || '').toLowerCase().includes(term))
-  );
-});
-
-const openBulkLinkModal = () => {
-  bulkSelectedUserIds.value = [];
-  bulkUserSearch.value = '';
-  isBulkModalOpen.value = true;
-};
-
-const handleBulkSyncUsers = () => {
-  if (!selectedContractIds.value.length || !bulkSelectedUserIds.value.length) {
-    alert('Selecione ao menos um usuário para atrelar aos contratos.');
-    return;
-  }
-
-  router.post(route('contracts.bulk-sync-users'), {
-    ids: selectedContractIds.value,
-    user_ids: bulkSelectedUserIds.value,
-  }, {
-    onSuccess: () => {
-      isBulkModalOpen.value = false;
-      selectedContractIds.value = [];
-      bulkSelectedUserIds.value = [];
-    },
   });
 };
 
@@ -230,7 +195,7 @@ const PER_PAGE_OPTIONS = [
   { value: '100', label: '100' },
   { value: '200', label: '200' },
   { value: '500', label: '500' },
-  { value: 'all', label: 'Todos' },
+  { value: 'all', label: trans('All') },
 ];
 
 const perPage = computed(() => String(props.filters?.per_page || '50'));
@@ -257,12 +222,12 @@ const getStatusConfig = (status) => {
 const formatDate = (value) => {
   if (!value) return '—';
   const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('pt-BR');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(getBcp47Locale());
 };
 
 const formatNumber = (value, digits = 2) => {
   if (value === null || value === undefined || value === '') return '—';
-  return Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return Number(value).toLocaleString(getBcp47Locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
 };
 
 const formatCurrency = (value, symbol = 'US$') => {
@@ -274,7 +239,7 @@ const cellValue = (row, key) => {
   const column = contractColumn(key);
   const value = row[key];
 
-  if (key === 'video_sent') return value ? 'Sim' : '—';
+  if (key === 'video_sent') return value ? trans('Yes') : '—';
   if (column?.numeric) return formatNumber(value, key === 'exchange_rate' ? 4 : 2);
 
   switch (key) {
@@ -323,7 +288,7 @@ const numericClass = (key) =>
           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'"
       >
         <Columns3 class="w-4 h-4" />
-        Colunas
+        {{ $t('Columns') }}
         <span
           v-if="hiddenCount > 0"
           class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-black"
@@ -337,9 +302,9 @@ const numericClass = (key) =>
         >
           <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Colunas da Planilha</p>
+              <p class="text-xs font-black text-slate-700 uppercase tracking-wider">{{ $t('Spreadsheet Columns') }}</p>
               <p class="text-[10px] font-medium text-slate-400 mt-0.5">
-                {{ toggleableVisibleCount }} de {{ toggleableColumns.length }} exibidas
+                {{ toggleableVisibleCount }} {{ $t('of') }} {{ toggleableColumns.length }} {{ $t('shown') }}
               </p>
             </div>
             <button
@@ -347,7 +312,7 @@ const numericClass = (key) =>
               class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-wider transition-colors"
             >
               <RotateCcw class="w-3 h-3" />
-              Resetar
+              {{ $t('Reset') }}
             </button>
           </div>
 
@@ -367,12 +332,12 @@ const numericClass = (key) =>
               </div>
               <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-slate-400 shrink-0">
                 <Lock class="w-3 h-3" />
-                Sempre
+                {{ $t('Always') }}
               </span>
             </div>
 
             <p class="px-4 pt-3 pb-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-              Arraste para reordenar
+              {{ $t('Drag to reorder') }}
             </p>
 
             <div
@@ -393,7 +358,7 @@ const numericClass = (key) =>
               <div class="flex items-center gap-2 min-w-0 flex-1">
                 <span
                   class="cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-slate-500 shrink-0"
-                  :title="`Reordenar ${col.label}`"
+                  :title="$t('Reorder :column', { column: col.label })"
                 >
                   <GripVertical class="w-4 h-4" />
                 </span>
@@ -423,7 +388,7 @@ const numericClass = (key) =>
                 <button
                   type="button"
                   @click.stop="move(col.key, -1)"
-                  :title="`Subir ${col.label}`"
+                  :title="$t('Move up :column', { column: col.label })"
                   class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
                 >
                   <ArrowUp class="w-3.5 h-3.5" />
@@ -431,7 +396,7 @@ const numericClass = (key) =>
                 <button
                   type="button"
                   @click.stop="move(col.key, 1)"
-                  :title="`Descer ${col.label}`"
+                  :title="$t('Move down :column', { column: col.label })"
                   class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
                 >
                   <ArrowDown class="w-3.5 h-3.5" />
@@ -441,7 +406,7 @@ const numericClass = (key) =>
           </div>
 
           <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
-            <p class="text-[10px] font-medium text-slate-400">Ordem e visibilidade salvas por usuário</p>
+            <p class="text-[10px] font-medium text-slate-400">{{ $t('Order and visibility saved per user') }}</p>
           </div>
         </div>
       </Transition>
@@ -452,7 +417,7 @@ const numericClass = (key) =>
       class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-200/60 transition-all active:scale-95 whitespace-nowrap"
     >
       <Plus class="w-4 h-4" />
-      Novo Contrato
+      {{ $t('New Contract') }}
     </button>
   </ContractsFilterBar>
 
@@ -461,23 +426,16 @@ const numericClass = (key) =>
       class="mx-5 mb-4 bg-slate-900 text-white px-5 py-3 rounded-2xl flex items-center justify-between shadow-xl"
     >
       <span class="text-xs font-black bg-blue-600 text-white px-3 py-1 rounded-lg uppercase tracking-wider">
-        {{ selectedContractIds.length }} {{ selectedContractIds.length === 1 ? 'contrato selecionado' : 'contratos selecionados' }}
+        {{ selectedContractIds.length }} {{ selectedContractIds.length === 1 ? $t('contract selected') : $t('contracts selected') }}
       </span>
 
       <div class="flex items-center gap-2">
-        <button
-          @click="openBulkLinkModal"
-          class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md active:scale-95"
-        >
-          <Users class="w-4 h-4" />
-          Vincular Usuários
-        </button>
         <button
           @click="handleBulkDelete"
           class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-md active:scale-95"
         >
           <Trash2 class="w-4 h-4" />
-          Excluir
+          {{ $t('Delete') }}
         </button>
       </div>
     </div>
@@ -509,7 +467,7 @@ const numericClass = (key) =>
                 @click="toggleSort(col.key)"
                 class="inline-flex items-center gap-1 uppercase tracking-wider transition-colors"
                 :class="isActiveSort(col.key) ? 'text-blue-700' : 'text-slate-500 hover:text-slate-800'"
-                :title="`Ordenar por ${col.label}`"
+                :title="$t('Sort by :column', { column: col.label })"
               >
                 {{ col.label }}
                 <ArrowUpDown v-if="!isActiveSort(col.key)" class="w-3 h-3 opacity-40" />
@@ -568,7 +526,7 @@ const numericClass = (key) =>
                   class="status-badge-trigger inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold normal-case border border-slate-200 bg-slate-50/50 hover:bg-slate-100/50 text-slate-450 hover:text-slate-600 cursor-pointer transition-all select-none hover:border-slate-300 shadow-sm"
                   @click.stop="openStatusSelector(row, $event)"
                 >
-                  Sem status
+                  {{ $t('No status') }}
                   <ChevronDown class="w-3.5 h-3.5 opacity-60 shrink-0 ml-0.5" />
                 </div>
               </template>
@@ -602,7 +560,7 @@ const numericClass = (key) =>
                   v-if="row.container_number || row.dhl_number"
                   @click.stop="$emit('tracking', row)"
                   class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 rounded-xl hover:bg-emerald-100 text-emerald-600"
-                  title="Rastreamento"
+                  :title="$t('Tracking')"
                 >
                   <Ship class="w-4 h-4" />
                 </button>
@@ -610,7 +568,7 @@ const numericClass = (key) =>
                 <button
                   @click.stop="$emit('edit', row)"
                   class="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-2 rounded-xl hover:bg-blue-100 text-blue-500"
-                  title="Editar contrato"
+                  :title="$t('Edit contract')"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00-2 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -627,8 +585,8 @@ const numericClass = (key) =>
                   <Package class="w-8 h-8 text-slate-400" />
                 </div>
                 <div>
-                  <p class="text-sm font-bold text-slate-500">Nenhum contrato encontrado</p>
-                  <p class="text-xs text-slate-400 mt-1">Ajuste os filtros ou crie um novo contrato</p>
+                  <p class="text-sm font-bold text-slate-500">{{ $t('No contracts found') }}</p>
+                  <p class="text-xs text-slate-400 mt-1">{{ $t('Adjust the filters or create a new contract') }}</p>
                 </div>
               </div>
             </td>
@@ -640,13 +598,13 @@ const numericClass = (key) =>
     <div class="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-4 rounded-b-3xl">
       <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
         <p class="text-xs font-bold text-slate-500">
-          Exibindo
+          {{ $t('Showing') }}
           <span class="text-blue-600 font-black">{{ rows.from || 0 }}</span>–<span class="text-blue-600 font-black">{{ rows.to || 0 }}</span>
-          de <span class="text-slate-700 font-black">{{ rows.total || 0 }}</span> itens
+          {{ $t('of') }} <span class="text-slate-700 font-black">{{ rows.total || 0 }}</span> {{ $t('items') }}
         </p>
 
         <div class="flex items-center gap-2">
-          <label for="contracts-per-page" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Exibir</label>
+          <label for="contracts-per-page" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Show') }}</label>
           <select
             id="contracts-per-page"
             :value="perPage"
@@ -654,7 +612,7 @@ const numericClass = (key) =>
             class="text-xs font-bold rounded-xl border-slate-200 bg-white py-1.5 pl-3 pr-8 text-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 cursor-pointer"
           >
             <option v-for="option in PER_PAGE_OPTIONS" :key="option.value" :value="option.value">
-              {{ option.label }}{{ option.value === 'all' ? '' : ' por página' }}
+              {{ option.label }}{{ option.value === 'all' ? '' : ' ' + $t('per page') }}
             </option>
           </select>
         </div>
@@ -705,9 +663,9 @@ const numericClass = (key) =>
       :style="statusDropdownStyle"
     >
       <div class="px-4 py-2 border-b border-slate-100 mb-1">
-        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Alterar STATUS</p>
+        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $t('Change status') }}</p>
         <p class="text-xs font-black text-slate-700 truncate mt-0.5">
-          Contrato {{ activeStatusRow.contract_number || 'sem número' }}
+          {{ $t('Contract') }} {{ activeStatusRow.contract_number || $t('no number') }}
         </p>
       </div>
       <div class="max-h-60 overflow-y-auto">
@@ -727,54 +685,6 @@ const numericClass = (key) =>
     </div>
   </Teleport>
 
-  <Teleport to="body">
-    <div v-if="isBulkModalOpen" class="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h3 class="text-base font-black text-slate-900 uppercase tracking-tighter">Vincular Usuários</h3>
-            <p class="text-xs font-medium text-slate-500 mt-0.5">
-              Atrele usuários aos {{ selectedContractIds.length }} contratos selecionados
-            </p>
-          </div>
-          <button @click="isBulkModalOpen = false" class="text-slate-400 hover:text-slate-600">
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-
-        <div class="space-y-2 max-h-72 overflow-y-auto">
-          <label
-            v-for="user in filteredBulkUsers"
-            :key="user.id"
-            class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              :value="user.id"
-              v-model="bulkSelectedUserIds"
-              class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
-            />
-            <span class="text-sm font-semibold text-slate-700">{{ user.name }}</span>
-            <span class="text-xs text-slate-400">{{ user.email }}</span>
-          </label>
-          <p v-if="!filteredBulkUsers.length" class="text-xs text-slate-400 text-center py-4">Nenhum usuário encontrado</p>
-        </div>
-
-        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-          <button
-            type="button"
-            @click="isBulkModalOpen = false"
-            class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl uppercase tracking-wider transition-colors"
-          >Cancelar</button>
-          <button
-            type="button"
-            @click="handleBulkSyncUsers"
-            class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl uppercase tracking-wider shadow-lg shadow-blue-200/50 transition-all active:scale-95"
-          >Atrelar aos {{ selectedContractIds.length }} Contratos</button>
-        </div>
-      </div>
-    </div>
-  </Teleport>
 </template>
 
 <style scoped>

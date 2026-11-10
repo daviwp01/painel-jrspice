@@ -1,8 +1,9 @@
 import { reactive } from 'vue';
+import { trans } from 'laravel-vue-i18n';
 import { toast } from '@/Stores/ToastStore';
 import { ContractDocumentRules } from '@/Utils/contractDocuments';
 
-const MAX_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
+const MAX_BYTES = ContractDocumentRules.MAX_BYTES;
 
 export const csrfToken = () => {
   const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
@@ -30,7 +31,7 @@ export const contractUploads = reactive({
     const key = `${contractId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     if (file.size > MAX_BYTES) {
-      toast.add(`${file.name} tem ${formatSize(file.size)}. O limite é de 5 GB por arquivo.`, 'error');
+      toast.add(trans(':name is :size. The limit is :max per file.', { name: file.name, size: formatSize(file.size), max: ContractDocumentRules.HUMAN_MAX_SIZE }), 'error');
       return Promise.resolve();
     }
 
@@ -38,7 +39,7 @@ export const contractUploads = reactive({
     const extension = (file.name.split('.').pop() || '').toLowerCase();
 
     if (!allowed.includes(extension)) {
-      toast.add(`Formato .${extension} não é aceito. Envie ${allowed.join(', ').toUpperCase()}.`, 'error');
+      toast.add(trans('The .:extension format is not accepted. Send :allowed.', { extension, allowed: allowed.join(', ').toUpperCase() }), 'error');
       return Promise.resolve();
     }
 
@@ -61,7 +62,7 @@ export const contractUploads = reactive({
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', route('contracts.documents.store', contract.id));
-      xhr.timeout = 3 * 60 * 60 * 1000; // 5 GB on a slow link
+      xhr.timeout = 3 * 60 * 60 * 1000; // 15 GB on a slow link
       xhr.setRequestHeader('X-XSRF-TOKEN', csrfToken());
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       xhr.setRequestHeader('Accept', 'application/json');
@@ -88,19 +89,19 @@ export const contractUploads = reactive({
 
       xhr.onerror = () => {
         entry.state = 'error';
-        entry.message = 'Falha na conexão durante o envio.';
+        entry.message = trans('Connection failed during upload.');
         resolve();
       };
 
       xhr.ontimeout = () => {
         entry.state = 'error';
-        entry.message = 'O envio excedeu o tempo limite. Tente novamente.';
+        entry.message = trans('The upload exceeded the time limit. Try again.');
         resolve();
       };
 
       xhr.onabort = () => {
         entry.state = 'cancelled';
-        entry.message = 'Envio cancelado.';
+        entry.message = trans('Upload cancelled.');
         resolve();
         setTimeout(() => this.dismiss(entry.key), 1500);
       };
@@ -149,10 +150,10 @@ function parseErrorMessage(xhr) {
     /* resposta não é JSON */
   }
 
-  if (xhr.status === 413) return 'Arquivo maior que o limite permitido pelo servidor.';
-  if (xhr.status === 419) return 'Sessão expirada. Recarregue a página e tente novamente.';
+  if (xhr.status === 413) return trans('File larger than the limit allowed by the server.');
+  if (xhr.status === 419) return trans('Session expired. Reload the page and try again.');
 
-  return `Falha no envio (HTTP ${xhr.status || 'sem resposta'}).`;
+  return trans('Upload failed (HTTP :status).', { status: xhr.status || trans('no response') });
 }
 
 export function formatSize(bytes) {

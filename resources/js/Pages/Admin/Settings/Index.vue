@@ -73,7 +73,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Relatórios Permitidos (Padrão)</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Allowed Reports (Default)') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <DefaultReportAccessSetting
@@ -95,7 +95,7 @@ const tabs = [
 
                         <div class="space-y-4">
                             <div class="flex items-center space-x-2 px-1">
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Dados de Atendimento & Redes</span>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">{{ $t('Contact & Social Data') }}</span>
                                 <div class="h-px flex-1 bg-slate-200"></div>
                             </div>
                             <ContactSettings :settings="settings" />

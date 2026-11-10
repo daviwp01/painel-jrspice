@@ -77,17 +77,17 @@ const close = () => emit('close');
                 target="_blank"
                 download
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                title="Baixar arquivo"
+                :title="$t('Download file')"
               >
                 <Download class="w-3.5 h-3.5" />
-                <span>Baixar</span>
+                <span>{{ $t('Download') }}</span>
               </a>
 
               <button
                 type="button"
                 @click="close"
                 class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
-                title="Fechar"
+                :title="$t('Close')"
               >
                 <X class="w-4 h-4" />
               </button>
@@ -119,7 +119,7 @@ const close = () => emit('close');
               <iframe
                 v-if="isYoutube"
                 :src="youtubeEmbedUrl"
-                title="Vídeo de Operação Portuária e Embarque"
+                :title="$t('Port Operation and Loading Video')"
                 class="w-full h-full border-none"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowfullscreen
@@ -133,7 +133,7 @@ const close = () => emit('close');
                 class="w-full h-full object-contain bg-black"
               >
                 <source :src="fileUrl" type="video/mp4" />
-                Seu navegador não suporta reprodução direta deste vídeo.
+                {{ $t('Your browser does not support direct playback of this video.') }}
               </video>
             </div>
 
@@ -147,7 +147,7 @@ const close = () => emit('close');
                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-800 text-white font-bold text-xs"
               >
                 <Download class="w-3.5 h-3.5" />
-                Baixar Arquivo
+                {{ $t('Download File') }}
               </a>
             </div>
 

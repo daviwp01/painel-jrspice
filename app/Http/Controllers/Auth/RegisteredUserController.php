@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Setting;
+use App\Models\User;
+use App\Services\RecaptchaVerifier;
+use App\Support\ThrottleKeys;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Services\RecaptchaVerifier;
-use App\Support\ThrottleKeys;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -72,7 +72,7 @@ class RegisteredUserController extends Controller
             'import_experience' => $request->import_experience,
             'import_volume' => $request->import_volume,
             'decision_role' => $request->decision_role,
-            'is_active' => !$requiresActivation,
+            'is_active' => ! $requiresActivation,
             'allowed_pages' => array_values(Setting::get('default_allowed_pages', [])),
         ]);
 
@@ -82,6 +82,7 @@ class RegisteredUserController extends Controller
 
         if ($user->is_active) {
             Auth::login($user);
+
             return redirect(route('dashboard', absolute: false));
         }
 
@@ -110,7 +111,7 @@ class RegisteredUserController extends Controller
         ]);
 
         throw ValidationException::withMessages([
-            'g_recaptcha' => 'Não foi possível confirmar que você não é um robô. Atualize a página e tente novamente.',
+            'g_recaptcha' => __('We could not confirm that you are not a robot. Refresh the page and try again.'),
         ]);
     }
 

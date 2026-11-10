@@ -1,4 +1,5 @@
 <script setup>
+import { productName } from '@/Utils/productName';
 import { ref, computed, watch } from 'vue';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
@@ -24,13 +25,13 @@ import ImportTab from './Tabs/ImportTab.vue';
 import ClientsTab from './Tabs/ClientsTab.vue';
 
 const tabs = [
-    { id: 'pages', name: 'Páginas / Menu', icon: LayoutIcon },
-    { id: 'clients', name: 'Clientes (Exp/Imp)', icon: UsersIcon },
-    { id: 'countries', name: 'Países', icon: GlobeIcon },
-    { id: 'products', name: 'Produtos', icon: PackageIcon },
-    { id: 'suppliers', name: 'Fornecedores', icon: TruckIcon },
-    { id: 'prices', name: 'Histórico Preços', icon: ActivityIcon },
-    { id: 'import', name: 'Importar Planilha', icon: FileUpIcon },
+    { id: 'pages', name: 'Pages / Menu', icon: LayoutIcon },
+    { id: 'clients', name: 'Clients (Exp/Imp)', icon: UsersIcon },
+    { id: 'countries', name: 'Countries', icon: GlobeIcon },
+    { id: 'products', name: 'Products', icon: PackageIcon },
+    { id: 'suppliers', name: 'Suppliers', icon: TruckIcon },
+    { id: 'prices', name: 'Price History', icon: ActivityIcon },
+    { id: 'import', name: 'Import Spreadsheet', icon: FileUpIcon },
 ];
 
 const props = defineProps({
@@ -108,17 +109,17 @@ const updateSearch = (key, value) => {
 const searchableProducts = computed(() => {
     return props.all_products.map(p => ({
         ...p,
-        name: `${p.name} (${p.country?.name || 'N/A'})`
+        name: `${productName(p)} (${p.country?.name || 'N/A'})`
     }));
 });
 </script>
 
 <template>
-    <Head title="Gerenciamento de Dados" />
+    <Head :title="$t('Data Management')" />
 
     <DashboardLayout>
         <template #header>
-            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">Base de Dados e Configurações</h2>
+            <h2 class="hidden md:block text-xs font-bold text-slate-400 uppercase tracking-widest">{{ $t('Database and Settings') }}</h2>
         </template>
 
         <div class="h-full bg-slate-50/50 pt-8 pb-16 px-4 sm:px-6 lg:px-8">
@@ -135,7 +136,7 @@ const searchableProducts = computed(() => {
                             :class="activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/10' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'" 
                             class="flex-1 md:flex-none px-2 py-3.5 md:px-4 md:py-4 border-b-[4px] font-bold text-[10px] md:text-xs lg:text-sm uppercase tracking-normal md:tracking-wider transition-all flex items-center justify-center gap-1.5 md:gap-2 whitespace-nowrap"
                         >
-                            <component :is="tab.icon" class="w-4 h-4" /> {{ tab.name }}
+                            <component :is="tab.icon" class="w-4 h-4" /> {{ $t(tab.name) }}
                         </button>
                     </div>
                 </div>

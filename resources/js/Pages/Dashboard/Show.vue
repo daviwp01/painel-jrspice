@@ -1,10 +1,13 @@
 <script setup>
+import { productName, withTranslatedProductNames } from '@/Utils/productName';
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, watch, computed, onMounted } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Truck, ChevronDown, ChevronUp, Check, MapPin, Box, Calendar, Search, X, Loader2, Menu, ChartLine, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { trans } from 'laravel-vue-i18n';
 import { Line } from 'vue-chartjs';
 import { createFixedTooltip } from '@/Utils/FixedChartTooltip';
 import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale, PointElement, Filler } from 'chart.js';
@@ -50,7 +53,7 @@ const props = defineProps({
   recentBestPrices: Array,
 });
 
-const monthsFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const yearColors = {
     '2022': '#64748b',
@@ -82,11 +85,11 @@ const chartDataComputed = computed(() => {
     let datasets = [];
     let labels = [];
     if (chartMode.value === 'SEMANAL') {
-        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const monthLabels = Array(52).fill("");
         for (let i = 0; i < 52; i++) {
             const d = new Date(2024, 0, 1 + (i * 7));
-            const month = monthNames[d.getMonth()];
+            const month = trans(monthNames[d.getMonth()]);
             const prevD = i > 0 ? new Date(2024, 0, 1 + ((i - 1) * 7)) : null;
             const isMonthStart = !prevD || prevD.getMonth() !== d.getMonth();
             if (isMonthStart) monthLabels[i] = month;
@@ -109,7 +112,7 @@ const chartDataComputed = computed(() => {
             spanGaps: true
         }));
     } else if (chartMode.value === 'MENSAL') {
-        labels = monthsFull.map(m => m.slice(0, 3));
+        labels = monthsFull.map(m => trans(m).slice(0, 3));
         datasets = Object.entries(props.chartData || {})
             .filter(([year]) => visibleYears.value.includes(year))
             .map(([year, data]) => ({
@@ -134,7 +137,7 @@ const chartDataComputed = computed(() => {
            return `${(d.getUTCMonth() + 1).toString().padStart(2, '0')}/${d.getUTCFullYear().toString().slice(-2)}`;
         });
         datasets = [{
-            label: 'Tendência Histórica',
+            label: 'Historical Trend',
             data: props.pricesData.map(p => p.price),
             borderColor: '#2563eb', // Standard Blue
             backgroundColor: 'rgba(37, 99, 235, 0.1)',
@@ -171,7 +174,7 @@ const fixedTooltip = createFixedTooltip({ align: 'center' });
 
 // Mês de cada uma das 52 semanas do eixo SEMANAL. O rótulo do eixo fica vazio
 // fora do início do mês, então o tooltip usa esta lista para mostrar o mês SEMPRE.
-const WEEK_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const WEEK_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const weeklyMonthLabels = Array.from({ length: 52 }, (_, i) =>
     WEEK_MONTHS[new Date(2024, 0, 1 + (i * 7)).getMonth()]
 );
@@ -201,11 +204,12 @@ const chartOptions = computed(() => ({
                     const item = items?.[0];
                     if (!item) return '';
                     if (chartMode.value === 'SEMANAL') {
-                        return weeklyMonthLabels[item.dataIndex] || item.label || '';
+                        const month = weeklyMonthLabels[item.dataIndex];
+                        return month ? trans(month) : (item.label || '');
                     }
                     return item.label || '';
                 },
-                label: (context) => ` ${context.dataset.label}: $ ${context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
+                label: (context) => ` ${trans(context.dataset.label)}: $ ${context.parsed.y.toLocaleString(getBcp47Locale(), {minimumFractionDigits: 2})}`,
                 labelColor: (context) => ({
                     borderColor: 'transparent',
                     backgroundColor: context.dataset.borderColor,
@@ -224,7 +228,7 @@ const chartOptions = computed(() => ({
             ticks: { 
                 font: { size: isMobile.value ? 10 : 18, weight: 'bold' },
                 color: '#94a3b8',
-                callback: (value) => `$ ${Number(value).toLocaleString('pt-BR')}`
+                callback: (value) => `$ ${Number(value).toLocaleString(getBcp47Locale())}`
             }
         },
         x: {
@@ -245,6 +249,7 @@ const chartOptions = computed(() => ({
 const selectedCountry = ref(props.filters.country_id || '');
 const selectedSupplier = ref(props.filters.supplier_id || '');
 const selectedProduct = ref(props.filters.product_id || '');
+const productSelectOptions = computed(() => withTranslatedProductNames(props.products));
 const filterDateRange = ref(props.filters.date_range || 'Todos');
 
 const suppliersWithOptions = computed(() => {
@@ -381,7 +386,7 @@ const calculateChange = (min, max) => {
 const formatNumber = (value, decimals = 2) => {
     const num = parseFloat(value);
     if (isNaN(num)) return decimals === 3 ? '0,000' : '0,00';
-    return num.toLocaleString('pt-BR', { 
+    return num.toLocaleString(getBcp47Locale(), { 
         minimumFractionDigits: decimals, 
         maximumFractionDigits: decimals 
     });
@@ -390,7 +395,7 @@ const formatNumber = (value, decimals = 2) => {
 const formatSpread = (value) => {
     const num = parseFloat(value);
     if (isNaN(num)) return '0,00';
-    return num.toLocaleString('pt-BR', { 
+    return num.toLocaleString(getBcp47Locale(), { 
         minimumFractionDigits: 2, 
         maximumFractionDigits: 2 
     });
@@ -400,7 +405,7 @@ const getAvgLabel = (min, max) => {
     const nMin = parseFloat(min);
     const nMax = parseFloat(max);
     if (isNaN(nMin) || isNaN(nMax)) return '0,00';
-    return ((nMin + nMax) / 2).toLocaleString('pt-BR', { 
+    return ((nMin + nMax) / 2).toLocaleString(getBcp47Locale(), { 
         minimumFractionDigits: 0, 
         maximumFractionDigits: 0 
     });
@@ -413,7 +418,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
 </script>
 
 <template>
-  <Head :title="currentPage.title" />
+  <Head :title="$t(currentPage.title)" />
 
   <DashboardLayout>
     <template #sidebar-filters>
@@ -421,10 +426,10 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
       <div class="border-t border-slate-800/50 pt-4">
          <div class="flex items-center justify-between mb-4 px-3">
              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> Filtros de Busca
+                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> {{ $t('Search Filters') }}
              </p>
              <div class="flex items-center gap-3">
-                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
+                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">{{ $t('Clear') }}</button>
                  <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
              </div>
          </div>
@@ -433,8 +438,8 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
             <SearchableSelect 
                v-model="selectedCountry"
                :options="countries"
-               label="País"
-               placeholder="Selecione o País"
+               :label="$t('Country')"
+               :placeholder="$t('Select the Country')"
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
@@ -445,9 +450,9 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
 
             <SearchableSelect 
                v-model="selectedProduct"
-               :options="products"
-               label="Produto"
-               placeholder="Selecione um Produto"
+               :options="productSelectOptions"
+               :label="$t('Product')"
+               :placeholder="$t('Select a Product')"
                :icon="BoxIcon"
                :disabled="!selectedCountry"
                variant="dark"
@@ -457,13 +462,13 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
 
             <div class="relative px-1">
               <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 cursor-pointer">
-                  <CalendarIcon class="w-3.5 h-3.5 text-[#b2862e]"/> Data (Ano / Semana)
+                  <CalendarIcon class="w-3.5 h-3.5 text-[#b2862e]"/> {{ $t('Date (Year / Week)') }}
               </label>
               
               <!-- CUSTOM TREE SELECT -->
               <div class="relative group">
                 <button @click="isDatePickerOpen = !isDatePickerOpen" class="w-full bg-[#1e293b]/40 border border-slate-800 rounded-xl text-sm text-slate-300 font-bold px-3 py-3 flex items-center justify-between hover:bg-[#1e293b]/60 transition-colors uppercase">
-                  <span>{{ filterDateRange === 'Todos' ? 'Todos os Registros' : (filterDateRange.includes('-') ? filterDateRange.replace('-', ' - Sem. ') : filterDateRange) }}</span>
+                  <span>{{ filterDateRange === 'Todos' ? $t('All Records') : (filterDateRange.includes('-') ? filterDateRange.replace('-', ' - ' + $t('Week') + ' ') : filterDateRange) }}</span>
                   <ChevronDownIcon :class="{ 'rotate-180 text-blue-500': isDatePickerOpen }" class="w-4 h-4 text-slate-500 transition-transform duration-300" />
                 </button>
 
@@ -472,7 +477,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                       <div class="w-4 h-4 border-2 rounded flex items-center justify-center border-slate-700" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === 'Todos' }">
                         <CheckIcon v-if="filterDateRange === 'Todos'" class="w-3 h-3 text-white stroke-[4]" />
                       </div>
-                      TODOS OS REGISTROS
+                      {{ $t('ALL RECORDS') }}
                    </div>
 
                    <div v-for="group in availableDates" :key="group.year" class="mb-2">
@@ -491,9 +496,9 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                       <div v-if="expandedYears.includes(group.year.toString())" class="space-y-1 mt-1 ml-6 border-l border-slate-800/50 animate-in slide-in-from-top-2 duration-300">
                         <div v-for="d in group.weeks" :key="d.year + '-' + d.week" @click="() => { filterDateRange = d.year + '-' + d.week; applyFilters(); isDatePickerOpen = false; }" class="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer text-[10px] font-bold uppercase tracking-wider text-slate-400 group/wk" :class="{ 'text-blue-400 bg-blue-600/10': filterDateRange === (d.year + '-' + d.week) }">
                            <div class="w-3.5 h-3.5 border-2 rounded flex items-center justify-center border-slate-700 transition-colors group-hover/wk:border-slate-500" :class="{ 'bg-blue-600 border-blue-600': filterDateRange === (d.year + '-' + d.week) }">
-                              <CheckIcon v-if="filterDateRange === (d.year + '-' + d.week)" class="w-2.5 h-2.5 text-white stroke-[4]" />
+                               <CheckIcon v-if="filterDateRange === (d.year + '-' + d.week)" class="w-2.5 h-2.5 text-white stroke-[4]" />
                            </div>
-                           SEMANA {{ d.week }}
+                           {{ $t('Week') }} {{ d.week }}
                         </div>
                       </div>
                    </div>
@@ -528,21 +533,21 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="relative z-10">
                             <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 flex items-center gap-2">
-                                <BoxIcon class="w-3" /> PRODUTO
+                                <BoxIcon class="w-3" /> {{ $t('PRODUCT') }}
                             </p>
                             <h3 class="text-sm xl:text-base font-black text-slate-900 uppercase tracking-tighter xl:tracking-tight leading-tight mb-1 truncate">
-                                {{ products.find(p => p.id == selectedProduct)?.name || 'Todos os Produtos' }}
+                                {{ productName(products.find(p => p.id == selectedProduct)) || $t('All Products') }}
                             </h3>
                             
                             <div class="flex items-center gap-2 pt-1.5 border-t border-slate-50 overflow-hidden">
                                 <div class="flex items-center gap-1.5 min-w-0">
                                     <CountryFlag v-if="countries.find(c => c.id == selectedCountry)?.name" :name="countries.find(c => c.id == selectedCountry)?.name" class-name="w-5 h-3.5 xl:w-6 xl:h-4 rounded-sm border border-slate-100 shrink-0" />
                                     <p class="text-[10px] xl:text-[11px] font-bold text-slate-500 uppercase tracking-wide truncate">
-                                        {{ countries.find(c => c.id == selectedCountry)?.name || 'GLOBAL' }}
+                                        {{ countries.find(c => c.id == selectedCountry)?.name || $t('GLOBAL') }}
                                     </p>
                                 </div>
                                 <div v-if="currentHarvest" class="ml-auto flex items-center gap-1 shrink-0">
-                                    <span class="text-[8px] xl:text-[9px] font-black text-slate-300 uppercase">SAFRA</span>
+                                    <span class="text-[8px] xl:text-[9px] font-black text-slate-300 uppercase">{{ $t('HARVEST') }}</span>
                                     <span class="text-[9px] xl:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 xl:px-2 py-0.5 rounded-full uppercase">
                                         {{ currentHarvest }}
                                     </span>
@@ -556,7 +561,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/50 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-blue-400/50 transition-colors"></div>
                         
                         <div class="flex items-start justify-between mb-1 z-10 relative">
-                            <p class="text-[8px] xl:text-[9px] font-bold text-blue-100 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">Menores e maiores preços na semana</p>
+                            <p class="text-[8px] xl:text-[9px] font-bold text-blue-100 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">{{ $t('Lowest and highest prices in the week') }}</p>
                             <div class="bg-blue-800 text-[9px] xl:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shadow-sm border border-blue-400/30 tabular-nums shrink-0 mt-0.5">
                                 {{ formatSpread(metrics.latest.spread) }}%
                             </div>
@@ -564,11 +569,11 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
                             <div class="pl-2 border-l-2 border-white/20">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">{{ $t('MIN') }}</p>
                                 <p class="text-lg xl:text-xl font-black tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.latest.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-2 border-white/60">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-blue-200 uppercase tracking-wider mb-0.5">{{ $t('MAX') }}</p>
                                 <p class="text-lg xl:text-xl font-black tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.latest.max) }}</p>
                             </div>
                         </div>
@@ -580,7 +585,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="flex items-start justify-between mb-1 z-10 relative">
                             <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">
-                                Variação total no ano de <span class="text-blue-600 font-black">{{ metrics.year.label?.split(':')?.[1]?.trim() || new Date().getFullYear() }}</span>
+                                {{ $t('Total variation in the year of') }} <span class="text-blue-600 font-black">{{ metrics.year.label?.split(':')?.[1]?.trim() || new Date().getFullYear() }}</span>
                             </p>
                             <div class="bg-slate-100 text-[9px] xl:text-[10px] font-bold text-slate-600 uppercase px-1.5 py-0.5 rounded shadow-sm border border-slate-200 tabular-nums shrink-0 mt-0.5">
                                 {{ formatSpread(metrics.year.spread) }}%
@@ -589,11 +594,11 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
                             <div class="pl-2 border-l-2 border-blue-500/20">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{{ $t('MIN') }}</p>
                                 <p class="text-lg xl:text-xl font-black text-slate-800 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.year.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-2 border-blue-600">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{{ $t('MAX') }}</p>
                                 <p class="text-lg xl:text-xl font-black text-blue-600 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.year.max) }}</p>
                             </div>
                         </div>
@@ -605,7 +610,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="flex items-start justify-between mb-1 z-10 relative">
                             <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-tighter xl:tracking-widest leading-[1.1] mr-2">
-                                Variação total desde <span class="text-blue-600 font-black">{{ metrics.all.label?.split(':')?.[1]?.trim() }}</span>
+                                {{ $t('Total variation since') }} <span class="text-blue-600 font-black">{{ metrics.all.label?.split(':')?.[1]?.trim() }}</span>
                             </p>
                             <div class="bg-slate-100 text-[9px] xl:text-[10px] font-bold text-rose-600 uppercase px-1.5 py-0.5 rounded shadow-sm border border-slate-200 tabular-nums shrink-0 mt-0.5">
                                 {{ formatSpread(metrics.all.spread) }}%
@@ -614,11 +619,11 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                         
                         <div class="grid grid-cols-2 gap-2 xl:gap-4 z-10 relative mt-0.5">
                             <div class="pl-2 border-l-2 border-blue-500/20">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MIN</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{{ $t('MIN') }}</p>
                                 <p class="text-lg xl:text-xl font-black text-slate-800 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.all.min) }}</p>
                             </div>
                             <div class="pl-2 border-l-2 border-blue-600">
-                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">MAX</p>
+                                <p class="text-[8px] xl:text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{{ $t('MAX') }}</p>
                                 <p class="text-lg xl:text-xl font-black text-blue-600 tabular-nums tracking-tighter xl:tracking-tight leading-none">{{ formatNumber(metrics.all.max) }}</p>
                             </div>
                         </div>
@@ -629,20 +634,20 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                 <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 pb-4 border-b border-slate-100 gap-4">
                         <div class="flex items-center gap-4">
-                           <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">MELHOR PREÇO x TEMPO</h3>
+                           <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">{{ $t('BEST PRICE x TIME') }}</h3>
                            <div class="flex items-center gap-1.5 ml-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                               <button @click="zoomOut" class="p-2 bg-white text-slate-500 hover:text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:border-blue-200 transition-all group" title="Diminuir Visualização">
+                               <button @click="zoomOut" class="p-2 bg-white text-slate-500 hover:text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:border-blue-200 transition-all group" :title="$t('Zoom out')">
                                    <ZoomOutIcon class="w-4 h-4" />
                                </button>
-                               <button @click="zoomIn" class="p-2 bg-white text-slate-500 hover:text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:border-blue-200 transition-all group" title="Aumentar Visualização">
+                               <button @click="zoomIn" class="p-2 bg-white text-slate-500 hover:text-blue-600 rounded-lg shadow-sm border border-slate-200 hover:border-blue-200 transition-all group" :title="$t('Zoom in')">
                                    <ZoomInIcon class="w-4 h-4" />
                                </button>
                            </div>
                         </div>
                         <div class="flex bg-slate-100 p-1 rounded-lg">
-                            <button @click="chartMode = 'MENSAL'" :class="[chartMode === 'MENSAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">MENSAL</button>
-                            <button @click="chartMode = 'SEMANAL'" :class="[chartMode === 'SEMANAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">SEMANAL</button>
-                            <button @click="chartMode = 'CONTÍNUO'" :class="[chartMode === 'CONTÍNUO' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">CONTÍNUO</button>
+                            <button @click="chartMode = 'MENSAL'" :class="[chartMode === 'MENSAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">{{ $t('Monthly') }}</button>
+                            <button @click="chartMode = 'SEMANAL'" :class="[chartMode === 'SEMANAL' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">{{ $t('Weekly') }}</button>
+                            <button @click="chartMode = 'CONTÍNUO'" :class="[chartMode === 'CONTÍNUO' ? 'bg-white text-slate-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700']" class="px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-md transition-all">{{ $t('Continuous') }}</button>
                         </div>
                     </div>
                     
@@ -664,7 +669,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                            />
                            <div v-else-if="!isLoading" class="absolute inset-0 flex flex-col items-center justify-center text-slate-300">
                                <SearchIcon class="w-12 h-12 mb-4 opacity-20" />
-                               <p class="text-[10px] font-bold uppercase tracking-widest">Aguardando seleção de produto</p>
+                               <p class="text-[10px] font-bold uppercase tracking-widest">{{ $t('Awaiting product selection') }}</p>
                            </div>
                         </div>
 
@@ -683,9 +688,9 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
             <!-- BEST RECENT PRICES (MASTERS ONLY) -->
             <div v-if="$page.props.auth.user.is_master && recentBestPrices && recentBestPrices.length > 0" class="mt-8 bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
                 <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
-                    <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">Melhores Preços</h3>
+                    <h3 class="text-lg font-bold text-slate-900 uppercase tracking-widest">{{ $t('Best Prices') }}</h3>
                     <div class="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-blue-100">
-                        Top {{ recentBestPrices.length }} Fornecedores
+                        {{ $t('Top :count Suppliers', { count: recentBestPrices.length }) }}
                     </div>
                 </div>
 
@@ -693,10 +698,10 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 bg-slate-50">
-                                <th class="py-3 px-4 rounded-tl-xl">Fornecedor</th>
-                                <th class="py-3 px-4">Data</th>
-                                <th class="py-3 px-4 text-center">Ano / Semana</th>
-                                <th class="py-3 px-4 text-right rounded-tr-xl">Preço</th>
+                                <th class="py-3 px-4 rounded-tl-xl">{{ $t('Supplier') }}</th>
+                                <th class="py-3 px-4">{{ $t('Date') }}</th>
+                                <th class="py-3 px-4 text-center">{{ $t('Year / Week') }}</th>
+                                <th class="py-3 px-4 text-right rounded-tr-xl">{{ $t('Price') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -707,7 +712,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                                    {{ new Date(bestPrice.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) }}
+                                    {{ new Date(bestPrice.date).toLocaleDateString(getBcp47Locale(), { timeZone: 'UTC' }) }}
                                 </td>
                                 <td class="py-4 px-4 text-center">
                                     <div class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-widest">

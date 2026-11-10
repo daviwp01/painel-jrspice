@@ -30,6 +30,12 @@ class ExternalRegistrationLog extends Model
         'email_hash',
         'ip',
         'origin',
+        'form_source',
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'utm_term',
         'user_agent',
         'outcome',
         'reason',
@@ -51,6 +57,12 @@ class ExternalRegistrationLog extends Model
             'email_hash' => hash('sha256', strtolower(trim($email))),
             'ip' => request()->ip(),
             'origin' => self::currentOrigin(),
+            'form_source' => mb_substr(self::requestString('form_source') ?: 'system', 0, 20),
+            'utm_source' => self::requestString('utm_source'),
+            'utm_medium' => self::requestString('utm_medium'),
+            'utm_campaign' => self::requestString('utm_campaign'),
+            'utm_content' => self::requestString('utm_content'),
+            'utm_term' => self::requestString('utm_term'),
             'user_agent' => self::currentUserAgent(),
             'outcome' => $outcome,
             'reason' => $reason,
@@ -74,6 +86,13 @@ class ExternalRegistrationLog extends Model
         $host = parse_url($referer, PHP_URL_HOST);
 
         return is_string($host) ? substr($host, 0, 255) : null;
+    }
+
+    private static function requestString(string $key): ?string
+    {
+        $value = trim((string) request()->input($key, ''));
+
+        return $value === '' ? null : mb_substr($value, 0, 255);
     }
 
     private static function currentUserAgent(): ?string

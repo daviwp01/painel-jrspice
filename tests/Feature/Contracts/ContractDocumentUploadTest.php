@@ -125,15 +125,16 @@ class ContractDocumentUploadTest extends TestCase
         $this->assertSame(0, ContractDocument::count());
     }
 
-    public function test_size_rule_rejects_anything_over_five_gigabytes(): void
+    public function test_size_rule_rejects_anything_over_fifteen_gigabytes(): void
     {
-        $this->assertSame(5 * 1024 * 1024 * 1024, ContractDocumentRules::MAX_BYTES);
-        $this->assertSame('5 GB', ContractDocumentRules::humanMaxSize());
+        $this->assertSame(15 * 1024 * 1024 * 1024, ContractDocumentRules::MAX_BYTES);
+        $this->assertSame('15 GB', ContractDocumentRules::humanMaxSize());
 
-        $rules = (new StoreContractDocumentRequest())->rules();
+        $rules = (new StoreContractDocumentRequest)->rules();
         $this->assertContains('max:'.ContractDocumentRules::MAX_KILobytes, $rules['file']);
 
-        $oversized = new class (realpath(__FILE__), 'tour.mp4', 'video/mp4', 0, true) extends SymfonyUploadedFile {
+        $oversized = new class(realpath(__FILE__), 'tour.mp4', 'video/mp4', 0, true) extends SymfonyUploadedFile
+        {
             public function getSize(): int
             {
                 return ContractDocumentRules::MAX_BYTES + 1;
@@ -296,8 +297,10 @@ class ContractDocumentUploadTest extends TestCase
 
     public function test_client_portal_lists_documents_without_upload_capability(): void
     {
-        $client = User::factory()->create(['is_master' => false]);
-        $this->contract->users()->attach($client->id);
+        $client = User::factory()->create([
+            'is_master' => false,
+            'client_id' => $this->contract->importer_id,
+        ]);
 
         $document = $this->uploadSample('invoice.pdf', $this->master);
 

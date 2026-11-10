@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\User;
-use App\Support\EmbedToken;
 use App\Models\ExternalRegistrationLog;
+use App\Models\User;
 use App\Services\RecaptchaVerifier;
+use App\Support\EmbedToken;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -92,6 +92,12 @@ class ExternalRegisterRequest extends FormRequest
             'terms' => ['required', 'accepted'],
             'form_token' => ['required', 'string', 'max:200'],
             'honeypot' => ['nullable', 'prohibited'],
+            'form_source' => ['nullable', 'string', Rule::in(['system', 'events'])],
+            'utm_source' => ['nullable', 'string', 'max:255'],
+            'utm_medium' => ['nullable', 'string', 'max:255'],
+            'utm_campaign' => ['nullable', 'string', 'max:255'],
+            'utm_content' => ['nullable', 'string', 'max:255'],
+            'utm_term' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -101,10 +107,10 @@ class ExternalRegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'company_name.not_regex' => 'O nome da empresa não pode conter números ou e-mails.',
-            'email.email' => 'Informe um e-mail corporativo válido.',
-            'phone.regex' => 'Informe um telefone válido.',
-            'terms.accepted' => 'É necessário aceitar a Política de Privacidade.',
+            'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
+            'email.email' => __('Enter a valid corporate email.'),
+            'phone.regex' => __('Enter a valid phone number.'),
+            'terms.accepted' => __('You must accept the Privacy Policy.'),
         ];
     }
 

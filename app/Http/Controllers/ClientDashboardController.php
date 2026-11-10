@@ -24,6 +24,11 @@ class ClientDashboardController extends Controller
     public function myProducts(Request $request)
     {
         $user = auth()->user();
+
+        if (! $user->canSeeMyProducts()) {
+            abort(403, __('You do not have permission to access this area.'));
+        }
+
         $activeFilters = $this->contracts->activeFilters($request);
 
         return Inertia::render('MyProducts/Index', [
@@ -47,7 +52,7 @@ class ClientDashboardController extends Controller
     private function contractProducts(User $user)
     {
         return ContractProduct::query()
-            ->whereHas('items.contract', fn ($q) => $q->whereHas('users', fn ($u) => $u->where('users.id', $user->id)))
+            ->whereHas('items.contract', fn ($q) => $q->visibleTo($user))
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -58,7 +63,7 @@ class ClientDashboardController extends Controller
     private function countries(User $user)
     {
         return Contract::query()
-            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
+            ->visibleTo($user)
             ->whereNotNull('country')
             ->where('country', '!=', '')
             ->distinct()
@@ -108,5 +113,4 @@ class ClientDashboardController extends Controller
 
         return Storage::disk(ContractDocumentService::DISK)->download($document->file_path, $document->name);
     }
-
 }

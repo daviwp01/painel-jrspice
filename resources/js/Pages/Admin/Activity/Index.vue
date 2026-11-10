@@ -1,4 +1,5 @@
 <script setup>
+import { trans } from 'laravel-vue-i18n';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Users, Clock, Mail, MousePointer2, Circle, ShieldCheck, Activity, UserCheck, Trash2, Timer, Eye, X, BarChart2, History, AlertTriangle, HelpCircle, TrendingUp, Download, CalendarDays, HeartPulse, Network } from 'lucide-vue-next';
@@ -101,28 +102,28 @@ const relativeBar = (count, maxCount) => maxCount > 0 ? Math.round((count / maxC
 // Interest level config — label, bar color, text color, tooltip
 const INTEREST_LEVELS = [
     {
-        label:   'Destaque',
+        label:   trans('Highlight'),
         bar:     'bg-emerald-500',
         text:    'text-emerald-700',
         weight:  'font-black',
         nameWt:  'font-black text-slate-800',
-        tooltip: 'Item mais pesquisado desta categoria. Indica que o utilizador tem alto interesse neste filtro.',
+        tooltip: trans('Most searched item in this category. Indicates the user has high interest in this filter.'),
     },
     {
-        label:   'Relevante',
+        label:   trans('Relevant'),
         bar:     'bg-emerald-300',
         text:    'text-emerald-600',
         weight:  'font-bold',
         nameWt:  'font-bold text-slate-600',
-        tooltip: 'Pesquisado com frequência moderada. O utilizador demonstra interesse consistente.',
+        tooltip: trans('Moderately searched. The user shows consistent interest.'),
     },
     {
-        label:   'Pontual',
+        label:   trans('Occasional'),
         bar:     'bg-emerald-100',
         text:    'text-slate-400',
         weight:  'font-medium',
         nameWt:  'font-medium text-slate-400',
-        tooltip: 'Pesquisado raramente. Interesse exploratório ou ocasional.',
+        tooltip: trans('Rarely searched. Exploratory or occasional interest.'),
     },
 ];
 
@@ -133,25 +134,25 @@ const interestLevel = (rank, count) => {
 
 // Context-aware tooltip: mentions the specific subject (country, product, etc.)
 const SUBJECT_MAP = {
-    country:    'país',
-    product:    'produto',
-    supplier:   'fornecedor',
-    date_range: 'período',
+    country:    trans('country'),
+    product:    trans('product'),
+    supplier:   trans('supplier'),
+    date_range: trans('period'),
 };
 const interestTooltip = (rank, groupType, count) => {
-    if (!count || count <= 1) return 'Filtro utilizado apenas uma vez. Interesse pontual ou exploratório.';
+    if (!count || count <= 1) return trans('Filter used only once. Occasional or exploratory interest.');
 
     if (groupType === 'country') {
-        if (rank === 1) return 'País com maior volume de buscas. Indica um alto interesse em produtos desta região.';
-        if (rank === 2) return 'País com buscas frequentes. Indica interesse relevante em produtos desta origem.';
-        return 'País com buscas esporádicas. Interesse pontual em produtos desta região.';
+        if (rank === 1) return trans('Country with the highest search volume. Indicates high interest in products from this region.');
+        if (rank === 2) return trans('Country with frequent searches. Indicates relevant interest in products from this origin.');
+        return trans('Country with sporadic searches. Occasional interest in products from this region.');
     }
 
-    const s = SUBJECT_MAP[groupType] || 'filtro';
+    const s = SUBJECT_MAP[groupType] || trans('filter');
     const S = s.charAt(0).toUpperCase() + s.slice(1);
-    if (rank === 1) return `${S} com maior engajamento. Indica preferência principal do utilizador neste critério.`;
-    if (rank === 2) return `${S} com buscas frequentes. Demonstra interesse consistente e relevante.`;
-    return `${S} com buscas pontuais. Interesse ocasional ou exploratório.`;
+    if (rank === 1) return trans(':subject with the highest engagement. Indicates the user main preference on this criterion.', { subject: S });
+    if (rank === 2) return trans(':subject with frequent searches. Shows consistent and relevant interest.', { subject: S });
+    return trans(':subject with occasional searches. Exploratory or occasional interest.', { subject: S });
 };
 </script>
 
@@ -170,12 +171,12 @@ const interestTooltip = (rank, groupType, count) => {
                     <div class="flex items-center px-4 py-2 border-r border-slate-100">
                         <Users class="w-4 h-4 text-indigo-500 mr-2" />
                         <span class="text-sm font-bold text-slate-800">{{ total_users }}</span>
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">{{ $t('Total') }}</span>
                     </div>
                     <div class="flex items-center px-4 py-2">
                         <UserCheck class="w-4 h-4 text-emerald-500 mr-2" />
                         <span class="text-sm font-bold text-slate-800">{{ online_users }}</span>
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Online</span>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">{{ $t('Online') }}</span>
                     </div>
                 </div>
                 <button @click="showConfirmClear = true" :disabled="isClearing"
@@ -327,32 +328,32 @@ const interestTooltip = (rank, groupType, count) => {
                                 <div>
                                     <h3 class="text-base font-black text-slate-900 tracking-tight">{{ modalUser?.name }}</h3>
                                     <p class="text-[11px] text-slate-400 mt-0.5">
-                                        {{ modalUser?.total_sessions }} sess{{ modalUser?.total_sessions === 1 ? 'ão' : 'ões' }}
-                                        &nbsp;·&nbsp; Média {{ modalUser?.avg_time || '0min' }}
-                                        &nbsp;·&nbsp; Total {{ modalUser?.total_time || '0min' }}
+                                        {{ $t(':count session(s)', { count: modalUser?.total_sessions ?? 0 }) }}
+                                        &nbsp;·&nbsp; {{ $t('Average') }} {{ modalUser?.avg_time || '0min' }}
+                                        &nbsp;·&nbsp; {{ $t('Total') }} {{ modalUser?.total_time || '0min' }}
                                     </p>
                                 </div>
                             </div>
                             <!-- Actions: Clear + Close -->
                             <div class="flex items-center gap-2 flex-shrink-0">
                                 <template v-if="confirmClearUser">
-                                    <span class="text-[11px] text-slate-500 hidden sm:inline">Confirmar limpeza?</span>
+                                    <span class="text-[11px] text-slate-500 hidden sm:inline">{{ $t('Confirm clear?') }}</span>
                                     <button @click="clearUserData" :disabled="clearingUser"
                                         class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-40">
                                         <span v-if="clearingUser" class="animate-spin w-3 h-3 border border-white border-t-transparent rounded-full"></span>
                                         <AlertTriangle v-else class="w-3 h-3" />
-                                        Limpar
+                                        {{ $t('Clear') }}
                                     </button>
                                     <button @click="confirmClearUser = false"
                                         class="px-3 py-1.5 text-slate-500 hover:text-slate-800 text-[10px] font-bold uppercase tracking-wider transition-colors">
-                                        Cancelar
+                                        {{ $t('Cancel') }}
                                     </button>
                                 </template>
                                 <template v-else>
                                     <button @click="confirmClearUser = true"
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-slate-700 text-[10px] font-bold uppercase tracking-wider transition-colors">
                                         <Trash2 class="w-3.5 h-3.5" />
-                                        <span class="hidden sm:inline">Limpar dados</span>
+                                        <span class="hidden sm:inline">{{ $t('Clear data') }}</span>
                                     </button>
                                 </template>
                                 <div class="w-px h-5 bg-slate-200 mx-1"></div>
@@ -372,17 +373,17 @@ const interestTooltip = (rank, groupType, count) => {
                             <button @click="switchTab('searches')"
                                 class="flex items-center gap-2 py-4 pr-8 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2"
                                 :class="activeTab === 'searches' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
-                                <BarChart2 class="w-3.5 h-3.5" /> Comportamento de Busca
+                                <BarChart2 class="w-3.5 h-3.5" /> {{ $t('Search Behavior') }}
                             </button>
                             <button @click="switchTab('engagement')"
                                 class="flex items-center gap-2 py-4 pr-8 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2"
                                 :class="activeTab === 'engagement' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
-                                <TrendingUp class="w-3.5 h-3.5" /> Engajamento
+                                <TrendingUp class="w-3.5 h-3.5" /> {{ $t('Engagement') }}
                             </button>
                             <button @click="switchTab('navigation')"
                                 class="flex items-center gap-2 py-4 pr-8 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2"
                                 :class="activeTab === 'navigation' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'">
-                                <MousePointer2 class="w-3.5 h-3.5" /> Páginas Navegadas
+                                <MousePointer2 class="w-3.5 h-3.5" /> {{ $t('Visited Pages') }}
                             </button>
                         </div>
 
@@ -408,7 +409,7 @@ const interestTooltip = (rank, groupType, count) => {
                                         <td class="px-8 py-4"><span class="text-[13px] text-slate-700 font-mono">{{ s.started_at }}</span></td>
                                         <td class="px-8 py-4">
                                             <span v-if="s.is_active" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> Ativo
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> {{ $t('Active') }}
                                             </span>
                                             <span v-else class="text-[13px] text-slate-500 font-mono">{{ s.ended_at }}</span>
                                         </td>
@@ -427,14 +428,14 @@ const interestTooltip = (rank, groupType, count) => {
                             </div>
                             <div v-else-if="!searchStats || searchStats.total_searches === 0" class="py-16 text-center">
                                 <TrendingUp class="w-7 h-7 text-slate-300 mx-auto mb-3" />
-                                <p class="text-sm text-slate-400">Nenhum engajamento registrado</p>
+                                <p class="text-sm text-slate-400">{{ $t('No engagement recorded') }}</p>
                             </div>
                             <div v-else-if="searchStats && searchStats.engagement" class="space-y-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <!-- Health Score -->
                                     <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col justify-between">
                                         <div class="flex items-center justify-between mb-4">
-                                            <span class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest">Health Score</span>
+                                            <span class="text-[11px] font-bold text-indigo-400 uppercase tracking-widest">{{ $t('Health Score') }}</span>
                                             <HeartPulse class="w-4 h-4 text-indigo-400" />
                                         </div>
                                         <div>
@@ -442,37 +443,37 @@ const interestTooltip = (rank, groupType, count) => {
                                                 <span class="text-3xl font-black text-indigo-700 tracking-tight leading-none">{{ searchStats.engagement.health_score }}</span>
                                                 <span class="text-xs font-bold text-indigo-400 leading-tight mb-0.5">/100</span>
                                             </div>
-                                            <p class="text-[10px] text-indigo-500 font-medium mt-2">Índice de retenção</p>
+                                            <p class="text-[10px] text-indigo-500 font-medium mt-2">{{ $t('Retention index') }}</p>
                                         </div>
                                     </div>
                                     
                                     <!-- Dias Ativos -->
                                     <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex flex-col justify-between">
                                         <div class="flex items-center justify-between mb-4">
-                                            <span class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">Dias Ativos</span>
+                                            <span class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">{{ $t('Active Days') }}</span>
                                             <CalendarDays class="w-4 h-4 text-emerald-400" />
                                         </div>
                                         <div>
                                             <div class="flex items-end gap-1">
                                                 <span class="text-3xl font-black text-emerald-700 tracking-tight leading-none">{{ searchStats.engagement.active_days_last_30 }}</span>
-                                                <span class="text-xs font-bold text-emerald-500 leading-tight mb-0.5">dias</span>
+                                                <span class="text-xs font-bold text-emerald-500 leading-tight mb-0.5">{{ $t('days') }}</span>
                                             </div>
-                                            <p class="text-[10px] text-emerald-600 font-medium mt-2">Nos últimos 30 dias</p>
+                                            <p class="text-[10px] text-emerald-600 font-medium mt-2">{{ $t('In the last 30 days') }}</p>
                                         </div>
                                     </div>
 
                                     <!-- Exportações -->
                                     <div class="bg-violet-50 border border-violet-100 rounded-2xl p-5 flex flex-col justify-between">
                                         <div class="flex items-center justify-between mb-4">
-                                            <span class="text-[11px] font-bold text-violet-400 uppercase tracking-widest">Extrações</span>
+                                            <span class="text-[11px] font-bold text-violet-400 uppercase tracking-widest">{{ $t('Exports') }}</span>
                                             <Download class="w-4 h-4 text-violet-400" />
                                         </div>
                                         <div>
                                             <div class="flex items-end gap-1">
                                                 <span class="text-3xl font-black text-violet-700 tracking-tight leading-none">{{ searchStats.engagement.total_exports }}</span>
-                                                <span class="text-xs font-bold text-violet-400 leading-tight mb-0.5">vezes</span>
+                                                <span class="text-xs font-bold text-violet-400 leading-tight mb-0.5">{{ $t('times') }}</span>
                                             </div>
-                                            <p class="text-[10px] text-violet-500 font-medium mt-2">Downloads de dados</p>
+                                            <p class="text-[10px] text-violet-500 font-medium mt-2">{{ $t('Data downloads') }}</p>
                                             
                                             <!-- Lista de exportações recentes -->
                                             <div v-if="searchStats.engagement.exported_items && searchStats.engagement.exported_items.length > 0" class="mt-3 flex flex-wrap gap-1">
@@ -486,7 +487,7 @@ const interestTooltip = (rank, groupType, count) => {
                                     <!-- Pico -->
                                     <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
                                         <div class="flex items-center justify-between mb-4">
-                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Rotina</span>
+                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{{ $t('Routine') }}</span>
                                             <Clock class="w-4 h-4 text-slate-300" />
                                         </div>
                                         <div>
@@ -494,7 +495,7 @@ const interestTooltip = (rank, groupType, count) => {
                                                 <span class="text-[13px] font-black text-slate-700 tracking-tight">{{ searchStats.engagement.peak_hour }}</span>
                                                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ searchStats.engagement.favorite_day }}</span>
                                             </div>
-                                            <p class="text-[10px] text-slate-400 font-medium mt-2">Maior engajamento</p>
+                                            <p class="text-[10px] text-slate-400 font-medium mt-2">{{ $t('Highest engagement') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -510,8 +511,8 @@ const interestTooltip = (rank, groupType, count) => {
                             </div>
                             <div v-else-if="!searchStats || !searchStats.by_type.some(g => g.type === 'page')" class="py-16 text-center">
                                 <MousePointer2 class="w-7 h-7 text-slate-300 mx-auto mb-3" />
-                                <p class="text-sm text-slate-400">Nenhuma página registrada</p>
-                                <p class="text-[11px] text-slate-300 mt-1">O histórico de navegação aparecerá aqui.</p>
+                                <p class="text-sm text-slate-400">{{ $t('No pages recorded') }}</p>
+                                <p class="text-[11px] text-slate-300 mt-1">{{ $t('The navigation history will appear here.') }}</p>
                             </div>
                             <template v-else>
                                 <!-- Páginas Navegadas -->
@@ -560,8 +561,8 @@ const interestTooltip = (rank, groupType, count) => {
                             </div>
                             <div v-else-if="!searchStats || !searchStats.by_type.some(g => g.type !== 'page')" class="py-16 text-center">
                                 <BarChart2 class="w-7 h-7 text-slate-300 mx-auto mb-3" />
-                                <p class="text-sm text-slate-400">Nenhum filtro registrado</p>
-                                <p class="text-[11px] text-slate-300 mt-1">Os filtros aplicados no dashboard aparecerão aqui.</p>
+                                <p class="text-sm text-slate-400">{{ $t('No filters recorded') }}</p>
+                                <p class="text-[11px] text-slate-300 mt-1">{{ $t('The filters applied on the dashboard will appear here.') }}</p>
                             </div>
                             <template v-else>
                                 <!-- Filtros Aplicados -->

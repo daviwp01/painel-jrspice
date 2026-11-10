@@ -29,7 +29,7 @@ class DirectContact extends Mailable
     {
         return new Envelope(
             from: new \Illuminate\Mail\Mailables\Address(config('mail.from.address'), 'JR SPICE'),
-            subject: 'JR SPICE CONTATO VIA SISTEMA - ' . ($this->data['subject'] ?? 'Sem Assunto'),
+            subject: __('JR SPICE SYSTEM CONTACT').' - '.($this->data['subject'] ?? __('No Subject')),
             replyTo: [
                 new \Illuminate\Mail\Mailables\Address($this->data['email'], $this->data['name']),
             ],

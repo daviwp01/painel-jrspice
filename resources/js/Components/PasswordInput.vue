@@ -35,7 +35,7 @@ const toggleVisibility = () => {
             @click="toggleVisibility"
             class="absolute inset-y-0 right-0 flex items-center pr-3 z-10 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-200 cursor-pointer"
             tabindex="-1"
-            :aria-label="show ? 'Hide password' : 'Show password'"
+            :aria-label="show ? $t('Hide password') : $t('Show password')"
         >
             <Eye v-if="!show" class="h-5 w-5" />
             <EyeOff v-else class="h-5 w-5" />

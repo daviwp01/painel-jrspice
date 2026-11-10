@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { Search, ChevronDown, Check, X, Lock } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     modelValue: [String, Number],
@@ -11,7 +12,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Selecione...'
+        default: 'Select...'
     },
     label: String,
     icon: [Object, Function], // Lucide icon component
@@ -53,7 +54,7 @@ const props = defineProps({
     },
     allLabel: {
         type: String,
-        default: 'Todos'
+        default: 'All'
     }
 });
 
@@ -173,10 +174,16 @@ const normalize = (str) =>
 const filteredOptions = computed(() => {
     if (!searchQuery.value) return props.options;
     const query = normalize(searchQuery.value);
-    return props.options.filter(opt => 
+    return props.options.filter(opt =>
         normalize(opt.name || '').includes(query)
+        || normalize(opt.type || '').includes(query)
     );
 });
+
+const typeLabel = (opt) => {
+    if (!opt?.type) return '';
+    return opt.type === 'exporter' ? trans('Exporter') : trans('Importer');
+};
 
 // Click outside to close
 const handleClickOutside = (event) => {
@@ -217,9 +224,10 @@ const clearOption = (e) => {
 
 <template>
     <div class="relative w-full" ref="dropdownRef">
-        <!-- Label -->
-        <div v-if="label" class="flex items-center justify-between mb-1.5">
+        <!-- Label / Clear -->
+        <div v-if="label || (clearable && hasValue)" class="flex items-center justify-between mb-1.5">
             <label 
+                v-if="label"
                 @click="toggleDropdown"
                 class="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors cursor-pointer" 
                 :class="[
@@ -227,16 +235,17 @@ const clearOption = (e) => {
                 ]"
             >
                 <component :is="icon" class="w-3.5 h-3.5 text-[#b2862e]" v-if="icon" />
-                {{ label }}
+                {{ $t(label) }}
             </label>
+            <span v-else></span>
             
             <button 
-                v-if="clearable && modelValue" 
+                v-if="clearable && hasValue" 
                 @click="clearOption"
                 type="button"
                 class="text-[9px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-tighter transition-colors"
             >
-                Limpar
+                {{ $t('Clear') }}
             </button>
         </div>
 
@@ -251,14 +260,31 @@ const clearOption = (e) => {
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
             ]"
         >
-            <div class="flex items-center gap-2 overflow-hidden">
-                <span v-if="!selectedOption" class="text-slate-500 text-sm font-medium uppercase truncate">{{ placeholder }}</span>
-                <div v-else class="flex items-center gap-2 overflow-hidden">
+            <div class="flex items-center gap-2 overflow-hidden min-w-0 flex-1">
+                <span v-if="!selectedOption" class="text-slate-500 text-sm font-medium uppercase truncate">{{ $t(placeholder) }}</span>
+                <div v-else class="flex items-center gap-2 overflow-hidden min-w-0">
                     <CountryFlag v-if="withFlag" :name="selectedOption.name" :code="resolveFlagName(selectedOption)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-800/10" />
                     <span :class="[variant === 'dark' ? 'text-slate-200' : 'text-slate-800']" class="text-sm font-bold uppercase truncate">{{ selectedOption.name }}</span>
+                    <span
+                        v-if="selectedOption.type"
+                        class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                        :class="variant === 'dark' ? 'bg-white/10 text-slate-300' : 'bg-slate-100 text-slate-500'"
+                    >{{ typeLabel(selectedOption) }}</span>
                 </div>
             </div>
-            <ChevronDown class="w-4 h-4 text-slate-500 transition-transform duration-300" :class="{ 'rotate-180 text-blue-500': isOpen }" />
+            <div class="flex items-center gap-1 shrink-0">
+                <button
+                    v-if="clearable && hasValue && !disabled"
+                    type="button"
+                    @click.stop="clearOption"
+                    class="p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    :aria-label="$t('Clear')"
+                    :title="$t('Clear')"
+                >
+                    <X class="w-3.5 h-3.5" />
+                </button>
+                <ChevronDown class="w-4 h-4 text-slate-500 transition-transform duration-300" :class="{ 'rotate-180 text-blue-500': isOpen }" />
+            </div>
         </div>
 
         <div 
@@ -277,7 +303,9 @@ const clearOption = (e) => {
                         ref="searchInput"
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Buscar..."
+                        autocomplete="off"
+                        spellcheck="false"
+                        :placeholder="$t('Search...')"
                         :class="[
                             'w-full rounded-lg text-[11px] font-bold py-2 pl-9 pr-8 transition-all uppercase',
                             variant === 'dark' ? 'bg-[#0f172a] border-slate-800 text-slate-200 focus:ring-blue-500 focus:border-blue-500' : 'bg-white border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800'
@@ -300,7 +328,19 @@ const clearOption = (e) => {
                         ? 'border-transparent text-slate-500 hover:bg-blue-50 hover:text-blue-700'
                         : 'bg-blue-600 text-white shadow-md'"
                 >
-                    <span class="text-xs font-bold uppercase tracking-wide">{{ allLabel }}</span>
+                    <span class="text-xs font-bold uppercase tracking-wide">{{ $t(allLabel) }}</span>
+                    <Check v-if="!hasValue" class="w-3.5 h-3.5 text-white stroke-[3]" />
+                </div>
+
+                <div
+                    v-if="clearable && searchQuery === ''"
+                    @click="clearOption"
+                    class="flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all group mb-0.5 border"
+                    :class="hasValue
+                        ? 'border-transparent text-slate-500 hover:bg-red-50 hover:text-red-600'
+                        : 'bg-blue-600 text-white shadow-md'"
+                >
+                    <span class="text-xs font-bold uppercase tracking-wide">{{ $t('No company') }}</span>
                     <Check v-if="!hasValue" class="w-3.5 h-3.5 text-white stroke-[3]" />
                 </div>
 
@@ -316,9 +356,16 @@ const clearOption = (e) => {
                         option.is_locked ? 'opacity-40 grayscale cursor-default border border-dashed border-slate-800 bg-black/10' : ''
                     ]"
                 >
-                    <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div class="flex items-center gap-2.5 overflow-hidden min-w-0">
                         <CountryFlag v-if="withFlag" :name="option.name" :code="resolveFlagName(option)" class-name="w-4 h-3 object-cover rounded-sm border border-slate-800/20" />
                         <span class="text-xs font-bold uppercase tracking-wide truncate">{{ option.name }}</span>
+                        <span
+                            v-if="option.type"
+                            class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider"
+                            :class="modelValue == option.id
+                                ? 'bg-white/20 text-white'
+                                : (option.type === 'exporter' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600')"
+                        >{{ typeLabel(option) }}</span>
                     </div>
                     <Lock v-if="option.is_locked" class="w-3 h-3 text-slate-500 group-hover:text-blue-400 transition-colors" />
                     <Check v-else-if="modelValue == option.id" class="w-3.5 h-3.5 text-white stroke-[3]" />
@@ -329,7 +376,7 @@ const clearOption = (e) => {
                     <div class="w-10 h-10 bg-slate-900/50 text-slate-500 rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-800">
                         <Search class="w-5 h-5" />
                     </div>
-                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">Nenhum resultado para "{{ searchQuery }}"</p>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">{{ $t('No results for ":query"', { query: searchQuery }) }}</p>
                 </div>
             </div>
         </div>

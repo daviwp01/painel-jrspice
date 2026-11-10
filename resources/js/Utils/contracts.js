@@ -1,3 +1,4 @@
+import { getBcp47Locale } from '@/Utils/locale';
 /**
  * Shared formatting helpers for the contracts module.
  *
@@ -16,8 +17,8 @@ export const formatDate = (value, options = {}) => {
   if (Number.isNaN(date.getTime())) return String(value);
 
   return options.withTime
-    ? date.toLocaleDateString('pt-BR')
-    : date.toLocaleDateString('pt-BR', options);
+    ? date.toLocaleDateString(getBcp47Locale())
+    : date.toLocaleDateString(getBcp47Locale(), options);
 };
 
 /**
@@ -94,7 +95,7 @@ export const getRemainingDays = ({ eta_date: eta, status } = {}) => {
 export const formatCurrency = (value, { symbol = 'US$', digits = 2 } = {}) => {
   if (value === null || value === undefined || value === '') return '—';
 
-  return `${symbol} ${Number(value).toLocaleString('pt-BR', {
+  return `${symbol} ${Number(value).toLocaleString(getBcp47Locale(), {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })}`;

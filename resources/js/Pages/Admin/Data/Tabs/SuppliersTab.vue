@@ -59,16 +59,16 @@ const confirmDeleteSupplier = () => {
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-6 self-start shadow-sm shadow-slate-200/50 transition-all duration-300">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-                    {{ editingSupplier ? 'Editando Fornecedor' : 'Adicionar Fornecedor' }}
+                    {{ editingSupplier ? $t('Editing Supplier') : $t('Add Supplier') }}
                 </h3>
                 <form @submit.prevent="submitSupplier" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nome do Fornecedor</label>
-                        <input v-model="supplierForm.name" type="text" placeholder="Nome da Empresa..." required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Supplier Name') }}</label>
+                        <input v-model="supplierForm.name" type="text" :placeholder="$t('Company Name...')" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div class="pt-4 flex items-center gap-3">
                         <button type="submit" :disabled="supplierForm.processing || !supplierForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                            {{ editingSupplier ? 'Atualizar' : 'Adicionar' }}
+                            {{ editingSupplier ? $t('Update') : $t('Add') }}
                         </button>
                         <button v-if="editingSupplier" type="button" @click="cancelSupplierEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
                             <XIcon class="w-4 h-4" />
@@ -86,7 +86,7 @@ const confirmDeleteSupplier = () => {
                         :value="filters.suppliers_search" 
                         @input="$emit('updateSearch', 'suppliers_search', $event.target.value)"
                         type="text" 
-                        placeholder="PESQUISAR FORNECEDORES..."
+                        :placeholder="$t('SEARCH SUPPLIERS...')"
                         class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
@@ -94,17 +94,17 @@ const confirmDeleteSupplier = () => {
                 <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Fornecedores Cadastrados</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">{{ $t('List of Registered Suppliers') }}</p>
                         <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                            {{ suppliers.total }} registros encontrados
+                            {{ $t(':count records found', { count: suppliers.total }) }}
                         </span>
                     </div>
                     <div class="relative">
                         <table class="w-full text-left text-slate-600">
                             <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-3">Nome do Fornecedor</th>
-                                    <th class="px-6 py-3 text-right">Ações</th>
+                                    <th class="px-6 py-3">{{ $t('Supplier Name') }}</th>
+                                    <th class="px-6 py-3 text-right">{{ $t('Actions') }}</th>
                                 </tr>
                             </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -120,7 +120,7 @@ const confirmDeleteSupplier = () => {
                                  </td>
                              </tr>
                             <tr v-if="!suppliers.data?.length">
-                                <td colspan="2" class="px-6 py-8 text-center text-slate-400 font-medium">Nenhum fornecedor cadastrado.</td>
+                                <td colspan="2" class="px-6 py-8 text-center text-slate-400 font-medium">{{ $t('No suppliers registered.') }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -134,7 +134,7 @@ const confirmDeleteSupplier = () => {
                     <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
                         <span class="text-blue-600">{{ suppliers.from }}-{{ suppliers.to }}</span> 
-                        <span class="mx-2 text-slate-300">de</span>
+                        <span class="mx-2 text-slate-300">{{ $t('of') }}</span>
                         <span class="text-slate-900">{{ suppliers.total }}</span>
                     </p>
                 </div>
@@ -147,9 +147,9 @@ const confirmDeleteSupplier = () => {
     
     <ConfirmationModal
         :show="isConfirmModalOpen"
-        title="Excluir Fornecedor"
-        :message="`Tem certeza que deseja excluir '${supplierToDelete?.name}'? Esta ação removerá a associação deste fornecedor de todos os registros de preços.`"
-        confirm-text="Excluir Fornecedor"
+        :title="$t('Delete Supplier')"
+        :message="$t(`Are you sure you want to delete ':name'? This action will remove this supplier from all price records.`, { name: supplierToDelete?.name ?? '' })"
+        :confirm-text="$t('Delete Supplier')"
         @close="isConfirmModalOpen = false"
         @confirm="confirmDeleteSupplier"
     />

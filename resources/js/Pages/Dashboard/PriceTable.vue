@@ -1,10 +1,13 @@
 <script setup>
+import { productName } from '@/Utils/productName';
+import { getBcp47Locale } from '@/Utils/locale';
 import { ref, computed, watch, onMounted } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Menu, Search, MapPin, ArrowDownIcon, ArrowUpIcon, MinusIcon, StarIcon, ClockIcon, Truck, FileDown, Check, X, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-vue-next';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import { trans } from 'laravel-vue-i18n';
 import axios from 'axios';
 
 const MapPinIcon = MapPin;
@@ -52,7 +55,7 @@ const toggleAllCountries = () => {
 
 const handleExportPdf = async () => {
     if (selectedExportCountries.value.length === 0) {
-        alert('Por favor, selecione ao menos um país.');
+        alert(trans('Please select at least one country.'));
         return;
     }
 
@@ -68,7 +71,7 @@ const handleExportPdf = async () => {
             const text = await response.data.text();
             const errorData = JSON.parse(text);
             if (errorData.is_error) {
-                alert(`ERRO TÉCNICO: ${errorData.message}\nNo arquivo: ${errorData.file}\nLinha: ${errorData.line}`);
+                alert(trans('TECHNICAL ERROR: :message\nIn file: :file\nLine: :line', { message: errorData.message, file: errorData.file, line: errorData.line }));
                 isDownloading.value = false;
                 return;
             }
@@ -87,7 +90,7 @@ const handleExportPdf = async () => {
         isExportModalOpen.value = false;
     } catch (e) {
         console.error(e);
-        alert('Ocorreu um erro ao gerar o PDF. Verifique os logs do servidor.');
+        alert(trans('An error occurred while generating the PDF. Check the server logs.'));
     } finally {
         isDownloading.value = false;
     }
@@ -263,7 +266,7 @@ const changePage = (url) => {
 </script>
 
 <template>
-  <Head :title="currentPage.title" />
+  <Head :title="$t(currentPage.title)" />
 
   <DashboardLayout>
     <template #sidebar-filters>
@@ -271,10 +274,10 @@ const changePage = (url) => {
       <div class="border-t border-slate-800/50 pt-4">
          <div class="flex items-center justify-between mb-4 px-3">
              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> Filtros de Busca
+                 <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span> {{ $t('Search Filters') }}
              </p>
              <div class="flex items-center gap-3">
-                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">Limpar</button>
+                 <button @click="clearFilters" class="text-[10px] font-bold text-slate-400 hover:text-blue-500 uppercase tracking-widest transition-colors">{{ $t('Clear') }}</button>
                  <Loader2 v-if="isLoading" class="w-3 h-3 text-blue-500 animate-spin" />
              </div>
          </div>
@@ -283,15 +286,15 @@ const changePage = (url) => {
             <SearchableSelect 
                v-model="selectedCountry"
                :options="countries"
-               label="País"
-               placeholder="Selecione o País"
+               :label="$t('Country')"
+               :placeholder="$t('Select the Country')"
                :icon="MapPinIcon"
                :with-flag="true"
                variant="dark"
                direction="down"
                @change="handleCountryChange"
             />
-          </div>
+         </div>
       </div>
     </template>
 
@@ -302,10 +305,10 @@ const changePage = (url) => {
         <!-- Page Title Region -->
         <div class="flex flex-col md:flex-row md:items-end justify-between pb-4 border-b border-slate-200 mb-8 gap-4">
             <div>
-                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ currentPage.title }}</h2>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">{{ $t(currentPage.title) }}</h2>
                 <div class="flex flex-wrap items-center gap-2 mt-2">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm flex items-center gap-2">
-                        <ClockIcon class="w-3 h-3 text-slate-400" /> Atualizado em: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString('pt-BR') : '--' }}</span>
+                        <ClockIcon class="w-3 h-3 text-slate-400" /> {{ $t('Updated on') }}: <span class="text-blue-600">{{ props.last_prices_update ? new Date(props.last_prices_update).toLocaleString(getBcp47Locale()) : '--' }}</span>
                     </p>
                 </div>
             </div>
@@ -314,7 +317,7 @@ const changePage = (url) => {
                     @click="isExportModalOpen = true"
                     class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3.5 md:py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95"
                 >
-                    <FileDown class="w-4 h-4" /> Exportar PDF
+                    <FileDown class="w-4 h-4" /> {{ $t('Export PDF') }}
                 </button>
             </div>
         </div>
@@ -328,32 +331,32 @@ const changePage = (url) => {
                 <div class="w-full lg:w-[40%] xl:w-[35%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col justify-center min-h-[110px] group">
                     <div class="absolute right-0 top-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-100/50 transition-colors"></div>
                     <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 relative z-10 w-full flex items-center gap-2">
-                        PAÍS DE ORIGEM
+                        {{ $t('COUNTRY OF ORIGIN') }}
                     </p>
                     <div class="flex items-center gap-4 relative z-10">
                         <CountryFlag v-if="currentCountryData.name" :name="currentCountryData.name" class-name="w-12 h-8 md:w-14 md:h-10 object-cover shrink-0" />
                         <h2 class="text-base md:text-lg lg:text-lg xl:text-2xl 2xl:text-4xl font-bold text-slate-800 tracking-tight uppercase break-words w-full leading-tight">
-                            {{ currentCountryData.name || 'Selecione O País' }}
+                            {{ currentCountryData.name || $t('Select the Country') }}
                         </h2>
                     </div>
                 </div>
 
                 <!-- LEGENDA -->
                 <div class="w-full lg:w-[60%] xl:w-[65%] bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-slate-200 relative min-h-[110px] flex flex-col justify-center">
-                    <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">LEGENDA DE VARIAÇÃO</p>
+                    <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">{{ $t('VARIATION LEGEND') }}</p>
                     <div class="flex flex-col xl:flex-row gap-6 xl:items-center justify-between w-full">
                         
                         <div class="grid grid-cols-2 gap-x-2 sm:gap-x-4 lg:gap-x-6 gap-y-4 md:gap-y-6 mt-2 overflow-visible">
-                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> PREÇO CAIU</div>
-                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> PREÇO SUBIU</div>
-                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-4 h-4 md:w-4 md:h-4 p-0.5 shrink-0" /> SEM ALTERAÇÕES</div>
-                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-4 h-4 md:w-4 md:h-4 shrink-0" /> PRODUTO NOVO</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-emerald-600 uppercase tracking-wider"><ArrowDownIcon class="text-emerald-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> {{ $t('PRICE WENT DOWN') }}</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-rose-600 uppercase tracking-wider"><ArrowUpIcon class="text-rose-500 w-4 h-4 md:w-4 md:h-4 stroke-[3] shrink-0" /> {{ $t('PRICE WENT UP') }}</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-slate-500 uppercase tracking-wider"><MinusIcon class="bg-slate-200 text-slate-400 rounded-full w-4 h-4 md:w-4 md:h-4 p-0.5 shrink-0" /> {{ $t('NO CHANGES') }}</div>
+                            <div class="flex items-center gap-2 md:gap-3 text-[9px] md:text-[11px] xl:text-xs font-bold text-amber-500 uppercase tracking-wider"><StarIcon class="text-amber-400 fill-amber-400 w-4 h-4 md:w-4 md:h-4 shrink-0" /> {{ $t('NEW PRODUCT') }}</div>
                         </div>
 
                         <div class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest space-y-4 lg:border-l-2 lg:border-slate-100 lg:pl-8 leading-relaxed hidden sm:flex flex-col justify-center shrink-0">
-                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Em relação ao preço anterior</p>
-                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços em Dólar p/ ton 1XFCL 40'</p>
-                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> Preços à confirmação final</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> {{ $t('Compared to the previous price') }}</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> {{ $t("Prices in Dollars per ton 1XFCL 40'") }}</p>
+                            <p class="flex items-center gap-3 whitespace-nowrap"><span class="w-1.5 h-1.5 bg-slate-300 rounded-full shrink-0"></span> {{ $t('Prices subject to final confirmation') }}</p>
                         </div>
                     </div>
                 </div>
@@ -366,7 +369,7 @@ const changePage = (url) => {
                         <tr>
                             <th class="px-2 py-3 md:px-5 md:py-4 cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('name')">
                                 <div class="flex items-center gap-1 md:gap-2">
-                                    PRODUTO
+                                    {{ $t('PRODUCT') }}
                                     <ArrowUp v-if="filters.sort_field === 'name' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'name' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -374,18 +377,18 @@ const changePage = (url) => {
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('latest_price')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    ÚLTIMO MELHOR PREÇO
+                                    {{ $t('LATEST BEST PRICE') }}
                                     <ArrowUp v-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'latest_price' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                                 </div>
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-not-allowed text-slate-300">
-                                MELHOR PREÇO ANTERIOR
+                                {{ $t('PREVIOUS BEST PRICE') }}
                             </th>
                             <th class="px-2 py-3 md:px-5 md:py-4 text-right cursor-pointer hover:bg-slate-50 transition-colors group" @click="handleSort('variation')">
                                 <div class="flex items-center justify-end gap-1 md:gap-2">
-                                    VARIAÇÃO
+                                    {{ $t('VARIATION') }}
                                     <ArrowUp v-if="filters.sort_field === 'variation' && filters.sort_direction === 'asc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowDown v-else-if="filters.sort_field === 'variation' && filters.sort_direction === 'desc'" class="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
                                     <ArrowUpDown v-else class="w-3 h-3 md:w-5 md:h-5 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
@@ -404,23 +407,23 @@ const changePage = (url) => {
                                         :data="detailParams(prod)"
                                         :on-start="() => isLoading = true"
                                         :on-finish="() => isLoading = false"
-                                        title="Ver detalhes do produto"
+                                        :title="$t('View product details')"
                                         class="inline-flex items-start gap-1.5 md:gap-2 outline-none focus-visible:text-blue-600">
-                                        <span>{{ prod.name }}</span>
+                                        <span>{{ productName(prod) }}</span>
                                         <ArrowUpRight class="w-3 h-3 md:w-5 md:h-5 shrink-0 mt-1 md:mt-2 text-slate-300 group-hover:text-blue-500 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                                     </Link>
-                                    <template v-else>{{ prod.name }}</template>
+                                    <template v-else>{{ productName(prod) }}</template>
                                 </td>
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums text-slate-900 pr-1 md:pr-6 text-sm md:text-3xl font-black">
-                                    {{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
+                                    {{ prod.latestPrice ? Number(prod.latestPrice).toLocaleString(getBcp47Locale(), {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums text-slate-400 pr-1 md:pr-6 text-sm md:text-2xl font-bold">
-                                    {{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '--' }}
+                                    {{ prod.previousPrice ? Number(prod.previousPrice).toLocaleString(getBcp47Locale(), {minimumFractionDigits: 2}) : '--' }}
                                 </td>
                                 <td class="px-2 py-3 md:px-5 md:py-4 text-right tabular-nums">
                                     <div class="flex items-center justify-end gap-1 md:gap-2 pr-1">
                                     <span class="font-black tracking-tighter text-[12px] md:text-3xl" :class="prod.status === 'down' ? 'text-emerald-600' : (prod.status === 'up' ? 'text-rose-600' : 'text-slate-500')">
-                                        {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
+                                        {{ (prod.variation > 0 ? '+' : '') }}{{ prod.variation.toLocaleString(getBcp47Locale(), {minimumFractionDigits: 2, maximumFractionDigits: 2}) }}%
                                     </span>
                                         <ArrowDownIcon v-if="prod.status === 'down'" class="text-emerald-500 w-3 h-3 md:w-8 md:h-8 stroke-[3]" />
                                         <ArrowUpIcon v-else-if="prod.status === 'up'" class="text-rose-500 w-3 h-3 md:w-8 md:h-8 stroke-[3]" />
@@ -430,7 +433,7 @@ const changePage = (url) => {
                                 </td>
                             </tr>
                             <tr v-if="!processedProducts.length">
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium uppercase tracking-widest text-[10px]">Sem dados inseridos para a semana atual.</td>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 font-medium uppercase tracking-widest text-[10px]">{{ $t('No data entered for the current week.') }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -439,7 +442,7 @@ const changePage = (url) => {
                 <!-- Pagination -->
                 <div v-if="products.links?.length > 3" class="mt-8 flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-3xl border border-slate-200 shadow-sm">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center md:text-left">
-                        Exibindo <span class="text-blue-600">{{ products.from }}</span> até <span class="text-blue-600">{{ products.to }}</span> de <span class="text-slate-900">{{ products.total }}</span> produtos
+                        {{ $t('Showing') }} <span class="text-blue-600">{{ products.from }}</span> {{ $t('to') }} <span class="text-blue-600">{{ products.to }}</span> {{ $t('of') }} <span class="text-slate-900">{{ products.total }}</span> {{ $t('products') }}
                     </p>
                     <div class="flex flex-wrap justify-center gap-1 md:gap-1.5">
                         <template v-for="(link, i) in products.links" :key="i">
@@ -470,8 +473,8 @@ const changePage = (url) => {
               <Loader2 class="w-6 h-6 text-blue-600 animate-spin" />
           </div>
           <div class="pr-2">
-              <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest whitespace-nowrap">Gerando PDF</h3>
-              <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none mt-0.5">Aguarde um instante</p>
+              <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest whitespace-nowrap">{{ $t('Generating PDF') }}</h3>
+              <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none mt-0.5">{{ $t('Wait a moment') }}</p>
           </div>
       </div>
   </div>
@@ -483,8 +486,8 @@ const changePage = (url) => {
       <div class="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
           <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
               <div>
-                  <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tighter">Exportar Tabela de Preços</h3>
-                  <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Selecione os países para o relatório PDF</p>
+                  <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tighter">{{ $t('Export Price Table') }}</h3>
+                  <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{{ $t('Select the countries for the PDF report') }}</p>
               </div>
               <button @click="isExportModalOpen = false" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
                   <X class="w-6 h-6 text-slate-400" />
@@ -493,14 +496,14 @@ const changePage = (url) => {
 
           <div class="p-8 overflow-y-auto">
               <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
-                  <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">Lista de Países Disponíveis</span>
+                  <span class="text-xs font-bold text-slate-700 uppercase tracking-widest">{{ $t('List of Available Countries') }}</span>
                   <label class="flex items-center gap-2 cursor-pointer group">
                       <input type="checkbox" v-model="selectAll" @change="toggleAllCountries" class="hidden">
                       <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all" 
                            :class="selectAll ? 'bg-blue-600 border-blue-600' : 'border-slate-200 group-hover:border-blue-400'">
                           <Check v-if="selectAll" class="w-3.5 h-3.5 text-white stroke-[4]" />
                       </div>
-                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Selecionar Todos</span>
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ $t('Select All') }}</span>
                   </label>
               </div>
 
@@ -525,14 +528,14 @@ const changePage = (url) => {
 
           <div class="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
               <button @click="isExportModalOpen = false" class="flex-1 px-6 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-200 transition-colors">
-                  Cancelar
+                  {{ $t('Cancel') }}
               </button>
               <button 
                   @click="handleExportPdf"
                   :disabled="selectedExportCountries.length === 0"
                   class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                  Gerar Relatório ({{ selectedExportCountries.length }})
+                  {{ $t('Generate Report') }} ({{ selectedExportCountries.length }})
               </button>
           </div>
       </div>

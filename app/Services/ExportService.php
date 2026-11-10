@@ -6,10 +6,8 @@ use App\Models\Country;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-
 
 class ExportService
 {
@@ -37,10 +35,10 @@ class ExportService
             $latestImportDate = ProductPrice::whereHas('product', function ($q) use ($country) {
                 $q->where('country_id', $country->id);
             })
-            ->where('date', '<=', $endOfWeek)
-            ->max('date');
+                ->where('date', '<=', $endOfWeek)
+                ->max('date');
 
-            if (!$latestImportDate) {
+            if (! $latestImportDate) {
                 continue;
             }
 
@@ -90,11 +88,11 @@ class ExportService
                         : 0.0;
 
                     return (object) [
-                        'name' => $product->name,
+                        'name' => $product->displayName(),
                         'latestPrice' => $latest,
                         'previousPrice' => $previous,
                         'variation' => round($variation, 2),
-                        'status' => $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$product->previous_price && $product->latest_price ? 'new' : 'none')),
+                        'status' => $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (! $product->previous_price && $product->latest_price ? 'new' : 'none')),
                         'supplier' => $product->latest_supplier ?? 'N/A',
                     ];
                 });
@@ -127,12 +125,13 @@ class ExportService
 
         try {
             $name = mb_strtolower($countryName, 'UTF-8');
-            $url = "https://flagcdn.com/w80/" . $this->getCountryCode($name) . ".png";
+            $url = 'https://flagcdn.com/w80/'.$this->getCountryCode($name).'.png';
             $imageData = @file_get_contents($url);
 
             if ($imageData) {
                 $base64 = base64_encode($imageData);
-                $flagCache[$countryName] = 'data:image/png;base64,' . $base64;
+                $flagCache[$countryName] = 'data:image/png;base64,'.$base64;
+
                 return $flagCache[$countryName];
             }
         } catch (\Exception $e) {
@@ -201,7 +200,9 @@ class ExportService
         ];
 
         foreach ($map as $key => $code) {
-            if (str_contains($name, $key)) return $code;
+            if (str_contains($name, $key)) {
+                return $code;
+            }
         }
 
         return 'un'; // Unknown flag fallback

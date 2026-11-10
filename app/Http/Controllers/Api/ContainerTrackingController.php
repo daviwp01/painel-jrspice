@@ -49,7 +49,7 @@ class ContainerTrackingController extends Controller
                 'vessel' => [],
                 'events' => [],
                 'last_updated' => null,
-                'message' => 'Número de container inválido. Formato esperado: 4 letras + 7 dígitos (ISO 6346), ex.: MSCU1234567.',
+                'message' => __('Invalid container number. Expected format: 4 letters + 7 digits (ISO 6346), e.g. MSCU1234567.'),
                 'provider' => null,
             ], 422);
         }
@@ -74,7 +74,7 @@ class ContainerTrackingController extends Controller
             return response()->json($this->envelope(
                 containerNumber: '',
                 state: 'unavailable',
-                message: 'Este contrato ainda não possui número de container informado.',
+                message: __('This contract does not have a container number yet.'),
             ));
         }
 

@@ -39,18 +39,21 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
             ],
             'settings' => [
-                'legal_privacy_policy' => \Illuminate\Support\Facades\Cache::remember('setting_privacy', 3600, fn() => \App\Models\Setting::get('legal_privacy_policy')),
-                'legal_terms_of_use' => \Illuminate\Support\Facades\Cache::remember('setting_terms', 3600, fn() => \App\Models\Setting::get('legal_terms_of_use')),
+                'legal_privacy_policy' => \Illuminate\Support\Facades\Cache::remember('setting_privacy', 3600, fn () => \App\Models\Setting::get('legal_privacy_policy')),
+                'legal_terms_of_use' => \Illuminate\Support\Facades\Cache::remember('setting_terms', 3600, fn () => \App\Models\Setting::get('legal_terms_of_use')),
             ],
-            'dashboardPages' => function() use ($request) {
+            'dashboardPages' => function () use ($request) {
                 $user = $request->user();
-                if (!$user) return [];
+                if (! $user) {
+                    return [];
+                }
 
                 return \App\Models\DashboardPage::where('is_active', true)
                     ->orderBy('order')
                     ->get()
-                    ->filter(fn($page) => $user->canAccessPage($page->slug))
-                    ->map(fn($page) => [
+                    ->filter(fn ($page) => $user->canAccessPage($page->slug))
+                    ->filter(fn ($page) => $page->component !== 'MyProducts/Index' || $user->canSeeMyProducts())
+                    ->map(fn ($page) => [
                         'id' => $page->id,
                         'title' => $page->title,
                         'slug' => $page->slug,

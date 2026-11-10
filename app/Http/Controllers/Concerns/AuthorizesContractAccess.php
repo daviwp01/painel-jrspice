@@ -10,9 +10,10 @@ use App\Models\User;
 /**
  * Single source of truth for "may this user see this contract?".
  *
- * Masters see everything; everyone else must be linked through the
- * contract_users pivot. Kept in one place so the portal, the document
- * endpoints and the tracking endpoint can never drift apart.
+ * Masters see everything; everyone else only sees contracts of the company
+ * linked to their account (users.client_id → exporter_id / importer_id).
+ * Kept in one place so the portal, the document endpoints and the tracking
+ * endpoint can never drift apart.
  */
 trait AuthorizesContractAccess
 {
@@ -24,15 +25,7 @@ trait AuthorizesContractAccess
             abort(401);
         }
 
-        if ($user->is_master) {
-            return;
-        }
-
-        $linked = $contract->users()
-            ->where('users.id', $user->id)
-            ->exists();
-
-        abort_unless($linked, 403, 'Você não tem permissão para acessar este contrato.');
+        abort_unless($user->canAccessContract($contract), 403, __('You do not have permission to access this contract.'));
     }
 
     private function contractUser(): User

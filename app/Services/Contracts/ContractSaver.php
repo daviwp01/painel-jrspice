@@ -12,36 +12,27 @@ final class ContractSaver
 
     /**
      * @param  array<string, mixed>  $data
-     * @param  array<int, int|string>  $userIds
      */
-    public function create(array $data, array $userIds = []): Contract
+    public function create(array $data): Contract
     {
-        return DB::transaction(function () use ($data, $userIds) {
+        return DB::transaction(function () use ($data) {
             $contract = Contract::create($this->contractAttributes($data));
             $this->persistItems($contract, $data['items'] ?? []);
-            $contract->users()->sync($this->filterUserIds($userIds));
 
-            return $contract->fresh(['items.product', 'exporter', 'importer', 'seller', 'users']);
+            return $contract->fresh(['items.product', 'exporter', 'importer', 'seller']);
         });
     }
 
     /**
-     * Passing a null user list keeps the current links untouched.
-     *
      * @param  array<string, mixed>  $data
-     * @param  array<int, int|string>|null  $userIds
      */
-    public function update(Contract $contract, array $data, ?array $userIds): Contract
+    public function update(Contract $contract, array $data): Contract
     {
-        return DB::transaction(function () use ($contract, $data, $userIds) {
+        return DB::transaction(function () use ($contract, $data) {
             $contract->update($this->contractAttributes($data));
             $this->persistItems($contract, $data['items'] ?? []);
 
-            if ($userIds !== null) {
-                $contract->users()->sync($this->filterUserIds($userIds));
-            }
-
-            return $contract->fresh(['items.product', 'exporter', 'importer', 'seller', 'users']);
+            return $contract->fresh(['items.product', 'exporter', 'importer', 'seller']);
         });
     }
 
@@ -213,15 +204,6 @@ final class ContractSaver
         }
 
         return null;
-    }
-
-    /**
-     * @param  array<int, int|string>  $userIds
-     * @return array<int, int>
-     */
-    private function filterUserIds(array $userIds): array
-    {
-        return array_values(array_unique(array_map('intval', array_filter($userIds, 'is_numeric'))));
     }
 
     private function toFloat(mixed $value): ?float

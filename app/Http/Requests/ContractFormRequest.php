@@ -43,9 +43,6 @@ abstract class ContractFormRequest extends FormRequest
             'shipping_company' => ['nullable', 'string', 'max:100'],
             'container_number' => ['nullable', 'string', 'max:100'],
 
-            'user_ids' => ['sometimes', 'array'],
-            'user_ids.*' => ['integer', Rule::exists('users', 'id')],
-
             'items' => ['required', 'array', 'min:1', 'max:500'],
             'items.*.id' => ['sometimes', 'integer'],
             'items.*.register_number' => ['nullable', 'string', 'max:50'],
@@ -74,10 +71,9 @@ abstract class ContractFormRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'status.in' => 'O status informado não é reconhecido.',
-            'items.required' => 'O contrato precisa de ao menos um item.',
-            'items.min' => 'O contrato precisa de ao menos um item.',
-            'user_ids.*.exists' => 'Um dos usuários selecionados não existe.',
+            'status.in' => __('The provided status is not recognized.'),
+            'items.required' => __('The contract needs at least one item.'),
+            'items.min' => __('The contract needs at least one item.'),
         ];
     }
 

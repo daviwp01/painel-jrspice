@@ -136,7 +136,7 @@ const openWhatsApp = (phone) => {
                     <div class="flex items-center px-4 py-2 border-r border-slate-100">
                         <Users class="w-4 h-4 text-blue-500 mr-2" />
                         <span class="text-sm font-bold text-slate-800">{{ total_users }}</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">Total</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1.5 mt-0.5">{{ $t('Total') }}</span>
                     </div>
                     <div class="flex items-center px-4 py-2">
                         <UserCheck class="w-4 h-4 text-emerald-500 mr-2" />
@@ -264,7 +264,7 @@ const openWhatsApp = (phone) => {
                             <button
                                 @click="viewLeadDetails(user)"
                                 class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-transparent rounded-lg transition-all active:scale-90"
-                                title="Visualizar Lead"
+                                :title="$t('View Lead')"
                             >
                                 <Eye class="w-4 h-4" />
                             </button>
@@ -381,7 +381,7 @@ const openWhatsApp = (phone) => {
                                         <button
                                             @click="viewLeadDetails(user)"
                                             class="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 border border-transparent rounded-xl transition-all active:scale-90"
-                                            title="Visualizar Lead"
+                                            :title="$t('View Lead')"
                                         >
                                             <Eye class="w-4 h-4" />
                                         </button>
@@ -460,12 +460,12 @@ const openWhatsApp = (phone) => {
                                 <Users class="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 class="text-sm font-black text-slate-800 tracking-tight uppercase">Informações de Lead</h3>
+                                <h3 class="text-sm font-black text-slate-800 tracking-tight uppercase">{{ $t('Lead Information') }}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ selectedUserLead?.name }}</p>
                             </div>
                         </div>
                         <button @click="showLeadInfoModal = false" class="text-slate-400 hover:text-slate-600 transition-colors p-1.5 hover:bg-slate-100 rounded-lg">
-                            <span class="sr-only">Fechar</span>
+                            <span class="sr-only">{{ $t('Close') }}</span>
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -476,39 +476,39 @@ const openWhatsApp = (phone) => {
                         <!-- Professional Info -->
                         <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <div>
-                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">Empresa</span>
-                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.company_name || 'Não informado' }}</span>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">{{ $t('Company') }}</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.company_name || $t('Not informed') }}</span>
                             </div>
                             <div>
-                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">Cargo</span>
-                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.cargo || 'Não informado' }}</span>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">{{ $t('Job Title') }}</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.cargo || $t('Not informed') }}</span>
                             </div>
                             <div class="col-span-2 pt-2 border-t border-slate-200/50">
-                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">WhatsApp</span>
-                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.phone || 'Não informado' }}</span>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 block">{{ $t('WhatsApp') }}</span>
+                                <span class="text-xs font-bold text-slate-800">{{ selectedUserLead?.phone || $t('Not informed') }}</span>
                             </div>
                         </div>
 
                         <!-- Lead Questions -->
                         <div class="space-y-4">
                             <div class="space-y-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">1. Sua empresa já importa insumos alimentícios?</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{{ $t('1. Does your company already import food ingredients?') }}</span>
                                 <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
-                                    {{ selectedUserLead?.import_experience || 'Sem resposta' }}
+                                    {{ selectedUserLead?.import_experience || $t('No answer') }}
                                 </div>
                             </div>
 
                             <div class="space-y-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">2. Volume aproximado por embarque</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{{ $t('2. Approximate volume per shipment') }}</span>
                                 <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
-                                    {{ selectedUserLead?.import_volume || 'Sem resposta' }}
+                                    {{ selectedUserLead?.import_volume || $t('No answer') }}
                                 </div>
                             </div>
 
                             <div class="space-y-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">3. Seu papel na decisão de compra</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">{{ $t('3. Your role in the purchase decision') }}</span>
                                 <div class="text-xs font-semibold text-slate-700 bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
-                                    {{ selectedUserLead?.decision_role || 'Sem resposta' }}
+                                    {{ selectedUserLead?.decision_role || $t('No answer') }}
                                 </div>
                             </div>
                         </div>
@@ -520,7 +520,7 @@ const openWhatsApp = (phone) => {
                             @click="showLeadInfoModal = false"
                             class="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-600 transition-all shadow-sm"
                         >
-                            Fechar
+                            {{ $t('Close') }}
                         </button>
                     </div>
                 </div>

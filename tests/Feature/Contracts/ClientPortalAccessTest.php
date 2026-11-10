@@ -67,14 +67,13 @@ class ClientPortalAccessTest extends TestCase
             );
     }
 
-    public function test_unlinked_user_sees_an_empty_portal(): void
+    public function test_user_without_company_link_cannot_access_portal(): void
     {
-        $stranger = User::factory()->create();
+        $stranger = User::factory()->create(['client_id' => null]);
 
         $this->actingAs($stranger)
             ->get(route('my-products.index'))
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('exportProcesses.total', 0));
+            ->assertForbidden();
     }
 
     public function test_linked_user_can_open_the_contract_detail(): void
@@ -98,11 +97,9 @@ class ClientPortalAccessTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_linked_user_can_download_document_even_without_client_id_match(): void
+    public function test_user_linked_to_contract_company_can_download_document(): void
     {
-        // Regression: authorization must follow the pivot, never users.client_id.
-        $this->linkedClient->forceFill(['client_id' => null])->save();
-
+        // Authorization follows users.client_id against exporter/importer.
         $document = ContractDocument::create([
             'contract_id' => $this->contract->id,
             'name' => 'invoice.pdf',
@@ -116,6 +113,25 @@ class ClientPortalAccessTest extends TestCase
         $this->actingAs($this->linkedClient)
             ->get(route('my-products.download-document', $document))
             ->assertOk();
+    }
+
+    public function test_user_without_company_cannot_download_document(): void
+    {
+        $document = ContractDocument::create([
+            'contract_id' => $this->contract->id,
+            'name' => 'invoice.pdf',
+            'file_path' => 'contracts/'.$this->contract->id.'/invoice.pdf',
+            'file_type' => 'document',
+            'uploaded_by' => $this->linkedClient->id,
+        ]);
+
+        Storage::disk('contracts')->put($document->file_path, 'pdf-bytes');
+
+        $stranger = User::factory()->create(['client_id' => null]);
+
+        $this->actingAs($stranger)
+            ->get(route('my-products.download-document', $document))
+            ->assertForbidden();
     }
 
     public function test_unlinked_user_cannot_download_document(): void

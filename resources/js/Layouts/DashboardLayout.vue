@@ -5,6 +5,7 @@ import { toast } from '@/Stores/ToastStore';
 import { ui } from '@/Stores/UiStore';
 import ToastContainer from '@/Components/ToastContainer.vue';
 import LegalModal from '@/Components/LegalModal.vue';
+import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import {
     LayoutDashboard, Users as UsersIcon, Activity as ActivityIcon,
     Settings as SettingsIcon2, Database as DatabaseIcon,
@@ -47,9 +48,9 @@ onUnmounted(() => {
 
 // Custom Navigation Items (Admin only)
 const navItems = computed(() => [
-    { name: 'Gestão de Dados', route: 'admin.data.index', active: route().current('admin.data.*'), masterOnly: true, icon: DatabaseIcon },
-    { name: 'Gestão de Clientes', route: 'admin.clients.index', active: route().current('admin.clients.*'), masterOnly: true, icon: UsersIcon },
-    { name: 'Avaliações', route: 'admin.reviews.index', active: route().current('admin.reviews.*'), masterOnly: true, icon: StarIcon },
+    { name: 'Data Management', route: 'admin.data.index', active: route().current('admin.data.*'), masterOnly: true, icon: DatabaseIcon },
+    { name: 'Client Management', route: 'admin.clients.index', active: route().current('admin.clients.*'), masterOnly: true, icon: UsersIcon },
+    { name: 'Reviews', route: 'admin.reviews.index', active: route().current('admin.reviews.*'), masterOnly: true, icon: StarIcon },
     { name: 'Users', route: 'admin.users.index', active: route().current('admin.users.*'), masterOnly: true, icon: UsersIcon },
     { name: 'Activity', route: 'admin.activity.index', active: route().current('admin.activity.*'), masterOnly: true, icon: ActivityIcon },
     { name: 'Settings', route: 'admin.settings.index', active: route().current('admin.settings.*'), masterOnly: true, icon: SettingsIcon2 },
@@ -68,12 +69,17 @@ const navItems = computed(() => [
         ]">
             <!-- Brand Logo -->
             <div class="h-16 flex items-center justify-between px-6 bg-[#1e293b]/30 shrink-0 border-b border-slate-800/50">
-                <Link :href="route('dashboard')" class="flex items-center space-x-2 group w-full">
+                <Link :href="route('dashboard')" class="flex items-center space-x-2 group">
                     <img src="/logo-white.png" alt="XPICE" class="h-11 w-auto object-contain transition-opacity duration-300 opacity-90 group-hover:opacity-100" />
                 </Link>
-                <button class="md:hidden text-slate-400 hover:text-white transition-colors" @click="closeMobileMenu">
-                    <XIcon class="w-5 h-5" />
-                </button>
+                <div class="flex items-center gap-2">
+                    <div class="hidden md:block">
+                        <LanguageSwitcher variant="dark" compact />
+                    </div>
+                    <button class="md:hidden text-slate-400 hover:text-white transition-colors" @click="closeMobileMenu">
+                        <XIcon class="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5 space-y-4 sidebar-scrollbar">
@@ -91,7 +97,7 @@ const navItems = computed(() => [
                                      ? 'bg-blue-600/10 text-blue-400 border border-blue-500/20' 
                                      : 'text-slate-400 hover:bg-white/5 hover:text-white']">
                             <component :is="pg.component === 'MyProducts/Index' ? Package : ChartLineIcon" class="w-4 h-4 transition-colors text-[#b2862e]" />
-                            {{ pg.title }}
+                            {{ $t(pg.title) }}
                             <div v-if="route().current('dashboard.page', { slug: pg.slug })" class="absolute left-[-20px] top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#b2862e] rounded-r-full shadow-[0_0_15px_rgba(178,134,46,0.5)]"></div>
                         </Link>
                     </div>
@@ -106,7 +112,7 @@ const navItems = computed(() => [
                 <div v-if="user?.is_master" class="mt-8 border-t border-slate-800 pt-8">
                     <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-3 flex items-center gap-2">
                          <span class="w-1.5 h-1.5 rounded-full bg-[#b2862e]"></span>
-                         {{ $t('Administração') }}
+                         {{ $t('Administration') }}
                     </p>
                     <div class="space-y-1">
                         <template v-for="item in navItems" :key="item.route">
@@ -123,7 +129,7 @@ const navItems = computed(() => [
                 </div>
             </div>
 
-            <!-- PERFIL DO USUÁRIO NA SIDEBAR (NOVA SEÇÃO) -->
+            <!-- PERFIL DO USUÁRIO NA SIDEBAR -->
             <div class="p-5 border-t border-slate-800 bg-slate-900/30">
                 <div class="flex items-center justify-between group">
                     <Link :href="route('profile.edit')" class="flex items-center gap-3 min-w-0 flex-1">
@@ -131,11 +137,11 @@ const navItems = computed(() => [
                             {{ user?.name?.charAt(0) }}
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] leading-none mb-1.5">{{ $t('Meu Perfil') }}</p>
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] leading-none mb-1.5">{{ $t('My Profile') }}</p>
                             <p class="text-xs font-bold text-white truncate leading-none group-hover:text-blue-400 transition-colors">{{ user?.name }}</p>
                         </div>
                     </Link>
-                    <Link :href="route('logout')" method="post" as="button" class="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all" :title="$t('Sair')">
+                    <Link :href="route('logout')" method="post" as="button" class="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all" :title="$t('Log Out')">
                         <LogOutIcon class="w-5 h-5" />
                     </Link>
                 </div>
@@ -153,9 +159,10 @@ const navItems = computed(() => [
                 <button @click="isMobileMenuOpen = true" class="p-2.5 text-slate-400 hover:text-white transition-all active:scale-90">
                     <MenuIcon class="w-6 h-6" />
                 </button>
-                <Link :href="route('dashboard')" class="flex-1 flex justify-center pr-10">
+                <Link :href="route('dashboard')" class="flex-1 flex justify-center">
                     <img src="/logo-white.png" alt="XPICE" class="h-9 w-auto object-contain" />
                 </Link>
+                <LanguageSwitcher variant="dark" compact />
             </header>
 
             <!-- VIEWPORT CONTENT -->
@@ -171,7 +178,7 @@ const navItems = computed(() => [
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                                 {{ $t('Copyright • 2026 All rights reserved') }}
                             </p>
-                            <a href="https://daviwp.dev" target="_blank" rel="noopener" title="Visite daviwp.dev - Web Designer & Developer" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase; font-weight: 900; letter-spacing: 0.1em;">by daviwp._</a>
+                            <a href="https://daviwp.dev" target="_blank" rel="noopener" :title="$t('Visit daviwp.dev - Web Designer & Developer')" class="transition-opacity hover:opacity-80" style="color: #6a6a9a; font-size: 9px; text-transform: lowercase; font-weight: 900; letter-spacing: 0.1em;">by daviwp._</a>
                             <!-- <div class="flex items-center space-x-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 <button @click="openLegal('privacy')" class="hover:text-blue-600 transition-colors uppercase">{{ $t('PRIVACY') }}</button>
                                 <button @click="openLegal('terms')" class="hover:text-blue-600 transition-colors uppercase">{{ $t('TERMS') }}</button>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { Search, ChevronDown, Check, X, Users } from 'lucide-vue-next';
+import { trans } from 'laravel-vue-i18n';
 
 const props = defineProps({
     modelValue: {
@@ -13,7 +14,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Selecione os usuários...'
+        default: 'Select users...'
     },
     label: {
         type: String,
@@ -121,7 +122,7 @@ const selectedObjects = computed(() => {
             if (found) return found;
             return {
                 id: id,
-                name: `Usuário #${id}`
+                name: trans('User #:id', { id })
             };
         });
 });
@@ -158,7 +159,7 @@ onUnmounted(() => {
                 type="button"
                 class="text-[9px] font-bold text-slate-400 hover:text-red-500 uppercase tracking-tighter transition-colors"
             >
-                Limpar ({{ selectedIdsList.length }})
+                {{ $t('Clear') }} ({{ selectedIdsList.length }})
             </button>
         </div>
 
@@ -173,7 +174,7 @@ onUnmounted(() => {
         >
             <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 pr-2">
                 <span v-if="selectedIdsList.length === 0" class="text-xs font-medium text-slate-400 truncate">
-                    {{ placeholder }}
+                    {{ $t(placeholder) }}
                 </span>
                 <template v-else>
                     <span 
@@ -208,7 +209,7 @@ onUnmounted(() => {
                     ref="searchInput"
                     v-model="searchQuery"
                     type="text"
-                    placeholder="Buscar por nome, e-mail, telefone..."
+                    :placeholder="$t('Search by name, email, phone...')"
                     class="w-full text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-400"
                 />
             </div>
@@ -245,14 +246,14 @@ onUnmounted(() => {
                 </div>
 
                 <div v-if="!filteredOptions.length" class="px-4 py-6 text-center text-xs text-slate-400 font-medium">
-                    Nenhum usuário encontrado
+                    {{ $t('No users found') }}
                 </div>
             </div>
 
             <!-- Footer indicator -->
             <div class="px-3 py-2 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                <span>Exibindo {{ filteredOptions.length }} de {{ optionsList.length }}</span>
-                <span>{{ selectedIdsList.length }} selecionados</span>
+                <span>{{ $t('Showing') }} {{ filteredOptions.length }} {{ $t('of') }} {{ optionsList.length }}</span>
+                <span>{{ $t(':count selected', { count: selectedIdsList.length }) }}</span>
             </div>
         </div>
     </div>

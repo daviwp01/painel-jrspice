@@ -58,23 +58,23 @@ const confirmDeleteClient = () => {
             <div class="w-full xl:w-1/3 bg-slate-50 p-6 rounded-2xl border border-slate-100 xl:sticky xl:top-6 self-start shadow-sm shadow-slate-200/50 transition-all duration-300">
                 <h3 class="text-xs font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-600"></div>
-                    {{ editingClient ? 'Editando Cliente' : 'Adicionar Cliente' }}
+                    {{ editingClient ? $t('Editing Client') : $t('Add Client') }}
                 </h3>
                 <form @submit.prevent="submitClient" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nome do Cliente</label>
-                        <input v-model="clientForm.name" type="text" placeholder="Nome da Empresa..." required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Client Name') }}</label>
+                        <input v-model="clientForm.name" type="text" :placeholder="$t('Company Name...')" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Cliente</label>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">{{ $t('Client Type') }}</label>
                         <select v-model="clientForm.type" required class="w-full bg-white border-slate-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                            <option value="exporter">Exportador</option>
-                            <option value="importer">Importador</option>
+                            <option value="exporter">{{ $t('Exporter') }}</option>
+                            <option value="importer">{{ $t('Importer') }}</option>
                         </select>
                     </div>
                     <div class="pt-4 flex items-center gap-3">
                         <button type="submit" :disabled="clientForm.processing || !clientForm.isDirty" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-widest transition-all text-center shadow-sm shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                            {{ editingClient ? 'Atualizar' : 'Adicionar' }}
+                            {{ editingClient ? $t('Update') : $t('Add') }}
                         </button>
                         <button v-if="editingClient" type="button" @click="cancelClientEdit" class="p-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors">
                             <XIcon class="w-4 h-4" />
@@ -92,7 +92,7 @@ const confirmDeleteClient = () => {
                         :value="filters.clients_search" 
                         @input="$emit('updateSearch', 'clients_search', $event.target.value)"
                         type="text" 
-                        placeholder="PESQUISAR CLIENTES..."
+                        :placeholder="$t('SEARCH CLIENTS...')"
                         class="w-full pl-12 pr-4 py-3.5 bg-white border-slate-200 border rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all shadow-sm"
                     >
                 </div>
@@ -100,26 +100,26 @@ const confirmDeleteClient = () => {
                 <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col bg-white">
                     <!-- Header Tool Bar -->
                     <div class="bg-white px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-20">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">Lista de Clientes Cadastrados</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">{{ $t('List of Registered Clients') }}</p>
                         <span class="bg-blue-50 text-blue-600 border border-blue-100 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                            {{ clients.total }} registros encontrados
+                            {{ $t(':count records found', { count: clients.total }) }}
                         </span>
                     </div>
                     <div class="relative">
                         <table class="w-full text-left text-slate-600">
                             <thead class="text-[10px] text-slate-500 bg-slate-50/90 backdrop-blur-sm uppercase font-bold border-b border-slate-200 tracking-[0.2em] sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-3">Nome do Cliente</th>
-                                    <th class="px-6 py-3">Tipo</th>
-                                    <th class="px-6 py-3 text-right">Ações</th>
+                                    <th class="px-6 py-3">{{ $t('Client Name') }}</th>
+                                    <th class="px-6 py-3">{{ $t('Type') }}</th>
+                                    <th class="px-6 py-3 text-right">{{ $t('Actions') }}</th>
                                 </tr>
                             </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="c in clients.data" :key="c.id" class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                                  <td class="px-6 py-3 font-bold text-slate-800 text-sm uppercase tracking-tight">{{ c.name }}</td>
                                  <td class="px-6 py-3">
-                                    <span v-if="c.type === 'exporter'" class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-lg">Exportador</span>
-                                    <span v-else class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-600 rounded-lg">Importador</span>
+                                    <span v-if="c.type === 'exporter'" class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-lg">{{ $t('Exporter') }}</span>
+                                    <span v-else class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-600 rounded-lg">{{ $t('Importer') }}</span>
                                  </td>
                                  <td class="px-6 py-3 text-right">
                                      <button @click="editClient(c)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-block mr-1">
@@ -131,7 +131,7 @@ const confirmDeleteClient = () => {
                                  </td>
                              </tr>
                             <tr v-if="!clients.data?.length">
-                                <td colspan="3" class="px-6 py-8 text-center text-slate-400 font-medium">Nenhum cliente cadastrado.</td>
+                                <td colspan="3" class="px-6 py-8 text-center text-slate-400 font-medium">{{ $t('No clients registered.') }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -145,7 +145,7 @@ const confirmDeleteClient = () => {
                     <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
                     <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
                         <span class="text-blue-600">{{ clients.from }}-{{ clients.to }}</span> 
-                        <span class="mx-2 text-slate-300">de</span>
+                        <span class="mx-2 text-slate-300">{{ $t('of') }}</span>
                         <span class="text-slate-900">{{ clients.total }}</span>
                     </p>
                 </div>
@@ -158,9 +158,9 @@ const confirmDeleteClient = () => {
     
     <ConfirmationModal
         :show="isConfirmModalOpen"
-        title="Excluir Cliente"
-        :message="`Tem certeza que deseja excluir '${clientToDelete?.name}'? Esta ação removerá a associação deste cliente de todos os processos.`"
-        confirm-text="Excluir Cliente"
+        :title="$t('Delete Client')"
+        :message="$t(`Are you sure you want to delete ':name'? This action will remove this client's association from all processes.`, { name: clientToDelete?.name ?? '' })"
+        :confirm-text="$t('Delete Client')"
         @close="isConfirmModalOpen = false"
         @confirm="confirmDeleteClient"
     />

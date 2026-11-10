@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Country;
-use App\Models\DashboardPage;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Setting;
@@ -29,7 +28,7 @@ class DashboardService
      */
     public function resolveDateRange(?string $dateRange, Carbon $defaultStart, Carbon $defaultEnd): array
     {
-        if (!$dateRange || $dateRange === 'Todos') {
+        if (! $dateRange || $dateRange === 'Todos') {
             return [$defaultStart, $defaultEnd];
         }
 
@@ -60,14 +59,14 @@ class DashboardService
     public function getCountriesWithLatestUpdate(Carbon $startOfWeek, Carbon $endOfWeek)
     {
         return Cache::remember(
-            'dashboard_countries_latest_' . $startOfWeek->format('Ymd'),
+            'dashboard_countries_latest_'.$startOfWeek->format('Ymd'),
             300,
             function () use ($startOfWeek, $endOfWeek) {
                 $latestSub = ProductPrice::query()
                     ->join('products', 'product_prices.product_id', '=', 'products.id')
                     ->whereBetween('product_prices.date', [
                         $startOfWeek->toDateString(),
-                        $endOfWeek->toDateString()
+                        $endOfWeek->toDateString(),
                     ])
                     ->groupBy('products.country_id')
                     ->selectRaw('products.country_id, MAX(product_prices.date) as latest_weekly_update');
@@ -88,14 +87,14 @@ class DashboardService
      */
     public function getProductsSidebar($countryId)
     {
-        if (!$countryId) {
+        if (! $countryId) {
             return collect();
         }
 
         return Cache::remember("dashboard_products_sidebar_{$countryId}", 300, function () use ($countryId) {
             return Product::query()
                 ->where('country_id', $countryId)
-                ->select('id', 'name', 'country_id', 'harvest_month')
+                ->select('id', 'name', 'name_en', 'name_es', 'country_id', 'harvest_month')
                 ->orderBy('name')
                 ->get();
         });
@@ -121,7 +120,7 @@ class DashboardService
                 ->orderBy('week', 'desc')
                 ->get()
                 ->groupBy('year')
-                ->map(fn($weeks, $year) => [
+                ->map(fn ($weeks, $year) => [
                     'year' => $year,
                     'weeks' => $weeks->values(),
                 ])

@@ -47,7 +47,7 @@ const fetchTracking = async (force = false) => {
     tracking.value = {
       state: 'error',
       data: null,
-      message: 'Não foi possível falar com a transportadora agora. Tente novamente em instantes.',
+      message: 'Could not reach the carrier right now. Try again in a moment.',
       refreshing: false,
     };
   }
@@ -64,15 +64,15 @@ const carrier = computed(() =>
 );
 
 const tabs = [
-  { key: 'details', label: 'Detalhes & Documentação', icon: ClipboardList, activeClass: 'border-blue-600 text-blue-600' },
-  { key: 'tracking', label: 'Rastreamento de Container', icon: Ship, activeClass: 'border-blue-600 text-blue-600' },
-  { key: 'observations', label: 'Observações', icon: MessageSquare, activeClass: 'border-blue-600 text-blue-600' },
-  { key: 'review', label: 'Avaliação', icon: Star, activeClass: 'border-amber-500 text-amber-600' },
+  { key: 'details', label: 'Details & Documentation', icon: ClipboardList, activeClass: 'border-blue-600 text-blue-600' },
+  { key: 'tracking', label: 'Container Tracking', icon: Ship, activeClass: 'border-blue-600 text-blue-600' },
+  { key: 'observations', label: 'Observations', icon: MessageSquare, activeClass: 'border-blue-600 text-blue-600' },
+  { key: 'review', label: 'Review', icon: Star, activeClass: 'border-amber-500 text-amber-600' },
 ];
 </script>
 
 <template>
-  <Head :title="`Contrato ${process.contract_number}`" />
+  <Head :title="$t('Contract') + ' ' + process.contract_number" />
 
   <DashboardLayout>
     <div class="px-6 py-7 md:px-8 w-full max-w-none space-y-6">
@@ -83,20 +83,20 @@ const tabs = [
           class="inline-flex items-center text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors group uppercase tracking-widest"
         >
           <ArrowLeft class="w-3.5 h-3.5 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
-          Voltar para meus contratos
+          {{ $t('Back to my contracts') }}
         </Link>
       </div>
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">Contrato {{ process.contract_number }}</h1>
+          <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter">{{ $t('Contract') }} {{ process.contract_number }}</h1>
           <p class="text-sm font-medium text-slate-500 mt-1">
-            Acesse a documentação do contrato, acompanhe o rastreamento do container e avalie o serviço.
+            {{ $t('Access the contract documentation, follow the container tracking and evaluate the service.') }}
           </p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-widest bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
-            Registro: {{ process.register_number || 'Sem registro' }}
+            {{ $t('Register') }}: {{ process.register_number || $t('Not registered') }}
           </span>
         </div>
       </div>
@@ -111,7 +111,7 @@ const tabs = [
           :class="activeTab === tab.key ? tab.activeClass : 'border-transparent text-slate-400 hover:text-slate-700'"
         >
           <component :is="tab.icon" class="w-4 h-4" />
-          {{ tab.label }}
+          {{ $t(tab.label) }}
         </button>
       </div>
 

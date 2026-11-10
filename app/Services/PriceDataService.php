@@ -6,8 +6,8 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Supplier;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class PriceDataService
 {
@@ -24,9 +24,9 @@ class PriceDataService
         $latestImportDate = ProductPrice::whereHas('product', function ($q) use ($countryId) {
             $q->where('country_id', $countryId);
         })
-        ->where('date', '<=', $rangeEnd->toDateString())
-        ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
-        ->max('date');
+            ->where('date', '<=', $rangeEnd->toDateString())
+            ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
+            ->max('date');
 
         if ($latestImportDate) {
             // Se achou uma data, pega a semana dessa data para definir o limite de exibição e filtrar os produtos
@@ -36,13 +36,13 @@ class PriceDataService
 
             $query->whereHas('prices', function ($q) use ($supplierId, $actualRangeStart, $actualRangeEnd) {
                 $q->whereBetween('date', [$actualRangeStart->toDateString(), $actualRangeEnd->toDateString()])
-                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+                    ->when($supplierId, fn ($sq) => $sq->where('supplier_id', $supplierId));
             });
         } else {
             $referenceEnd = $rangeEnd;
             $query->whereHas('prices', function ($q) use ($supplierId, $referenceEnd) {
                 $q->where('date', '<=', $referenceEnd->toDateString())
-                    ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId));
+                    ->when($supplierId, fn ($sq) => $sq->where('supplier_id', $supplierId));
             });
         }
 
@@ -51,7 +51,7 @@ class PriceDataService
             'latest_price' => ProductPrice::select('price')
                 ->whereColumn('product_id', 'products.id')
                 ->where('date', '<=', $referenceEnd->toDateString())
-                ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+                ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
                 ->orderBy('date', 'desc')
                 ->orderBy('price', 'asc')
                 ->limit(1),
@@ -63,11 +63,11 @@ class PriceDataService
                         ->from('product_prices')
                         ->whereColumn('product_id', 'products.id')
                         ->where('date', '<=', $referenceEnd->toDateString())
-                        ->when($supplierId, fn($sq) => $sq->where('supplier_id', $supplierId))
+                        ->when($supplierId, fn ($sq) => $sq->where('supplier_id', $supplierId))
                         ->orderBy('date', 'desc')
                         ->limit(1);
                 })
-                ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+                ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
                 ->orderBy('date', 'desc')
                 ->orderBy('price', 'asc')
                 ->limit(1),
@@ -76,7 +76,7 @@ class PriceDataService
                 ->join('product_prices', 'product_prices.supplier_id', '=', 'suppliers.id')
                 ->whereColumn('product_prices.product_id', 'products.id')
                 ->where('product_prices.date', '<=', $referenceEnd->toDateString())
-                ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+                ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
                 ->orderBy('product_prices.date', 'desc')
                 ->orderBy('product_prices.price', 'asc')
                 ->limit(1),
@@ -106,7 +106,7 @@ class PriceDataService
         // Trasformação final para o frontend
         $paginated->getCollection()->transform(function ($product) {
             $latest = $product->latest_price ? (float) $product->latest_price : null;
-            $hasPrevious = !is_null($product->previous_price);
+            $hasPrevious = ! is_null($product->previous_price);
             $previous = $hasPrevious ? (float) $product->previous_price : $latest;
 
             $variation = ($latest && $previous && $previous > 0)
@@ -116,8 +116,8 @@ class PriceDataService
             $product->latest_price = $latest;
             $product->previous_price = $previous;
             $product->variation = round($variation, 2);
-            $product->status = $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (!$hasPrevious && $latest ? 'new' : 'none'));
-            
+            $product->status = $variation > 0 ? 'up' : ($variation < 0 ? 'down' : (! $hasPrevious && $latest ? 'new' : 'none'));
+
             return $product;
         });
 
@@ -140,9 +140,9 @@ class PriceDataService
                 'countries.name as country_name',
             ])
             ->with([
-                'product:id,name,country_id',
+                'product:id,name,name_en,name_es,country_id',
                 'product.country:id,name',
-                'supplier:id,name'
+                'supplier:id,name',
             ]);
 
         if ($countryId) {
@@ -192,7 +192,7 @@ class PriceDataService
         // Utilizamos o banco de dados para agrupar e achar o valor mínimo da semana (Economia de Memória OOM)
         $prices = DB::table('product_prices')
             ->where('product_id', $productId)
-            ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+            ->when($range, fn ($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
             ->selectRaw('YEAR(date) as yr, FLOOR((DAYOFYEAR(date) - 1) / 7) as wk, MIN(price) as min_p')
             ->groupBy('yr', 'wk')
             ->orderBy('yr', 'asc')
@@ -207,15 +207,19 @@ class PriceDataService
         foreach ($prices as $row) {
             $year = (int) $row->yr;
             $week = (int) $row->wk;
-            
-            if ($week < 0) $week = 0;
-            if ($week > 51) $week = 51;
 
-            if (!isset($chartData[$year])) {
+            if ($week < 0) {
+                $week = 0;
+            }
+            if ($week > 51) {
+                $week = 51;
+            }
+
+            if (! isset($chartData[$year])) {
                 $chartData[$year] = array_fill(0, 52, null);
             }
-            
-            $chartData[$year][$week] = (float)round($row->min_p, 2);
+
+            $chartData[$year][$week] = (float) round($row->min_p, 2);
         }
 
         return $chartData;
@@ -226,14 +230,14 @@ class PriceDataService
      */
     public function getRecentBestPrices(int $productId, ?array $range = null): array
     {
-        return Cache::remember("product_best_prices_{$productId}_" . ($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
+        return Cache::remember("product_best_prices_{$productId}_".($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
             // Encontra a data mais recente com preços para este produto no range
             $latestDate = DB::table('product_prices')
                 ->where('product_id', $productId)
-                ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+                ->when($range, fn ($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
                 ->max('date');
 
-            if (!$latestDate) {
+            if (! $latestDate) {
                 return [];
             }
 
@@ -254,13 +258,13 @@ class PriceDataService
             $result = [];
             foreach ($bestPrices as $price) {
                 $date = Carbon::parse($price->date);
-                $year = $date->isoWeekYear(); 
+                $year = $date->isoWeekYear();
                 $week = $date->isoWeek();
-                
+
                 $result[] = [
                     'supplier' => $price->supplier ?? 'N/A',
                     'date' => $price->date,
-                    'price' => (float)$price->price,
+                    'price' => (float) $price->price,
                     'week_label' => "{$year} / {$week}",
                 ];
             }
@@ -274,12 +278,12 @@ class PriceDataService
      */
     public function calculateMetrics(int $productId, ?array $range): array
     {
-        return Cache::remember("product_metrics_{$productId}_" . ($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
+        return Cache::remember("product_metrics_{$productId}_".($range['start'] ?? 'all'), 300, function () use ($productId, $range) {
             $latestDate = ProductPrice::where('product_id', $productId)
-                ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+                ->when($range, fn ($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
                 ->max('date');
 
-            if (!$latestDate) {
+            if (! $latestDate) {
                 return [
                     'latest' => ['label' => 'SEM DADOS', 'min' => 0, 'max' => 0, 'spread' => 0],
                     'year' => ['label' => 'ANO', 'min' => 0, 'max' => 0, 'spread' => 0],
@@ -316,23 +320,23 @@ class PriceDataService
                 }, 'weekly_sub')
                 ->first();
 
-            $productInfo = Product::select('id', 'name', 'harvest_month')
+            $productInfo = Product::select('id', 'name', 'name_en', 'name_es', 'harvest_month')
                 ->where('id', $productId)
                 ->first();
 
             $metrics = [
                 'latest' => [
-                    'label' => 'ÚLTIMA DATA: ' . $currentDate->format('d/m/Y'),
+                    'label' => 'ÚLTIMA DATA: '.$currentDate->format('d/m/Y'),
                     'min' => (float) ($latestStats->min_p ?? 0),
                     'max' => (float) ($latestStats->max_p ?? 0),
                 ],
                 'year' => [
-                    'label' => 'ANO: ' . $currentDate->year,
+                    'label' => 'ANO: '.$currentDate->year,
                     'min' => (float) ($yearStats->min_p ?? 0),
                     'max' => (float) ($yearStats->max_p ?? 0),
                 ],
                 'all' => [
-                    'label' => 'DESDE: ' . ($allTimeStats->first_date ? Carbon::parse($allTimeStats->first_date)->year : $currentDate->year),
+                    'label' => 'DESDE: '.($allTimeStats->first_date ? Carbon::parse($allTimeStats->first_date)->year : $currentDate->year),
                     'min' => (float) ($allTimeStats->min_p ?? 0),
                     'max' => (float) ($allTimeStats->max_p ?? 0),
                 ],
@@ -340,7 +344,9 @@ class PriceDataService
             ];
 
             foreach ($metrics as $key => $value) {
-                if ($key === 'product_info') continue;
+                if ($key === 'product_info') {
+                    continue;
+                }
                 $metrics[$key]['spread'] = ($value['min'] > 0)
                     ? (($value['max'] - $value['min']) / $value['min']) * 100
                     : 0;
@@ -357,37 +363,41 @@ class PriceDataService
     {
         $pricesRow = ProductPrice::query()
             ->where('product_id', $productId)
-            ->when($range, fn($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
+            ->when($range, fn ($q) => $q->whereBetween('date', [$range['start'], $range['end']]))
             ->selectRaw('YEAR(date) as yr, MONTH(date) as mt, MIN(price) as min_p')
             ->groupBy('yr', 'mt')
             ->orderBy('yr', 'asc')
             ->orderBy('mt', 'asc')
             ->get();
 
-            if ($pricesRow->isEmpty()) {
-                return [];
+        if ($pricesRow->isEmpty()) {
+            return [];
+        }
+
+        $chartData = [];
+        $firstYear = $pricesRow->first()->yr;
+        $currentYear = now()->year;
+
+        $grouped = $pricesRow->groupBy(function ($p) {
+            return (int) $p->yr.'-'.(int) $p->mt;
+        });
+
+        foreach (range((int) $firstYear, (int) $currentYear) as $year) {
+            if ($range && $year < Carbon::parse($range['start'])->year) {
+                continue;
+            }
+            if ($range && $year > Carbon::parse($range['end'])->year) {
+                continue;
             }
 
-            $chartData = [];
-            $firstYear = $pricesRow->first()->yr;
-            $currentYear = now()->year;
-
-            $grouped = $pricesRow->groupBy(function($p) {
-                return (int)$p->yr . '-' . (int)$p->mt;
-            });
-
-            foreach (range((int)$firstYear, (int)$currentYear) as $year) {
-                if ($range && $year < Carbon::parse($range['start'])->year) continue;
-                if ($range && $year > Carbon::parse($range['end'])->year) continue;
-
-                $monthlyData = [];
-                for ($month = 1; $month <= 12; $month++) {
-                    $key = $year . '-' . $month;
-                    $item = $grouped->get($key);
-                    $monthlyData[] = $item ? (float) round($item->first()->min_p, 2) : null;
-                }
-                $chartData[$year] = $monthlyData;
+            $monthlyData = [];
+            for ($month = 1; $month <= 12; $month++) {
+                $key = $year.'-'.$month;
+                $item = $grouped->get($key);
+                $monthlyData[] = $item ? (float) round($item->first()->min_p, 2) : null;
             }
+            $chartData[$year] = $monthlyData;
+        }
 
         return $chartData;
     }
@@ -413,6 +423,7 @@ class PriceDataService
                 ->get();
         });
     }
+
     /**
      * Get all raw prices for continuous chart mode.
      */
