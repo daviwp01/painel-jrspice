@@ -36,7 +36,7 @@ const selectedSupplier = ref(props.filters.supplier_id || '');
 const isLoading = ref(false);
 
 const suppliersWithOptions = computed(() => {
-    return [{ id: '', name: 'Todos' }, ...props.suppliers];
+    return [{ id: '', name: trans('All') }, ...props.suppliers];
 });
 
 // Export PDF Logic

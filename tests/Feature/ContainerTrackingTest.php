@@ -90,6 +90,11 @@ class ContainerTrackingTest extends TestCase
 
     public function test_reports_unsupported_prefix_as_a_state_not_as_a_500(): void
     {
+        // Without an aggregator configured there is nothing to auto-detect with.
+        config()->set('tracking.aggregator.driver', 'tracktainer');
+        config()->set('tracking.aggregator.url', '');
+        config()->set('tracking.aggregator.api_key', '');
+
         $master = User::factory()->master()->create();
 
         $response = $this->actingAs($master)->getJson(route('tracking.show', 'ZZZZ1234567'));
@@ -97,6 +102,57 @@ class ContainerTrackingTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('state', 'unsupported')
             ->assertJsonPath('status', 'UNKNOWN');
+    }
+
+    public function test_booking_reference_is_accepted_when_tracktainer_is_configured(): void
+    {
+        config()->set('tracking.aggregator.driver', 'tracktainer');
+        config()->set('tracking.aggregator.url', 'https://api.tracktainer.test/v1');
+        config()->set('tracking.aggregator.api_key', 'test-key');
+
+        Http::fake([
+            'api.tracktainer.test/v1/ocean/shipments?*' => Http::response([
+                'data' => [[
+                    'type' => 'ocean-shipments',
+                    'id' => 'bk-1',
+                    'attributes' => ['shipment_number' => 'TAOGQ5798900'],
+                ]],
+                'links' => ['next' => null],
+            ]),
+            'api.tracktainer.test/v1/ocean/shipments/bk-1' => Http::response([
+                'data' => [
+                    'type' => 'ocean-shipments',
+                    'id' => 'bk-1',
+                    'attributes' => [
+                        'shipment_status' => 'IN_TRANSIT',
+                        'shipment_number' => 'TAOGQ5798900',
+                        'carrier' => ['name' => 'One Line', 'scac' => 'ONEY'],
+                        'port_of_loading' => ['name' => 'Yantian', 'code' => 'CNYAN', 'country' => ['name' => 'China']],
+                        'port_of_discharge' => ['name' => 'Rotterdam', 'code' => 'NLRTM', 'country' => ['name' => 'Netherlands']],
+                        'etd' => '2026-10-01',
+                        'eta' => '2026-12-01',
+                        'failure_reason' => null,
+                        'containers' => [[
+                            'container_number' => 'ONEU9410240',
+                            'movements' => [
+                                ['event' => 'LOAD', 'classifier' => 'ACT', 'date' => '2026-10-02', 'location' => ['name' => 'Yantian']],
+                                ['event' => 'DEPA', 'classifier' => 'ACT', 'date' => '2026-10-03', 'location' => ['name' => 'Yantian']],
+                            ],
+                        ]],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $master = User::factory()->master()->create();
+
+        $response = $this->actingAs($master)->getJson(route('tracking.show', 'TAOGQ5798900'));
+
+        $response->assertOk()
+            ->assertJsonPath('state', 'ok')
+            ->assertJsonPath('status', 'IN_TRANSIT')
+            ->assertJsonPath('carrier_name', 'One Line')
+            ->assertJsonPath('provider', 'tracktainer');
     }
 
     public function test_reports_missing_container_on_the_contract(): void

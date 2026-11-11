@@ -282,7 +282,7 @@ const submit = async () => {
                         :class="currentStep >= 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-200'">
                         1
                     </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'">Acesso</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'">{{ $t('Access') }}</span>
                 </div>
 
                 <!-- Step 2 -->
@@ -291,7 +291,7 @@ const submit = async () => {
                         :class="currentStep >= 2 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-200'">
                         2
                     </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'">Empresa</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'">{{ $t('Company') }}</span>
                 </div>
 
                 <!-- Step 3 -->
@@ -300,7 +300,7 @@ const submit = async () => {
                         :class="currentStep >= 3 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-200'">
                         3
                     </div>
-                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'">Perfil</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider mt-2" :class="currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'">{{ $t('Profile') }}</span>
                 </div>
             </div>
         </div>
@@ -509,7 +509,7 @@ const submit = async () => {
                     class="flex items-center justify-center gap-2 px-5 py-3.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-xl text-sm font-bold tracking-wide transition-all w-1/3"
                 >
                     <ArrowLeft class="w-4 h-4" />
-                    Voltar
+                    {{ $t('Back') }}
                 </button>
 
                 <button
@@ -518,7 +518,7 @@ const submit = async () => {
                     @click="nextStep"
                     class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl text-sm font-bold tracking-wide text-white shadow-lg shadow-blue-100 transition-all"
                 >
-                    Continuar
+                    {{ $t('Continue') }}
                     <ArrowRight class="w-4 h-4" />
                 </button>
 

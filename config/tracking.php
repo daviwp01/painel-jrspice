@@ -101,7 +101,6 @@ return [
     // config file never depends on a booted application (unit tests).
     'snapshot_path' => env('TRACKING_SNAPSHOT_PATH'),
 
-
     'cache' => [
         'store' => env('TRACKING_CACHE_STORE'),
         'ttl' => (int) env('TRACKING_CACHE_TTL', 60),
@@ -114,9 +113,12 @@ return [
 
     // Shared credentials used when a carrier runs through a paid aggregator.
     'aggregator' => [
-        'driver' => 'terminal49',
-        'url' => env('TRACKING_AGGREGATOR_URL', 'https://api.terminal49.com/v2'),
+        // tracktainer | terminal49 — demais drivers ficam implementados mas
+        // só este é ativado via TRACKING_AGGREGATOR_DRIVER em .env.
+        'driver' => env('TRACKING_AGGREGATOR_DRIVER', 'terminal49'),
+        'url' => env('TRACKING_AGGREGATOR_URL'),
         'api_key' => env('TRACKING_AGGREGATOR_KEY'),
+        // Used by the terminal49 driver only; tracktainer builds Bearer headers itself.
         'headers' => [
             'Authorization' => 'Token '.env('TRACKING_AGGREGATOR_KEY'),
             'Accept' => 'application/vnd.api+json',

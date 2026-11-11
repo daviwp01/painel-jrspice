@@ -1147,5 +1147,8 @@
   "No company": "No company",
   "Name (English)": "Name (English)",
   "Name (Spanish)": "Name (Spanish)",
-  "Optional": "Optional"
+  "Optional": "Optional",
+  "Invalid reference. Use a container (ISO 6346), booking or bill of lading number.": "Invalid reference. Use a container (ISO 6346), booking or bill of lading number.",
+  "BRAZIL": "BRAZIL",
+  "PORTUGAL": "PORTUGAL"
 }

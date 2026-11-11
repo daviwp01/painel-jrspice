@@ -14,6 +14,12 @@ final class ContainerPrefixResolver
 {
     private const ISO6346 = '/^[A-Z]{4}[0-9]{7}$/';
 
+    /**
+     * Any reference the portal may receive: ISO 6346 container, booking or
+     * bill of lading (docs: B/L is usually 9–20 chars; bookings vary).
+     */
+    private const REFERENCE = '/^[A-Z0-9]{8,25}$/';
+
     /** @var array<string, string> prefix => carrier key */
     private array $map = [];
 
@@ -43,6 +49,20 @@ final class ContainerPrefixResolver
     public function isValidFormat(string $containerNumber): bool
     {
         return (bool) preg_match($this->iso6346, self::normalize($containerNumber));
+    }
+
+    /**
+     * Container, booking or B/L — what the controller accepts before tracking.
+     */
+    public function isValidReference(string $reference): bool
+    {
+        $normalized = self::normalize($reference);
+
+        if (strlen($normalized) < 8 || strlen($normalized) > 25) {
+            return false;
+        }
+
+        return (bool) preg_match(self::REFERENCE, $normalized);
     }
 
     public function prefixOf(string $containerNumber): ?string

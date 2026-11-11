@@ -27,6 +27,10 @@ class TrackingServiceProvider extends ServiceProvider
                 $app,
                 $app->make(ContainerPrefixResolver::class),
                 (array) $app['config']->get('tracking.carriers', []),
+                array_merge(
+                    (array) $app['config']->get('tracking.aggregator', []),
+                    ['default_carrier' => (string) $app['config']->get('tracking.default_carrier', '')],
+                ),
             ),
         );
 

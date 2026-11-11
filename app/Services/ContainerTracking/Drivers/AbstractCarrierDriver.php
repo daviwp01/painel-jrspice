@@ -9,6 +9,7 @@ use App\DataTransferObjects\TrackingDataDTO;
 use App\Exceptions\Tracking\CarrierApiException;
 use App\Exceptions\Tracking\ContainerNotFoundException;
 use App\Services\ContainerTracking\Aggregators\Terminal49Aggregator;
+use App\Services\ContainerTracking\Aggregators\TracktainerAggregator;
 use App\Services\ContainerTracking\ContainerPrefixResolver;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -144,15 +145,16 @@ abstract class AbstractCarrierDriver implements ContainerTrackerInterface
 
         $driver = (string) ($aggregator['driver'] ?? 'terminal49');
 
-        if ($driver === 'terminal49') {
-            return (new Terminal49Aggregator($aggregator, $this->carrierName(), $this->carrierCode()))
-                ->track($container, (string) $aggregator['scac']);
-        }
-
-        throw new CarrierApiException(
-            sprintf('Agregador [%s] não suportado.', $driver),
-            TrackingDataDTO::STATE_NOT_CONFIGURED,
-        );
+        return match ($driver) {
+            'tracktainer' => TracktainerAggregator::make($aggregator, $this->carrierName(), $this->carrierCode())
+                ->track($container),
+            'terminal49' => (new Terminal49Aggregator($aggregator, $this->carrierName(), $this->carrierCode()))
+                ->track($container, (string) $aggregator['scac']),
+            default => throw new CarrierApiException(
+                sprintf('Agregador [%s] não suportado.', $driver),
+                TrackingDataDTO::STATE_NOT_CONFIGURED,
+            ),
+        };
     }
 
     protected function trackViaScraper(string $container): TrackingDataDTO

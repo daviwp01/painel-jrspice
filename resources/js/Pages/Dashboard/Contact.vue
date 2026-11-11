@@ -111,13 +111,13 @@ const submitContact = () => {
                             <div class="space-y-4">
                                 <div v-if="contactInfo.hours.br" class="flex items-center justify-between border-b border-slate-50 pb-3">
                                     <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-500 uppercase tracking-tight">
-                                        <CountryFlag name="Brasil" class-name="w-5 h-3" /> BRASIL
+                                        <CountryFlag name="Brasil" class-name="w-5 h-3" /> {{ $t('BRAZIL') }}
                                     </span>
                                     <span class="text-xs font-medium text-slate-800 uppercase">{{ contactInfo.hours.br }}</span>
                                 </div>
                                 <div v-if="contactInfo.hours.pt" class="flex items-center justify-between">
                                     <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-500 uppercase tracking-tight">
-                                        <CountryFlag name="Portugal" class-name="w-5 h-3" /> PORTUGAL
+                                        <CountryFlag name="Portugal" class-name="w-5 h-3" /> {{ $t('PORTUGAL') }}
                                     </span>
                                     <span class="text-xs font-medium text-slate-800 uppercase">{{ contactInfo.hours.pt }}</span>
                                 </div>

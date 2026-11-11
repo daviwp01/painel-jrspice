@@ -40,15 +40,18 @@ const current = computed(
     () => languages.find((lang) => lang.value === currentLang.value) || languages[0],
 );
 
-const changeLanguage = (value) => {
+const changeLanguage = async (value) => {
     if (value === currentLang.value) return;
 
     currentLang.value = value;
-    loadLanguageAsync(value);
 
     const expires = new Date();
     expires.setTime(expires.getTime() + 365 * 24 * 60 * 60 * 1000);
     document.cookie = `app_locale=${value};expires=${expires.toUTCString()};path=/`;
+
+    // Applies messages + currentLanguage before the next paint so every
+    // consumer of currentLocale / $t re-renders in the same switch.
+    await loadLanguageAsync(value);
 };
 </script>
 

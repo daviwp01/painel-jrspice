@@ -22,7 +22,7 @@ Arquitetura **Strategy / Adapter** para as 9 armadoras marítimas, com contrato
 
 ```
 GET /meus-produtos/{contract}/rastreamento   → usa o container do contrato (autorizado por pivot)
-GET /rastreamento/{container}                → consulta direta (regex ^[A-Z]{4}[0-9]{7}$)
+GET /rastreamento/{container}                → consulta direta (aceita container ISO, booking ou B/L — `isValidReference`)
 ```
 
 Ambos com `throttle:30,1` e resposta **sempre** no formato do DTO + `state`.
@@ -56,8 +56,10 @@ TRACKING_MAERSK_KEY=...
 - **`api`** — `GET/POST` na URL com `{container}`, headers/chaves da config, e o
   mapeamento JSON → DTO declarado em `config/tracking.php` (`carriers.*.api.map`,
   com caminhos no formato `data.events`).
-- **`aggregator`** — mesmo mecanismo usando `TRACKING_AGGREGATOR_URL`/`_KEY`
-  (agregador pago, ex.: JSONCargo / Terminal49).
+- **`aggregator`** — mesmo mecanismo usando `TRACKING_AGGREGATOR_URL`/`_KEY` +
+  `TRACKING_AGGREGATOR_DRIVER` (`tracktainer` | `terminal49`). **Ativo: Tracktainer**
+  (`TracktainerAggregator` — list-first, POST só se o número for novo; 409 = sem
+  crédito). Terminal49 permanece implementado, desativado via env.
 - **`scraper`** — portal público via `Symfony\Component\DomCrawler\Crawler`
   com seletores CSS declarados em `carriers.*.scraper.selectors`.
 
@@ -97,3 +99,38 @@ php artisan test tests/Feature/ContainerTrackingTest.php      # 8 testes: 422, e
 
 Enquanto `container_number` estiver vazio o endpoint responde `unavailable`,
 que é exatamente o estado que o portal mostra.
+
+## 9. Chegada automática (eta_date)
+
+O Tracktainer ainda **não expõe webhook** (docs: “Coming soon… polling com
+`filter[updated_after]`”). O caminho oficial é o polling agendado:
+
+| Peça | Papel |
+|---|---|
+| `TracktainerClient` | HTTP/auth/erros da API |
+| `ArrivalDateExtractor` | payload → data de chegada (ACT `ARRI`/`DISCH` > `eta` quando `ARRIVED`/`COMPLETED`) |
+| `ContractArrivalSyncService` | casa `container_number` (case-insensitive) e grava `eta_date` **só se mudou** |
+| `tracking:sync-arrivals` | pagina por `links.next`, watermark em `settings.tracktainer_sync_after`, `--dry-run` |
+| `routes/console.php` | `everyThirtyMinutes()->withoutOverlapping()` (worker já roda `schedule:run`) |
+
+```bash
+php artisan tracking:sync-arrivals --dry-run   # mostra o que mudaria
+php artisan tracking:sync-arrivals              # aplica e avança o watermark
+```
+
+Falha de API **não** avança o watermark (próxima execução repete a janela).
+
+## 10. Containers, bookings e B/L
+
+O portal aceita **qualquer referência de 8–25 caracteres alfanuméricos**
+(`ContainerPrefixResolver::isValidReference`):
+
+| Formato | Exemplo | Resolução da armadora |
+|---|---|---|
+| ISO 6346 (4L+7D) | `ONEU9410240` | prefixo do mapa → driver |
+| Booking / B/L | `TAOGQ5798900` | `shipping_company` do contrato; se ausente e Tracktainer ativo → **auto-detect** (detecção assíncrona da API) |
+| Numérico | `279066292` | idem (Tracktainer detecta a linha) |
+
+- Tracktainer: `shipment_number_type` = `CONTAINER` se ISO, senão `BOOKING`
+- Fallback de auto-detetect só existe quando `TRACKING_AGGREGATOR_DRIVER=tracktainer`
+  (senão `unsupported`, como antes)

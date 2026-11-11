@@ -299,7 +299,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
         <template v-if="chip.label">
           <span class="text-slate-400 group-hover:text-rose-400 font-black uppercase tracking-wider text-[10px]">{{ chip.label }}:</span>
         </template>
-        <span class="max-w-[220px] truncate">{{ chip.value }}</span>
+        <span class="max-w-[220px] truncate">{{ chip.key === 'status' ? $t(chip.value) : chip.value }}</span>
         <X class="w-3 h-3 opacity-40 group-hover:opacity-100 shrink-0" />
       </button>
     </div>
@@ -433,7 +433,7 @@ const toggleClass = (active, tone = 'blue') => 'inline-flex items-center gap-1.5
                 :class="toggleClass(draft.status.includes(option.id))"
               >
                 <Check v-if="draft.status.includes(option.id)" class="w-3 h-3" />
-                {{ option.name }}
+                {{ $t(option.name) }}
               </button>
             </div>
             <div class="grid grid-cols-2 gap-2">

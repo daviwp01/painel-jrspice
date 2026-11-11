@@ -1,5 +1,6 @@
 <script setup>
 import { productName } from '@/Utils/productName';
+import { harvestLabel } from '@/Utils/harvestLabel';
 import { useForm, router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { PencilIcon, TrashIcon, XIcon, GlobeIcon, SearchIcon, Calendar, SlidersHorizontal, Check, Star, Info, Eraser } from 'lucide-vue-next';
@@ -373,7 +374,7 @@ const clearAllHarvests = () => {
                                         </div>
                                     </td>
                                     <td class="px-6 py-3">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ p.harvest_month || '--' }}</span>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ p.harvest_month ? harvestLabel(p.harvest_month) : '--' }}</span>
                                     </td>
                                     <td class="px-6 py-3 text-right space-x-1">
                                         <button @click="editProduct(p)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">

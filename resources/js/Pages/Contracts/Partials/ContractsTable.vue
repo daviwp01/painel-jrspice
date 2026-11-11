@@ -518,7 +518,7 @@ const numericClass = (key) =>
                   @click.stop="openStatusSelector(row, $event)"
                 >
                   <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="getStatusConfig(row.status).dot"></span>
-                  {{ row.status }}
+                  {{ $t(row.status) }}
                   <ChevronDown class="w-3.5 h-3.5 opacity-60 shrink-0 ml-0.5" />
                 </div>
                 <div
@@ -678,7 +678,7 @@ const numericClass = (key) =>
           :class="activeStatusRow.status === option.id ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'"
         >
           <span class="w-2 h-2 rounded-full shrink-0" :class="getStatusConfig(option.id).dot"></span>
-          {{ option.name }}
+          {{ $t(option.name) }}
           <Check v-if="activeStatusRow.status === option.id" class="w-3.5 h-3.5 text-blue-600 ml-auto shrink-0" />
         </button>
       </div>

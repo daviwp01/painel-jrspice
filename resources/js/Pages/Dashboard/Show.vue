@@ -1,5 +1,6 @@
 <script setup>
 import { productName, withTranslatedProductNames } from '@/Utils/productName';
+import { harvestLabel } from '@/Utils/harvestLabel';
 import { getBcp47Locale } from '@/Utils/locale';
 import { ref, watch, computed, onMounted } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
@@ -253,7 +254,7 @@ const productSelectOptions = computed(() => withTranslatedProductNames(props.pro
 const filterDateRange = ref(props.filters.date_range || 'Todos');
 
 const suppliersWithOptions = computed(() => {
-    return [{ id: '', name: 'Todos' }, ...props.suppliers];
+    return [{ id: '', name: trans('All') }, ...props.suppliers];
 });
 const isDatePickerOpen = ref(false);
 const expandedYears = ref([]);
@@ -549,7 +550,7 @@ const zoomOut = () => { if (chartHeight.value > 450) chartHeight.value -= 100; }
                                 <div v-if="currentHarvest" class="ml-auto flex items-center gap-1 shrink-0">
                                     <span class="text-[8px] xl:text-[9px] font-black text-slate-300 uppercase">{{ $t('HARVEST') }}</span>
                                     <span class="text-[9px] xl:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 xl:px-2 py-0.5 rounded-full uppercase">
-                                        {{ currentHarvest }}
+                                        {{ harvestLabel(currentHarvest) }}
                                     </span>
                                 </div>
                             </div>

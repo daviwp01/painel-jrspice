@@ -20,11 +20,14 @@ final class TrackingManager extends Manager
 {
     /**
      * @param  array<string, array<string, mixed>>  $carriers
+     * @param  array<string, mixed>  $aggregator  tracking.aggregator + default_carrier
+     *                                            (empty in unit tests → no autodetect fallback)
      */
     public function __construct(
         Container $container,
         private readonly ContainerPrefixResolver $resolver,
         private readonly array $carriers,
+        private readonly array $aggregator = [],
     ) {
         parent::__construct($container);
     }
@@ -52,7 +55,15 @@ final class TrackingManager extends Manager
         $carrierKey = $this->resolver()->resolve($containerNumber) ?? $this->resolveByName($shippingCompany);
 
         if ($carrierKey === null) {
-            throw new CarrierNotSupportedException($containerNumber);
+            // Booking / B-L style references without a known carrier: when the
+            // Tracktainer aggregator is active it auto-detects the line from the
+            // number itself (async), so any configured driver can carry the HTTP
+            // call — the DTO then reports the carrier the API returns.
+            $carrierKey = $this->aggregatorAutodetectDriver();
+
+            if ($carrierKey === null) {
+                throw new CarrierNotSupportedException($containerNumber);
+            }
         }
 
         $driver = $this->driver($carrierKey);
@@ -67,6 +78,25 @@ final class TrackingManager extends Manager
     public function resolver(): ContainerPrefixResolver
     {
         return $this->resolver;
+    }
+
+    /**
+     * Carrier key to delegate to when the aggregator can resolve the line
+     * itself (Tracktainer async detection). null when that path is off.
+     */
+    private function aggregatorAutodetectDriver(): ?string
+    {
+        $driver = (string) ($this->aggregator['driver'] ?? '');
+        $url = (string) ($this->aggregator['url'] ?? '');
+        $key = (string) ($this->aggregator['api_key'] ?? '');
+
+        if ($driver !== 'tracktainer' || $url === '' || $key === '') {
+            return null;
+        }
+
+        $fallback = (string) ($this->aggregator['default_carrier'] ?? '');
+
+        return isset($this->carriers[$fallback]) ? $fallback : array_key_first($this->carriers);
     }
 
     /**

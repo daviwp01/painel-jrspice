@@ -37,7 +37,7 @@ class ContainerTrackingController extends Controller
     {
         $container = ContainerPrefixResolver::normalize($container);
 
-        if (! $this->resolver->isValidFormat($container)) {
+        if (! $this->resolver->isValidReference($container)) {
             return response()->json([
                 'container_number' => $container,
                 'carrier_name' => null,
@@ -49,7 +49,7 @@ class ContainerTrackingController extends Controller
                 'vessel' => [],
                 'events' => [],
                 'last_updated' => null,
-                'message' => __('Invalid container number. Expected format: 4 letters + 7 digits (ISO 6346), e.g. MSCU1234567.'),
+                'message' => __('Invalid reference. Use a container (ISO 6346), booking or bill of lading number.'),
                 'provider' => null,
             ], 422);
         }
@@ -80,11 +80,11 @@ class ContainerTrackingController extends Controller
 
         $container = ContainerPrefixResolver::normalize($container);
 
-        if (! $this->resolver->isValidFormat($container)) {
+        if (! $this->resolver->isValidReference($container)) {
             return response()->json($this->envelope(
                 containerNumber: $container,
                 state: TrackingDataDTO::STATE_ERROR,
-                message: 'O número de container cadastrado não segue o padrão ISO 6346 (4 letras + 7 dígitos).',
+                message: __('Invalid reference. Use a container (ISO 6346), booking or bill of lading number.'),
             ));
         }
 

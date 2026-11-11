@@ -84,6 +84,27 @@ class ContainerPrefixResolverTest extends TestCase
         $this->assertFalse($resolver->isValidFormat(''), 'não pode ser vazio');
     }
 
+    public function test_validates_booking_and_bl_references_as_well_as_containers(): void
+    {
+        $resolver = $this->resolver();
+
+        // ISO 6346 container
+        $this->assertTrue($resolver->isValidReference('MSCU1234567'));
+        // Booking numbers from the client spreadsheet (12+ alnum)
+        $this->assertTrue($resolver->isValidReference('TAOGQ5798900'));
+        $this->assertTrue($resolver->isValidReference('HANGK4798600'));
+        $this->assertTrue($resolver->isValidReference('YMJAB420100785'));
+        // Numeric references seen in production
+        $this->assertTrue($resolver->isValidReference('279066292'));
+        // Normalization: lowercase and spaces
+        $this->assertTrue($resolver->isValidReference('taogq5798900'));
+        $this->assertTrue($resolver->isValidReference('MSCU 1234567'));
+        // Too short / empty / clearly invalid
+        $this->assertFalse($resolver->isValidReference('MSC123'));
+        $this->assertFalse($resolver->isValidReference(''));
+        $this->assertFalse($resolver->isValidReference('ABC'));
+    }
+
     public function test_prefix_of_returns_the_first_four_letters(): void
     {
         $resolver = $this->resolver();
