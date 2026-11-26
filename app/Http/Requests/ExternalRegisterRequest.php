@@ -27,6 +27,10 @@ class ExternalRegisterRequest extends FormRequest
             return false;
         }
 
+        if (! $this->refererPathIsAllowed()) {
+            return false;
+        }
+
         if ($this->filled('honeypot')) {
             return false;
         }
@@ -61,6 +65,10 @@ class ExternalRegisterRequest extends FormRequest
             return 'origin';
         }
 
+        if (! $this->refererPathIsAllowed()) {
+            return 'referer_path';
+        }
+
         if ($this->filled('honeypot')) {
             return 'honeypot';
         }
@@ -82,6 +90,7 @@ class ExternalRegisterRequest extends FormRequest
             'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'not_regex:/\s/'],
             'password' => ['required', 'confirmed', 'max:64', Password::min(8)],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[\d\s()+\-]{8,30}$/'],
+            'phone_country_code' => ['required', 'string', 'max:8', 'regex:/^\+\d{1,4}$/'],
             'company_name' => [
                 'required', 'string', 'min:2', 'max:120', 'not_regex:/[0-9]/', 'not_regex:/@/',
             ],
@@ -98,6 +107,9 @@ class ExternalRegisterRequest extends FormRequest
             'utm_campaign' => ['nullable', 'string', 'max:255'],
             'utm_content' => ['nullable', 'string', 'max:255'],
             'utm_term' => ['nullable', 'string', 'max:255'],
+            'gclid' => ['nullable', 'string', 'max:255'],
+            'fbclid' => ['nullable', 'string', 'max:255'],
+            'msclkid' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -110,7 +122,8 @@ class ExternalRegisterRequest extends FormRequest
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
             'email.email' => __('Enter a valid corporate email.'),
             'phone.regex' => __('Enter a valid phone number.'),
-            'terms.accepted' => __('You must accept the Privacy Policy.'),
+            'phone_country_code.regex' => __('Enter a valid country code.'),
+            'terms.accepted' => __('You must accept the Privacy Policy and authorize contact by email and WhatsApp.'),
         ];
     }
 
@@ -139,6 +152,50 @@ class ExternalRegisterRequest extends FormRequest
 
         // Same-origin is always legitimate: the form runs on our own domain.
         return strtolower($host) === strtolower($this->host());
+    }
+
+    /**
+     * When the browser exposes the page path (Referer), each form_source must
+     * come from its own landing: system → /system, events → /events.
+     * Origin has no path, so a missing Referer falls back to host-only checks.
+     */
+    private function refererPathIsAllowed(): bool
+    {
+        $formSource = trim((string) $this->input('form_source', ''));
+
+        if ($formSource === '') {
+            return true;
+        }
+
+        $allowed = (array) config("embed.allowed_paths.{$formSource}", []);
+
+        if ($allowed === []) {
+            return true;
+        }
+
+        $referer = $this->headers->get('Referer');
+
+        if (! is_string($referer) || $referer === '' || $referer === 'null') {
+            return true;
+        }
+
+        $path = parse_url($referer, PHP_URL_PATH);
+
+        if (! is_string($path) || $path === '') {
+            return true;
+        }
+
+        $path = rtrim($path, '/');
+
+        foreach ($allowed as $allowedPath) {
+            $normalized = rtrim((string) $allowedPath, '/');
+
+            if ($path === $normalized || str_starts_with($path, $normalized.'/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function originHost(): ?string

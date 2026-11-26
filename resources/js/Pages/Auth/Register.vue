@@ -40,6 +40,7 @@ const form = useForm({
     name: '',
     email: '',
     phone: '',
+    phone_country_code: '+55',
     company_name: '',
     cargo: '',
     import_experience: '',
@@ -47,6 +48,7 @@ const form = useForm({
     decision_role: '',
     password: '',
     password_confirmation: '',
+    terms: false,
     g_recaptcha: '',
 });
 
@@ -107,7 +109,8 @@ const formatPhone = (event) => {
     
     event.target.value = value;
     localPhone.value = value;
-    form.phone = `${countryCode.value} ${value}`.trim();
+    form.phone = value;
+    form.phone_country_code = countryCode.value;
 };
 
 const onlyNumbers = (event) => {
@@ -120,6 +123,7 @@ const onlyNumbers = (event) => {
 watch(countryCode, () => {
     localPhone.value = '';
     form.phone = '';
+    form.phone_country_code = countryCode.value;
     form.clearErrors('phone');
 });
 
@@ -128,7 +132,7 @@ watch(() => form.errors, (errors) => {
     if (errors && Object.keys(errors).length > 0) {
         const step1Fields = ['name', 'email', 'password', 'password_confirmation'];
         const step2Fields = ['phone', 'company_name', 'cargo'];
-        const step3Fields = ['import_experience', 'import_volume', 'decision_role', 'g_recaptcha'];
+        const step3Fields = ['import_experience', 'import_volume', 'decision_role', 'terms', 'g_recaptcha'];
         
         const firstErrorKey = Object.keys(errors)[0];
         
@@ -186,7 +190,7 @@ const validateStep = (step) => {
             hasErrors = true;
         }
     } else if (step === 3) {
-        form.clearErrors('import_experience', 'import_volume', 'decision_role');
+        form.clearErrors('import_experience', 'import_volume', 'decision_role', 'terms');
 
         if (!form.import_experience) {
             form.setError('import_experience', 'Por favor, responda a pergunta 1');
@@ -198,6 +202,10 @@ const validateStep = (step) => {
         }
         if (!form.decision_role) {
             form.setError('decision_role', 'Por favor, responda a pergunta 3');
+            hasErrors = true;
+        }
+        if (!form.terms) {
+            form.setError('terms', 'Você precisa aceitar a Política de Privacidade e autorizar o contato por e-mail e WhatsApp.');
             hasErrors = true;
         }
     }
@@ -495,6 +503,27 @@ const submit = async () => {
             </div>
 
             <InputError class="mt-4" :message="form.errors.g_recaptcha" />
+
+            <div v-if="currentStep === 3" class="mt-4 flex items-start gap-3">
+                <input
+                    id="terms"
+                    type="checkbox"
+                    v-model="form.terms"
+                    class="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                    required
+                />
+                <label for="terms" class="text-xs leading-relaxed text-gray-600 cursor-pointer">
+                    {{ $t('I have read and accept the') }}
+                    <a
+                        href="https://xpice.pt/politicas-de-privacidade"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-semibold text-blue-600 hover:text-blue-800 underline"
+                    >{{ $t('Privacy Policy') }}</a>
+                    {{ $t('and authorize Xpice Connections to contact me by email and WhatsApp.') }}
+                </label>
+            </div>
+            <InputError class="mt-2" :message="form.errors.terms" />
 
             <p v-if="recaptchaSiteKey && recaptchaType === 'v3'" class="mt-3 text-center text-[10px] text-gray-400">
                 {{ $t('This site is protected by reCAPTCHA.') }}

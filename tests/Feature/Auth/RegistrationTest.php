@@ -23,7 +23,32 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-            'phone' => '+5511999999999',
+            'phone' => '11999999999',
+            'phone_country_code' => '+55',
+            'company_name' => 'Example Corp',
+            'cargo' => 'Manager',
+            'import_experience' => 'Estamos avaliando começar',
+            'import_volume' => 'Ainda não sei',
+            'decision_role' => 'Outro',
+            'terms' => '1',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard', absolute: false));
+
+        $user = \App\Models\User::query()->where('email', 'test@example.com')->sole();
+        $this->assertNotNull($user->terms_accepted_at);
+    }
+
+    public function test_registration_requires_privacy_and_contact_consent(): void
+    {
+        $response = $this->from('/register')->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'phone' => '11999999999',
+            'phone_country_code' => '+55',
             'company_name' => 'Example Corp',
             'cargo' => 'Manager',
             'import_experience' => 'Estamos avaliando começar',
@@ -31,7 +56,8 @@ class RegistrationTest extends TestCase
             'decision_role' => 'Outro',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertSessionHasErrors('terms');
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
     }
 }

@@ -91,7 +91,7 @@ class ContainerTrackingTest extends TestCase
     public function test_reports_unsupported_prefix_as_a_state_not_as_a_500(): void
     {
         // Without an aggregator configured there is nothing to auto-detect with.
-        config()->set('tracking.aggregator.driver', 'tracktainer');
+        config()->set('tracking.aggregator.driver', 'timetocargo');
         config()->set('tracking.aggregator.url', '');
         config()->set('tracking.aggregator.api_key', '');
 
@@ -104,42 +104,39 @@ class ContainerTrackingTest extends TestCase
             ->assertJsonPath('status', 'UNKNOWN');
     }
 
-    public function test_booking_reference_is_accepted_when_tracktainer_is_configured(): void
+    public function test_booking_reference_is_accepted_when_timetocargo_is_configured(): void
     {
-        config()->set('tracking.aggregator.driver', 'tracktainer');
-        config()->set('tracking.aggregator.url', 'https://api.tracktainer.test/v1');
+        config()->set('tracking.aggregator.driver', 'timetocargo');
+        config()->set('tracking.aggregator.url', 'https://tracking.timetocargo.test/v2');
         config()->set('tracking.aggregator.api_key', 'test-key');
 
         Http::fake([
-            'api.tracktainer.test/v1/ocean/shipments?*' => Http::response([
-                'data' => [[
-                    'type' => 'ocean-shipments',
-                    'id' => 'bk-1',
-                    'attributes' => ['shipment_number' => 'TAOGQ5798900'],
-                ]],
-                'links' => ['next' => null],
-            ]),
-            'api.tracktainer.test/v1/ocean/shipments/bk-1' => Http::response([
+            'tracking.timetocargo.test/v2/tracking*' => Http::response([
+                'success' => true,
+                'status' => 'OK',
                 'data' => [
-                    'type' => 'ocean-shipments',
-                    'id' => 'bk-1',
-                    'attributes' => [
-                        'shipment_status' => 'IN_TRANSIT',
-                        'shipment_number' => 'TAOGQ5798900',
-                        'carrier' => ['name' => 'One Line', 'scac' => 'ONEY'],
-                        'port_of_loading' => ['name' => 'Yantian', 'code' => 'CNYAN', 'country' => ['name' => 'China']],
-                        'port_of_discharge' => ['name' => 'Rotterdam', 'code' => 'NLRTM', 'country' => ['name' => 'Netherlands']],
-                        'etd' => '2026-10-01',
-                        'eta' => '2026-12-01',
-                        'failure_reason' => null,
-                        'containers' => [[
-                            'container_number' => 'ONEU9410240',
-                            'movements' => [
-                                ['event' => 'LOAD', 'classifier' => 'ACT', 'date' => '2026-10-02', 'location' => ['name' => 'Yantian']],
-                                ['event' => 'DEPA', 'classifier' => 'ACT', 'date' => '2026-10-03', 'location' => ['name' => 'Yantian']],
-                            ],
-                        ]],
+                    'summary' => [
+                        'pol' => ['location' => 0, 'date' => '2026-10-01T12:00:00'],
+                        'pod' => ['location' => 1, 'date' => '2026-12-01T08:00:00'],
+                        'company' => [
+                            'name' => 'ONE',
+                            'full_name' => 'Ocean Network Express',
+                            'scacs' => ['ONEY'],
+                        ],
                     ],
+                    'locations' => [
+                        ['id' => 0, 'name' => 'Yantian', 'country' => 'China'],
+                        ['id' => 1, 'name' => 'Rotterdam', 'country' => 'Netherlands'],
+                    ],
+                    'containers' => [[
+                        'number' => 'ONEU9410240',
+                        'events' => [
+                            ['location' => 0, 'status' => 'Loaded', 'status_code' => 'CLL', 'date' => '2026-10-02T00:00:00', 'actual' => true, 'vessel' => 'ONE VESSEL', 'voyage' => '001E'],
+                            ['location' => 1, 'status' => 'Vessel arrival', 'status_code' => 'VAD', 'date' => '2026-12-01T08:00:00', 'actual' => false, 'vessel' => 'ONE VESSEL', 'voyage' => '001E'],
+                        ],
+                    ]],
+                    'shipment_status' => 'IN_TRANSIT',
+                    'tracking_metadata' => ['updated_at' => '2026-11-26T00:00:00Z'],
                 ],
             ]),
         ]);
@@ -151,8 +148,12 @@ class ContainerTrackingTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('state', 'ok')
             ->assertJsonPath('status', 'IN_TRANSIT')
-            ->assertJsonPath('carrier_name', 'One Line')
-            ->assertJsonPath('provider', 'tracktainer');
+            ->assertJsonPath('carrier_name', 'Ocean Network Express')
+            ->assertJsonPath('provider', 'timetocargo')
+            ->assertJsonPath('origin.port', 'Yantian')
+            ->assertJsonPath('destination.port', 'Rotterdam')
+            ->assertJsonPath('vessel.name', 'ONE VESSEL')
+            ->assertJsonPath('events.0.status_code', 'CLL');
     }
 
     public function test_reports_missing_container_on_the_contract(): void

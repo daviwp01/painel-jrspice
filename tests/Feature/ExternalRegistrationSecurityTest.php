@@ -41,6 +41,7 @@ class ExternalRegistrationSecurityTest extends TestCase
         $this->assertFalse($user->is_master);
         $this->assertTrue($user->registered_via_external_form);
         $this->assertNotNull($user->terms_accepted_at);
+        $this->assertSame('+55', $user->phone_country_code);
         $this->assertTrue($user->is_active);
 
         $this->assertDatabaseHas('external_registration_logs', [
@@ -108,11 +109,79 @@ class ExternalRegistrationSecurityTest extends TestCase
 
     public function test_referer_falls_back_when_origin_is_stripped(): void
     {
-        $this->withHeader('Referer', self::ORIGIN.'/landing/curso')
+        $this->withHeader('Referer', self::ORIGIN.'/system')
             ->postJson(route('api.external.register'), $this->payload())
             ->assertCreated();
 
         $this->assertSame(1, User::count());
+    }
+
+    public function test_system_form_is_allowed_from_system_path(): void
+    {
+        Config::set('embed.allowed_origins', ['https://xpice.pt']);
+
+        $payload = $this->payload();
+        $payload['form_source'] = 'system';
+        $payload['email'] = 'system@empresa.com.br';
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->withHeader('Referer', 'https://xpice.pt/system?utm_source=meta')
+            ->postJson(route('api.external.register'), $payload)
+            ->assertCreated();
+
+        $this->assertSame('system', User::query()->where('email', 'system@empresa.com.br')->sole()->form_source);
+    }
+
+    public function test_events_form_is_allowed_from_events_path(): void
+    {
+        Config::set('embed.allowed_origins', ['https://xpice.pt']);
+
+        $payload = $this->payload();
+        $payload['form_source'] = 'events';
+        $payload['email'] = 'events@empresa.com.br';
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->withHeader('Referer', 'https://xpice.pt/events?utm_source=feira')
+            ->postJson(route('api.external.register'), $payload)
+            ->assertCreated();
+
+        $this->assertSame('events', User::query()->where('email', 'events@empresa.com.br')->sole()->form_source);
+    }
+
+    public function test_events_form_is_refused_from_system_path(): void
+    {
+        Config::set('embed.allowed_origins', ['https://xpice.pt']);
+
+        $payload = $this->payload();
+        $payload['form_source'] = 'events';
+        $payload['email'] = 'mismatch@empresa.com.br';
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->withHeader('Referer', 'https://xpice.pt/system')
+            ->postJson(route('api.external.register'), $payload)
+            ->assertForbidden();
+
+        $this->assertSame(0, User::count());
+        $this->assertDatabaseHas('external_registration_logs', [
+            'outcome' => ExternalRegistrationLog::OUTCOME_REJECTED,
+            'reason' => 'referer_path',
+        ]);
+    }
+
+    public function test_system_form_is_refused_from_events_path(): void
+    {
+        Config::set('embed.allowed_origins', ['https://xpice.pt']);
+
+        $payload = $this->payload();
+        $payload['form_source'] = 'system';
+        $payload['email'] = 'mismatch2@empresa.com.br';
+
+        $this->withHeader('Origin', 'https://xpice.pt')
+            ->withHeader('Referer', 'https://xpice.pt/events')
+            ->postJson(route('api.external.register'), $payload)
+            ->assertForbidden();
+
+        $this->assertSame(0, User::count());
     }
 
     public function test_filled_honeypot_is_refused(): void
@@ -304,22 +373,28 @@ class ExternalRegistrationSecurityTest extends TestCase
         $this->assertSame(0, User::count());
     }
 
-    public function test_the_form_page_only_allows_google_when_reCAPTCHA_is_active(): void
+    public function test_the_form_page_allows_gtm_and_google_hosts_when_needed(): void
     {
         $without = $this->get('/external-form-snippet.html');
         $without->assertOk();
-        $this->assertStringNotContainsString('google.com', $without->headers->get('Content-Security-Policy'));
+        $cspWithout = (string) $without->headers->get('Content-Security-Policy');
+
+        // GTM is always allowed; reCAPTCHA hosts only when enabled.
+        $this->assertStringContainsString('https://www.googletagmanager.com', $cspWithout);
+        $this->assertStringNotContainsString('https://www.google.com', $cspWithout);
+        $this->assertStringContainsString("script-src 'self' 'unsafe-inline'", $cspWithout);
 
         $this->enableRecaptcha();
 
         $with = $this->get('/external-form-snippet.html');
         $with->assertOk();
 
-        $csp = $with->headers->get('Content-Security-Policy');
+        $csp = (string) $with->headers->get('Content-Security-Policy');
 
-        $this->assertStringContainsString('script-src \'self\' https://www.google.com', $csp);
-        $this->assertStringContainsString('connect-src \'self\' https://www.google.com', $csp);
-        $this->assertStringContainsString('frame-src \'self\' https://www.google.com', $csp);
+        $this->assertStringContainsString('https://www.googletagmanager.com', $csp);
+        $this->assertStringContainsString('script-src \'self\' \'unsafe-inline\' https://www.googletagmanager.com https://www.google.com', $csp);
+        $this->assertStringContainsString('connect-src \'self\' https://www.googletagmanager.com https://www.google.com', $csp);
+        $this->assertStringContainsString('frame-src \'self\' https://www.googletagmanager.com https://www.google.com', $csp);
         $this->assertStringContainsString('data-recaptcha-site-key="SITE-CHAVE"', $with->getContent());
         $this->assertStringContainsString('protegido pelo reCAPTCHA', $with->getContent());
     }
@@ -399,6 +474,7 @@ class ExternalRegistrationSecurityTest extends TestCase
             'password' => 'SenhaForte123',
             'password_confirmation' => 'SenhaForte123',
             'phone' => '(11) 98888-7777',
+            'phone_country_code' => '+55',
             'company_name' => 'Alimentos Fortes',
             'cargo' => 'Gerente de Compras',
             'import_experience' => 'Estamos avaliando começar',

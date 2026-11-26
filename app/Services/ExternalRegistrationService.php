@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
@@ -37,12 +38,24 @@ final class ExternalRegistrationService
 
         try {
             $user = DB::transaction(fn (): User => $this->createUser($request, $email));
-        } catch (QueryException) {
-            // Two submissions racing on the same address: the unique index
-            // decided for us. Same generic answer, nothing is disclosed.
-            ExternalRegistrationLog::record($email, ExternalRegistrationLog::OUTCOME_DUPLICATE);
+        } catch (QueryException $e) {
+            if ($this->isUniqueViolation($e)) {
+                ExternalRegistrationLog::record($email, ExternalRegistrationLog::OUTCOME_DUPLICATE);
 
-            return $this->answer();
+                return $this->answer();
+            }
+
+            Log::error('external_register.persist_failed', [
+                'email' => $email,
+                'code' => $e->getCode(),
+                'error' => $e->getMessage(),
+            ]);
+            ExternalRegistrationLog::record($email, ExternalRegistrationLog::OUTCOME_FAILED, 'persist');
+
+            return [
+                'status' => 500,
+                'message' => __('Registration could not be completed. Please try again.'),
+            ];
         }
 
         event(new Registered($user));
@@ -61,6 +74,7 @@ final class ExternalRegistrationService
             'email' => $email,
             'password' => $request->string('password')->toString(),
             'phone' => Str::squish($request->string('phone')->toString()),
+            'phone_country_code' => Str::squish($request->string('phone_country_code')->toString()),
             'company_name' => Str::squish($request->string('company_name')->toString()),
             'cargo' => Str::squish($request->string('cargo')->toString()),
             'import_experience' => $request->string('import_experience')->toString(),
@@ -75,6 +89,9 @@ final class ExternalRegistrationService
             'utm_campaign' => $this->utm($request, 'utm_campaign'),
             'utm_content' => $this->utm($request, 'utm_content'),
             'utm_term' => $this->utm($request, 'utm_term'),
+            'gclid' => $this->utm($request, 'gclid'),
+            'fbclid' => $this->utm($request, 'fbclid'),
+            'msclkid' => $this->utm($request, 'msclkid'),
             'terms_accepted_at' => now(),
             // Absolute guarantee: a public form can never mint a master.
             'is_master' => false,
@@ -86,6 +103,18 @@ final class ExternalRegistrationService
         $value = trim((string) $request->input($key, ''));
 
         return $value === '' ? null : mb_substr($value, 0, 255);
+    }
+
+    private function isUniqueViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $driverCode = (int) ($e->errorInfo[1] ?? 0);
+        $message = $e->getMessage();
+
+        return $sqlState === '23000'
+            || $driverCode === 1062
+            || str_contains($message, 'Duplicate entry')
+            || str_contains($message, 'UNIQUE constraint failed');
     }
 
     /**

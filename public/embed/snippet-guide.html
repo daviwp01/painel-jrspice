@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Embed do formulário — landing pages</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 2rem 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+        }
+        .wrap { max-width: 760px; margin: 0 auto; }
+        h1 { font-size: 1.25rem; margin: 0 0 0.35rem; }
+        .sub { color: #64748b; font-size: 0.9rem; margin: 0 0 1.25rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.25rem;
+            font-size: 0.875rem;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th { background: #f1f5f9; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+        tr:last-child td { border-bottom: 0; }
+        .note {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .tabs button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 999px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        .tabs button.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 12px;
+            overflow: auto;
+            font-size: 0.78rem;
+            line-height: 1.55;
+            margin: 0 0 1.25rem;
+        }
+        .live {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        .live h2 { margin: 0 0 0.75rem; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Embed do formulário nas landings</h1>
+        <p class="sub">Cole o snippet na landing. O iframe aponta para o form em <code>xvision.xpice.pt</code>.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Landing (hospedeira)</th>
+                    <th>Form no iframe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>https://xpice.pt/system</code></td>
+                    <td><code>https://xvision.xpice.pt/system</code></td>
+                </tr>
+                <tr>
+                    <td><code>https://xpice.pt/events</code></td>
+                    <td><code>https://xvision.xpice.pt/events</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="tabs">
+            <button type="button" class="active" data-form="system">Landing /system</button>
+            <button type="button" data-form="events">Landing /events</button>
+            <button type="button" data-form="preview">Prévia do form</button>
+        </div>
+
+        <pre id="code"></pre>
+
+        <div id="preview" class="live" hidden>
+            <h2>Prévia (iframe → xvision.xpice.pt)</h2>
+            <div id="xpice-lead-form"></div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var FORM_BASE = 'https://xvision.xpice.pt';
+            var codeEl = document.getElementById('code');
+            var previewEl = document.getElementById('preview');
+            var tabs = document.querySelectorAll('.tabs button');
+
+            function buildSnippet(formSource) {
+                var formUrl = FORM_BASE + '/' + formSource;
+                return [
+                    '<!-- ' + formUrl + ' -->',
+                    '<div id="xpice-lead-form"></div>',
+                    '<script>',
+                    '(function () {',
+                    "  var FORM_URL = '" + formUrl + "';",
+                    '  var TRACKING_KEYS = [',
+                    "    'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',",
+                    "    'gclid', 'fbclid', 'msclkid'",
+                    '  ];',
+                    '',
+                    '  function buildIframeSrc() {',
+                    '    var params = new URLSearchParams(window.location.search || "");',
+                    '    var pairs = [];',
+                    '    params.forEach(function (value, key) {',
+                    '      if (TRACKING_KEYS.indexOf(key) !== -1 && value) {',
+                    "        pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));",
+                    '      }',
+                    '    });',
+                    "    if (!pairs.length) return FORM_URL;",
+                    "    return FORM_URL + (FORM_URL.indexOf('?') === -1 ? '?' : '&') + pairs.join('&');",
+                    '  }',
+                    '',
+                    '  var host = document.getElementById("xpice-lead-form");',
+                    '  if (!host) return;',
+                    '',
+                    '  var iframe = document.createElement("iframe");',
+                    '  iframe.src = buildIframeSrc();',
+                    '  iframe.title = "Formulário de cadastro Xvision";',
+                    '  iframe.loading = "lazy";',
+                    '  iframe.setAttribute("frameborder", "0");',
+                    '  iframe.setAttribute("scrolling", "no");',
+                    '  iframe.style.cssText = "width:100%;max-width:560px;min-height:760px;border:0;display:block;margin:0 auto;background:#fff;";',
+                    '  host.appendChild(iframe);',
+                    '',
+                    '  window.addEventListener("message", function (event) {',
+                    '    if (!event.origin || event.origin.indexOf("xvision.xpice.pt") === -1) return;',
+                    '    var data = event.data;',
+                    '    if (!data || data.type !== "xpice:resize") return;',
+                    '    if (typeof data.height === "number" && data.height > 0) {',
+                    '      iframe.style.height = data.height + "px";',
+                    '    }',
+                    '  });',
+                    '})();',
+                    '<\/script>'
+                ].join('\n');
+            }
+
+            function renderPreview(formSource) {
+                previewEl.hidden = false;
+                codeEl.hidden = true;
+                var host = document.getElementById('xpice-lead-form');
+                host.innerHTML = '';
+                var iframe = document.createElement('iframe');
+                iframe.src = FORM_BASE + '/' + formSource;
+                iframe.title = 'Prévia do formulário';
+                iframe.style.cssText = 'width:100%;max-width:560px;min-height:760px;border:1px solid #e2e8f0;border-radius:8px;display:block;margin:0 auto;background:#fff;';
+                host.appendChild(iframe);
+            }
+
+            function select(tab) {
+                tabs.forEach(function (btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-form') === tab);
+                });
+
+                if (tab === 'preview') {
+                    renderPreview('system');
+                    return;
+                }
+
+                previewEl.hidden = true;
+                codeEl.hidden = false;
+                codeEl.textContent = buildSnippet(tab);
+            }
+
+            tabs.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    select(btn.getAttribute('data-form'));
+                });
+            });
+
+            select('system');
+        })();
+    </script>
+</body>
+</html>

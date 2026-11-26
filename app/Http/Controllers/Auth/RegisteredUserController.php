@@ -51,13 +51,16 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => 'required|string|max:30',
+            'phone_country_code' => ['required', 'string', 'max:8', 'regex:/^\+\d{1,4}$/'],
             'company_name' => ['required', 'string', 'max:255', 'not_regex:/[0-9]/', 'not_regex:/@/'],
             'cargo' => ['required', 'string', 'max:255'],
             'import_experience' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getImportExperienceOptions())],
             'import_volume' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getImportVolumeOptions())],
             'decision_role' => ['required', 'string', \Illuminate\Validation\Rule::in(User::getDecisionRoleOptions())],
+            'terms' => ['required', 'accepted'],
         ], [
             'company_name.not_regex' => __('The company name cannot contain numbers or email addresses.'),
+            'terms.accepted' => __('You must accept the Privacy Policy and authorize contact by email and WhatsApp.'),
         ]);
 
         $requiresActivation = Setting::get('registration_requires_activation', false);
@@ -67,6 +70,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
+            'phone_country_code' => $request->phone_country_code,
             'company_name' => $request->company_name,
             'cargo' => $request->cargo,
             'import_experience' => $request->import_experience,
@@ -74,6 +78,7 @@ class RegisteredUserController extends Controller
             'decision_role' => $request->decision_role,
             'is_active' => ! $requiresActivation,
             'allowed_pages' => array_values(Setting::get('default_allowed_pages', [])),
+            'terms_accepted_at' => now(),
         ]);
 
         RateLimiter::clear(ThrottleKeys::registerByEmail($request->string('email')->toString()));

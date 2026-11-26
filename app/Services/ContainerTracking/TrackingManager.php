@@ -82,7 +82,7 @@ final class TrackingManager extends Manager
 
     /**
      * Carrier key to delegate to when the aggregator can resolve the line
-     * itself (Tracktainer async detection). null when that path is off.
+     * itself (TimeToCargo AUTO / Tracktainer async detection). null when off.
      */
     private function aggregatorAutodetectDriver(): ?string
     {
@@ -90,7 +90,7 @@ final class TrackingManager extends Manager
         $url = (string) ($this->aggregator['url'] ?? '');
         $key = (string) ($this->aggregator['api_key'] ?? '');
 
-        if ($driver !== 'tracktainer' || $url === '' || $key === '') {
+        if (! in_array($driver, ['timetocargo', 'tracktainer'], true) || $url === '' || $key === '') {
             return null;
         }
 

@@ -51,24 +51,104 @@ final class ContractArrivalSyncService
                 continue;
             }
 
-            $current = $contract->eta_date?->toDateString();
+            $change = $this->applyArrival($contract, $arrival, $persist);
 
-            if ($current === $arrival) {
-                continue;
+            if ($change !== null) {
+                $updated[] = $change;
             }
-
-            if ($persist) {
-                $contract->forceFill(['eta_date' => $arrival])->saveQuietly();
-            }
-
-            $updated[] = [
-                'contract_id' => $contract->id,
-                'container' => $contract->container_number,
-                'eta_date' => $arrival,
-            ];
         }
 
         return $updated;
+    }
+
+    /**
+     * Provider-agnostic write path used by TimeToCargo (webhook + polling).
+     *
+     * @param  list<string>  $references  booking / B/L / container numbers on the shipment
+     * @param  array<string, string>  $arrivals  uppercase container number → Y-m-d
+     * @param  bool  $persist  false = dry-run
+     * @return list<array{contract_id: int, container: string, eta_date: string}>
+     */
+    public function syncFromNormalized(array $references, array $arrivals, bool $persist = true): array
+    {
+        $arrivalsByUpper = [];
+
+        foreach ($arrivals as $container => $date) {
+            if (! is_string($container) || ! is_string($date) || $date === '') {
+                continue;
+            }
+
+            $arrivalsByUpper[strtoupper($container)] = $date;
+        }
+
+        $allReferences = array_values(array_unique([
+            ...array_map(static fn (string $r): string => trim($r), $references),
+            ...array_keys($arrivalsByUpper),
+        ]));
+
+        $allReferences = array_values(array_filter($allReferences, static fn (string $r): bool => $r !== ''));
+
+        if ($allReferences === []) {
+            return [];
+        }
+
+        $contracts = $this->contractsFor($allReferences);
+
+        if ($contracts->isEmpty()) {
+            return [];
+        }
+
+        $updated = [];
+
+        foreach ($contracts as $contract) {
+            $arrival = $this->arrivalForContainer($arrivalsByUpper, $contract->container_number);
+
+            if ($arrival === null) {
+                continue;
+            }
+
+            $change = $this->applyArrival($contract, $arrival, $persist);
+
+            if ($change !== null) {
+                $updated[] = $change;
+            }
+        }
+
+        return $updated;
+    }
+
+    /**
+     * @param  array<string, string>  $arrivalsByUpper
+     */
+    private function arrivalForContainer(array $arrivalsByUpper, ?string $containerNumber): ?string
+    {
+        if ($containerNumber === null || $containerNumber === '') {
+            return null;
+        }
+
+        return $arrivalsByUpper[strtoupper($containerNumber)] ?? null;
+    }
+
+    /**
+     * @return array{contract_id: int, container: string, eta_date: string}|null
+     */
+    private function applyArrival(Contract $contract, string $arrival, bool $persist): ?array
+    {
+        $current = $contract->eta_date?->toDateString();
+
+        if ($current === $arrival) {
+            return null;
+        }
+
+        if ($persist) {
+            $contract->forceFill(['eta_date' => $arrival])->saveQuietly();
+        }
+
+        return [
+            'contract_id' => $contract->id,
+            'container' => $contract->container_number,
+            'eta_date' => $arrival,
+        ];
     }
 
     /**

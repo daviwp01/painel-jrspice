@@ -111,14 +111,27 @@ return [
         'connect_timeout' => (int) env('TRACKING_HTTP_CONNECT_TIMEOUT', 5),
     ],
 
+    // TimeToCargo webhook (POST /api/webhooks/timetocargo).
+    // Secret comes from POST /v2/webhooks creation response (or account UI).
+    'timetocargo' => [
+        'webhook_secret' => env('TIMETOCARGO_WEBHOOK_SECRET', ''),
+        'webhook_events' => [
+            'tracking.delivered',
+            'tracking.eta_update',
+            'tracking.history_update',
+            'tracking.info_found',
+        ],
+    ],
+
     // Shared credentials used when a carrier runs through a paid aggregator.
     'aggregator' => [
-        // tracktainer | terminal49 — demais drivers ficam implementados mas
-        // só este é ativado via TRACKING_AGGREGATOR_DRIVER em .env.
-        'driver' => env('TRACKING_AGGREGATOR_DRIVER', 'terminal49'),
-        'url' => env('TRACKING_AGGREGATOR_URL'),
+        // timetocargo (ativo) | tracktainer (standby) | terminal49 (standby)
+        // Ative um por vez via TRACKING_AGGREGATOR_DRIVER em .env.
+        'driver' => env('TRACKING_AGGREGATOR_DRIVER', 'timetocargo'),
+        'url' => env('TRACKING_AGGREGATOR_URL', 'https://tracking.timetocargo.com/v2'),
         'api_key' => env('TRACKING_AGGREGATOR_KEY'),
-        // Used by the terminal49 driver only; tracktainer builds Bearer headers itself.
+        'timeout' => (int) env('TRACKING_AGGREGATOR_TIMEOUT', 30),
+        // Used by the terminal49 driver only; tracktainer/timetocargo build auth themselves.
         'headers' => [
             'Authorization' => 'Token '.env('TRACKING_AGGREGATOR_KEY'),
             'Accept' => 'application/vnd.api+json',

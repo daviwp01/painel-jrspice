@@ -67,37 +67,29 @@ class EmbedFormController extends Controller
         $ancestors = (array) config('embed.frame_ancestors', []);
         $frameAncestors = $ancestors === [] ? "'none'" : implode(' ', array_map('strval', $ancestors));
 
-        // O reCAPTCHA distribui o carregamento em três domênios do Google:
-        // www.google.com (api.js e as chamadas que geram o token),
-        // www.gstatic.com (a implementação que o api.js puxa) e
-        // www.recaptcha.net (espelho opcional). Só entram na política quando a
-        // verificação está ativa, para a página continuar fechada no resto do
-        // tempo.
+        // GTM always allowed (bootstrap is inline; container loads from
+        // googletagmanager.com; noscript iframe needs frame-src).
+        // reCAPTCHA hosts only when verification is enabled.
         $recaptcha = app(RecaptchaVerifier::class)->enabled();
-        $hosts = $recaptcha ? ' https://www.google.com https://www.gstatic.com https://www.recaptcha.net' : '';
+        $recaptchaHosts = $recaptcha ? ' https://www.google.com https://www.gstatic.com https://www.recaptcha.net' : '';
+        $gtmHosts = ' https://www.googletagmanager.com';
+        $hosts = $gtmHosts.$recaptchaHosts;
 
-        $directives = array_merge(
-            [
-                "default-src 'none'",
-                "script-src 'self'{$hosts}",
-                "style-src 'self'",
-            ],
-            // O badge do Google nasce com um atributo style dinâmico (largura e
-            // posição). Liberar somente o atributo mantém os stylesheets
-            // restritos ao nosso domínio; navegadores sem CSP3 ignoram esta
-            // diretiva e continuam valendo style-src 'self'.
-            $recaptcha ? ["style-src-attr 'unsafe-inline'"] : [],
-            [
-                "img-src 'self' data:{$hosts}",
-                "font-src 'self'",
-                "connect-src 'self'{$hosts}",
-                "frame-src 'self'{$hosts}",
-                "form-action 'self'",
-                "base-uri 'none'",
-                "object-src 'none'",
-                "frame-ancestors {$frameAncestors}",
-            ],
-        );
+        $directives = [
+            "default-src 'none'",
+            // 'unsafe-inline' covers only the GTM bootstrap snippet in <head>.
+            "script-src 'self' 'unsafe-inline'{$hosts}",
+            "style-src 'self'",
+            "style-src-attr 'unsafe-inline'",
+            "img-src 'self' data:{$hosts}",
+            "font-src 'self'",
+            "connect-src 'self'{$hosts}",
+            "frame-src 'self'{$hosts}",
+            "form-action 'self'",
+            "base-uri 'none'",
+            "object-src 'none'",
+            "frame-ancestors {$frameAncestors}",
+        ];
 
         // Only in production: on http:// localhost this directive would rewrite
         // every asset URL to https:// and hit the live server.

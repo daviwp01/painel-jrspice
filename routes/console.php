@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::job(new UpdateQueueHeartbeat)->everyMinute();
 
-// Sem webhook no Tracktainer ainda — polling oficial com filter[updated_after].
+// Segurança: webhook TimeToCargo (tempo real) + polling a cada 30 min.
 Schedule::command('tracking:sync-arrivals')
     ->everyThirtyMinutes()
     ->withoutOverlapping()

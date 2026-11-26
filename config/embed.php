@@ -15,19 +15,34 @@ return [
     |
     */
 
-    // Origens de onde o formulário pode ser enviado. Qualquer outra recebe 403.
-    // Separe por vírgia. Vazio = nenhuma origem externa é aceita.
+    // Origens de onde o formulário pode ser enviado (host do POST).
+    // O form vive em xvision.xpice.pt e é embebido nas landings de xpice.pt,
+    // então o Origin/Referer do envio é sempre o domínio do formulário.
     'allowed_origins' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('EMBED_ALLOWED_ORIGINS', 'https://xvision.xpice.pt'))
+        explode(',', (string) env(
+            'EMBED_ALLOWED_ORIGINS',
+            'https://xvision.xpice.pt,https://xpice.pt,https://www.xpice.pt'
+        ))
     ))),
 
-    // Sites autorizados a exibir o formulário dentro de um <iframe>.
-    // '*' libera qualquer site — use uma lista em produção.
+    // Landings autorizadas a exibir o form dentro de um <iframe>.
+    // CSP frame-ancestors é lido no documento do form (xvision.xpice.pt),
+    // mas precisa liberar o host da página hospedeira (xpice.pt/...).
     'frame_ancestors' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('EMBED_FRAME_ANCESTORS', 'https://xvision.xpice.pt,https://*.xpice.pt'))
+        explode(',', (string) env(
+            'EMBED_FRAME_ANCESTORS',
+            'https://xpice.pt,https://www.xpice.pt,https://xvision.xpice.pt,https://*.xpice.pt'
+        ))
     ))),
+
+    // Caminhos autorizados por form_source (Referer do documento do form).
+    // system → /system · events → /events (em xvision.xpice.pt ou domínio próprio).
+    'allowed_paths' => [
+        'system' => ['/system', '/external-form-snippet.html'],
+        'events' => ['/events'],
+    ],
 
     // Tempo mínimo (em segundos) entre a exibição do formulário e o envio.
     // Captura bots que submetem sem preencher nada.

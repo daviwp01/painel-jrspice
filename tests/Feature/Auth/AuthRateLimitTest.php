@@ -243,11 +243,13 @@ class AuthRateLimitTest extends TestCase
             'password' => 'password',
             'password_confirmation' => 'password',
             'phone' => '(11) 98888-7777',
+            'phone_country_code' => '+55',
             'company_name' => 'Alimentos Fortes',
             'cargo' => 'Gerente',
             'import_experience' => 'Estamos avaliando começar',
             'import_volume' => 'Ainda não sei',
             'decision_role' => 'Decido a compra',
+            'terms' => '1',
         ];
     }
 }

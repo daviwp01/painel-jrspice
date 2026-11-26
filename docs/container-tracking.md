@@ -57,9 +57,10 @@ TRACKING_MAERSK_KEY=...
   mapeamento JSON → DTO declarado em `config/tracking.php` (`carriers.*.api.map`,
   com caminhos no formato `data.events`).
 - **`aggregator`** — mesmo mecanismo usando `TRACKING_AGGREGATOR_URL`/`_KEY` +
-  `TRACKING_AGGREGATOR_DRIVER` (`tracktainer` | `terminal49`). **Ativo: Tracktainer**
-  (`TracktainerAggregator` — list-first, POST só se o número for novo; 409 = sem
-  crédito). Terminal49 permanece implementado, desativado via env.
+  `TRACKING_AGGREGATOR_DRIVER`. **Ativo: TimeToCargo**
+  (`TimeToCargoAggregator` — `GET /v2/tracking` síncrono, `company=AUTO`).
+  Tracktainer e Terminal49 permanecem implementados em standby
+  (`TRACKING_AGGREGATOR_DRIVER=tracktainer|terminal49`).
 - **`scraper`** — portal público via `Symfony\Component\DomCrawler\Crawler`
   com seletores CSS declarados em `carriers.*.scraper.selectors`.
 
@@ -102,23 +103,29 @@ que é exatamente o estado que o portal mostra.
 
 ## 9. Chegada automática (eta_date)
 
-O Tracktainer ainda **não expõe webhook** (docs: “Coming soon… polling com
-`filter[updated_after]`”). O caminho oficial é o polling agendado:
+Com **TimeToCargo** (ativo) há dois caminhos:
 
-| Peça | Papel |
-|---|---|
-| `TracktainerClient` | HTTP/auth/erros da API |
-| `ArrivalDateExtractor` | payload → data de chegada (ACT `ARRI`/`DISCH` > `eta` quando `ARRIVED`/`COMPLETED`) |
-| `ContractArrivalSyncService` | casa `container_number` (case-insensitive) e grava `eta_date` **só se mudou** |
-| `tracking:sync-arrivals` | pagina por `links.next`, watermark em `settings.tracktainer_sync_after`, `--dry-run` |
-| `routes/console.php` | `everyThirtyMinutes()->withoutOverlapping()` (worker já roda `schedule:run`) |
+1. **Webhook (tempo real)** — `POST /api/webhooks/timetocargo`  
+   Assinatura HMAC-SHA256 (`x-timetocargo-signature`). Eventos:
+   `tracking.delivered`, `tracking.eta_update`, `tracking.history_update`, `tracking.info_found`.
+   Registrar com:
+   ```bash
+   php artisan tracking:register-timetocargo-webhook
+   ```
+   O secret é gravado em `settings.timetocargo_webhook_secret` (ou `TIMETOCARGO_WEBHOOK_SECRET` no .env).
+
+2. **Polling (rede de segurança)** — `tracking:sync-arrivals` a cada 30 min  
+   `GET /v2/shipments?status=ACTIVE` com payload aninhado; extrai chegada real
+   (eventos `VAD`/`CDD` com `actual=true`, ou `summary.pod.date` quando
+   `DELIVERED`/`ARRIVED`) e grava `contracts.eta_date` só se mudou.
+
+Com **Tracktainer** (standby) o polling antigo continua:
+`filter[updated_after]` + watermark em `settings.tracktainer_sync_after`.
 
 ```bash
 php artisan tracking:sync-arrivals --dry-run   # mostra o que mudaria
-php artisan tracking:sync-arrivals              # aplica e avança o watermark
+php artisan tracking:sync-arrivals              # aplica
 ```
-
-Falha de API **não** avança o watermark (próxima execução repete a janela).
 
 ## 10. Containers, bookings e B/L
 
@@ -128,9 +135,20 @@ O portal aceita **qualquer referência de 8–25 caracteres alfanuméricos**
 | Formato | Exemplo | Resolução da armadora |
 |---|---|---|
 | ISO 6346 (4L+7D) | `ONEU9410240` | prefixo do mapa → driver |
-| Booking / B/L | `TAOGQ5798900` | `shipping_company` do contrato; se ausente e Tracktainer ativo → **auto-detect** (detecção assíncrona da API) |
-| Numérico | `279066292` | idem (Tracktainer detecta a linha) |
+| Booking / B/L | `TAOGQ5798900` | `shipping_company` do contrato; se ausente e agregador ativo → **auto-detect** (TimeToCargo `company=AUTO` ou Tracktainer) |
+| Numérico | `279066292` | idem (agregador detecta a linha) |
 
-- Tracktainer: `shipment_number_type` = `CONTAINER` se ISO, senão `BOOKING`
-- Fallback de auto-detetect só existe quando `TRACKING_AGGREGATOR_DRIVER=tracktainer`
-  (senão `unsupported`, como antes)
+- TimeToCargo: `type=container` se ISO 6346, senão omite `type` (auto-detect)
+- Tracktainer (standby): `shipment_number_type` = `CONTAINER` se ISO, senão `BOOKING`
+- Fallback de auto-detect só existe quando `TRACKING_AGGREGATOR_DRIVER` é
+  `timetocargo` ou `tracktainer` (senão `unsupported`, como antes)
+
+## 11. TimeToCargo (ativo)
+
+| Peça | Papel |
+|---|---|
+| `TimeToCargo/TimeToCargoClient.php` | HTTP/auth (`api_key` query) + mapeamento 401/429/5xx |
+| `Aggregators/TimeToCargoAggregator.php` | `GET /v2/tracking` → `TrackingDataDTO` (`provider: timetocargo`) |
+| `.env` | `TRACKING_AGGREGATOR_DRIVER=timetocargo`, URL `https://tracking.timetocargo.com/v2` |
+
+Contrato validado ao vivo em 2026-11-26 (`MSDU8368827` → `IN_TRANSIT`, origin/destination/vessel/events).

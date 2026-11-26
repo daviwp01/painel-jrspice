@@ -20,19 +20,26 @@
 <body>
 @if(($gtmId ?? null))
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $gtmId }}"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+height="0" width="0" class="jr-noscript-frame" title="GTM"></iframe></noscript>
 @endif
 
 <div class="jr-register-container">
     <div id="jr-alert-box" class="jr-alert" role="status" aria-live="polite"></div>
 
+    <div id="jr-success-panel" class="jr-success-panel" role="status" aria-live="polite">
+        <p id="jr-success-message" class="jr-success-message"></p>
+        <a href="https://xvision.xpice.pt/login" class="jr-btn jr-btn-xvision" id="jr-btn-xvision">
+            {{ __('Acessar Xvision') }}
+        </a>
+    </div>
+
     <noscript>
-        <div class="jr-alert jr-alert-danger">{{ __('Enable JavaScript to complete the registration.') }}</div>
+        <div class="jr-alert jr-alert-danger jr-show">{{ __('Enable JavaScript to complete the registration.') }}</div>
     </noscript>
 
-    <div class="jr-steps-indicator" aria-hidden="true">
+    <div class="jr-steps-indicator" id="jr-steps" aria-hidden="true">
         <div class="jr-steps-line-bg"></div>
-        <div class="jr-steps-line-active" id="jr-progress-line" style="width: 0%;"></div>
+        <div class="jr-steps-line-active jr-progress-0" id="jr-progress-line"></div>
 
         <div class="jr-step-item">
             <div class="jr-step-circle active" id="jr-circle-1">1</div>
@@ -87,7 +94,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="jr-step-content" id="jr-step-2">
             <div class="jr-form-group">
                 <label for="phone">{{ __('Phone / WhatsApp') }}</label>
-                <input type="tel" id="phone" name="phone" maxlength="30" autocomplete="tel" inputmode="tel" placeholder="(11) 99999-9999" required>
+                <div class="jr-phone-row">
+                    <select id="phone_country_code" name="phone_country_code" aria-label="{{ __('Country code') }}">
+                        <option value="+55">🇧🇷 +55</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+351">🇵🇹 +351</option>
+                        <option value="+54">🇦🇷 +54</option>
+                        <option value="+595">🇵🇾 +595</option>
+                        <option value="+598">🇺🇾 +598</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+86">🇨🇳 +86</option>
+                    </select>
+                    <input type="tel" id="phone" name="phone" maxlength="30" autocomplete="tel-national" inputmode="tel" placeholder="(11) 99999-9999" required>
+                </div>
                 <div class="jr-error-message" id="error-phone" role="alert"></div>
             </div>
             <div class="jr-form-group">
@@ -141,10 +162,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="jr-terms">
                     <input type="checkbox" id="terms" name="terms" value="1" required>
                     <label for="terms">
-                        {{ __('I have read and agree to the') }}
-                        <a href="{{ url('/privacidade') }}" target="_blank" rel="noopener noreferrer">{{ __('Privacy Policy') }}</a>
-                        {{ __('and to the') }}
-                        <a href="{{ url('/termos') }}" target="_blank" rel="noopener noreferrer">{{ __('Terms of Use') }}</a>.
+                        {{ __('I have read and accept the') }}
+                        <a href="https://xpice.pt/politicas-de-privacidade" target="_blank" rel="noopener noreferrer">{{ __('Privacy Policy') }}</a>
+                        {{ __('and authorize Xpice Connections to contact me by email and WhatsApp.') }}
                     </label>
                 </div>
                 <div class="jr-error-message" id="error-terms" role="alert"></div>
@@ -162,9 +182,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         @endif
 
         <div class="jr-actions">
-            <button type="button" class="jr-btn jr-btn-prev" id="jr-btn-prev" style="display: none;">{{ __('Back') }}</button>
+            <button type="button" class="jr-btn jr-btn-prev jr-hidden" id="jr-btn-prev">{{ __('Back') }}</button>
             <button type="button" class="jr-btn jr-btn-next" id="jr-btn-next">{{ __('Continue') }}</button>
-            <button type="submit" class="jr-btn jr-btn-submit" id="jr-btn-submit" style="display: none;">{{ __('Create account') }}</button>
+            <button type="submit" class="jr-btn jr-btn-submit jr-hidden" id="jr-btn-submit">{{ __('Create account') }}</button>
         </div>
     </form>
 </div>

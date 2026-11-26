@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'is_active',
         'phone',
+        'phone_country_code',
         'company_name',
         'cargo',
         'import_experience',
@@ -42,6 +43,9 @@ class User extends Authenticatable
         'utm_campaign',
         'utm_content',
         'utm_term',
+        'gclid',
+        'fbclid',
+        'msclkid',
         'terms_accepted_at',
     ];
 
