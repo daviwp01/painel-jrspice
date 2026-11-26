@@ -26,7 +26,7 @@ height="0" width="0" class="jr-noscript-frame" title="GTM"></iframe></noscript>
 <div class="jr-register-container">
     <div id="jr-alert-box" class="jr-alert" role="status" aria-live="polite"></div>
 
-    <div id="jr-success-panel" class="jr-success-panel" role="status" aria-live="polite">
+    <div id="jr-success-panel" class="jr-success-panel" role="status" aria-live="polite" hidden>
         <p id="jr-success-message" class="jr-success-message"></p>
         <a href="https://xvision.xpice.pt/login" class="jr-btn jr-btn-xvision" id="jr-btn-xvision">
             {{ __('Acessar Xvision') }}

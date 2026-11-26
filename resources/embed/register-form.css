@@ -119,8 +119,13 @@
     display: block;
 }
 
+.jr-success-panel[hidden],
+.jr-success-panel:not(.jr-show) {
+    display: none !important;
+}
+
 .jr-success-panel.jr-show {
-    display: block;
+    display: block !important;
 }
 
 @keyframes jr-fade-in {

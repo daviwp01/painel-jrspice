@@ -306,6 +306,7 @@
     function hideSuccessPanel() {
         if (successPanel) {
             successPanel.classList.remove('jr-show');
+            successPanel.setAttribute('hidden', '');
             if (successMessage) successMessage.textContent = '';
         }
         form.classList.remove('jr-hidden');
@@ -316,7 +317,10 @@
 
     function showSuccessPanel(message) {
         if (successMessage) successMessage.textContent = message;
-        if (successPanel) successPanel.classList.add('jr-show');
+        if (successPanel) {
+            successPanel.classList.add('jr-show');
+            successPanel.removeAttribute('hidden');
+        }
         form.classList.add('jr-hidden');
         var steps = document.getElementById('jr-steps');
         if (steps) steps.classList.add('jr-hidden');
